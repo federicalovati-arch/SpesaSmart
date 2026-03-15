@@ -1,0 +1,63 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  ShoppingCart,
+  LayoutDashboard,
+  ShoppingBasket,
+  Store,
+  List,
+} from 'lucide-react';
+import {
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
+
+const navItems = [
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/products', label: 'Prodotti', icon: ShoppingBasket },
+  { href: '/supermarkets', label: 'Supermercati', icon: Store },
+  { href: '/lists', label: 'Liste Spesa', icon: List },
+];
+
+export function AppSidebar() {
+  const pathname = usePathname();
+
+  return (
+    <Sidebar className="border-r">
+      <SidebarHeader>
+        <Link href="/" className="flex items-center gap-2 font-bold text-lg">
+          <ShoppingCart className="w-6 h-6 text-primary" />
+          <span className="text-primary">Spesa</span>Intelligente
+        </Link>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarMenu>
+          {navItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <Link href={item.href} legacyBehavior passHref>
+                <SidebarMenuButton
+                  isActive={
+                    item.href === '/'
+                      ? pathname === item.href
+                      : pathname.startsWith(item.href)
+                  }
+                  className="w-full justify-start"
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
