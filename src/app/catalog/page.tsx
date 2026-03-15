@@ -46,13 +46,13 @@ export default function CatalogPage() {
   return (
     <>
       <main className="flex flex-col flex-1 bg-gray-50">
-        <div className="bg-primary text-primary-foreground p-6 pt-12">
-            <h1 className="text-3xl font-bold">Catalogo</h1>
-            <p className="text-primary-foreground/80 mt-1">Gestisci prodotti, negozi e prezzi.</p>
-        </div>
-        
         <div className="p-4 sm:p-6 lg:p-8 flex-1">
-            <div className="flex items-center gap-2 mb-6 -mt-16">
+            <div className="pt-6">
+                <h1 className="text-3xl font-bold">Catalogo</h1>
+                <p className="text-muted-foreground mt-1">Gestisci prodotti, negozi e prezzi.</p>
+            </div>
+            
+            <div className="flex items-center gap-2 my-6">
                  <Button variant="outline" className="bg-white shadow rounded-lg h-12">
                     <LayoutGrid className="mr-2 h-4 w-4" />
                     CATEGORIE
