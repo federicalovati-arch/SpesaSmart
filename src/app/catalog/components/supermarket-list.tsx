@@ -3,65 +3,54 @@
 import { useState } from 'react';
 import type { Supermarket } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Store, MapPin, MoreVertical, Edit, Trash2 } from 'lucide-react';
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Edit, Trash2, Zap, Clover, Carrot, Store } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 type SupermarketListProps = {
   supermarkets: Supermarket[];
+};
+
+const getSupermarketIcon = (name: string) => {
+    const lowerCaseName = name.toLowerCase();
+    if (lowerCaseName.includes('eurospin')) {
+        return <Zap className="h-6 w-6 text-primary" />;
+    }
+    if (lowerCaseName.includes('conad')) {
+        return <Clover className="h-6 w-6 text-primary" />;
+    }
+    if (lowerCaseName.includes('coop')) {
+        return <Carrot className="h-6 w-6 text-primary" />;
+    }
+    return <Store className="h-6 w-6 text-primary" />;
 };
 
 export function SupermarketList({ supermarkets: initialSupermarkets }: SupermarketListProps) {
   const [supermarkets, setSupermarkets] = useState(initialSupermarkets);
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-4">
       {supermarkets.map((supermarket) => (
         <Card key={supermarket.id} className="shadow-sm">
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <Store className="h-5 w-5 text-primary" />
-                  {supermarket.name}
-                </CardTitle>
-                {supermarket.location && (
-                  <CardDescription className="flex items-center gap-2 mt-2">
-                    <MapPin className="h-4 w-4" />
-                    {supermarket.location}
-                  </CardDescription>
-                )}
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Apri menu</span>
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
-                    <Edit className="mr-2 h-4 w-4" />
-                    <span>Modifica</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    <span>Elimina</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="bg-primary/10 p-3 rounded-xl">
+                {getSupermarketIcon(supermarket.name)}
             </div>
-          </CardHeader>
+            <h3 className="font-bold text-lg flex-grow">{supermarket.name}</h3>
+            <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <Edit className="h-5 w-5 text-gray-600" />
+                    <span className="sr-only">Modifica</span>
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 text-destructive/70 hover:text-destructive"
+                >
+                    <Trash2 className="h-5 w-5" />
+                    <span className="sr-only">Elimina</span>
+                </Button>
+            </div>
+          </CardContent>
         </Card>
       ))}
     </div>
