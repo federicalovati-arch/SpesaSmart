@@ -7,6 +7,8 @@ import {
   Home,
   ShoppingBasket,
   List,
+  History,
+  User,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -22,6 +24,8 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/catalog', label: 'Catalogo', icon: ShoppingBasket },
   { href: '/lists', label: 'Liste Spesa', icon: List },
+  { href: '/history', label: 'Storico', icon: History },
+  { href: '/profile', label: 'Profilo', icon: User },
 ];
 
 export function AppSidebar() {

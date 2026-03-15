@@ -6,7 +6,6 @@ import {
   Home,
   ShoppingBasket,
   List,
-  CreditCard,
   History,
   User,
 } from 'lucide-react';
@@ -16,9 +15,8 @@ const navItems = [
   { href: '/', label: 'HOME', icon: Home },
   { href: '/catalog', label: 'CATALOGO', icon: ShoppingBasket },
   { href: '/lists', label: 'LISTE', icon: List },
-  { href: '#', label: 'CARTE', icon: CreditCard },
-  { href: '#', label: 'STORICO', icon: History },
-  { href: '#', label: 'PROFILO', icon: User },
+  { href: '/history', label: 'STORICO', icon: History },
+  { href: '/profile', label: 'PROFILO', icon: User },
 ];
 
 export function BottomNav() {
@@ -26,7 +24,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 z-50 w-full bg-white border-t md:hidden">
-      <div className="grid h-16 grid-cols-6 mx-auto">
+      <div className="grid h-16 grid-cols-5 mx-auto">
         {navItems.map((item) => {
           const isActive =
             item.href === '/'
