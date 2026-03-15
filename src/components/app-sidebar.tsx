@@ -6,7 +6,6 @@ import {
   ShoppingCart,
   LayoutDashboard,
   ShoppingBasket,
-  Store,
   List,
 } from 'lucide-react';
 import {
@@ -21,8 +20,7 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/products', label: 'Prodotti', icon: ShoppingBasket },
-  { href: '/supermarkets', label: 'Supermercati', icon: Store },
+  { href: '/catalog', label: 'Catalogo', icon: ShoppingBasket },
   { href: '/lists', label: 'Liste Spesa', icon: List },
 ];
 

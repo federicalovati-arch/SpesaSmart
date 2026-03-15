@@ -62,13 +62,13 @@ export default function DashboardPage() {
               </Link>
             </Button>
             <Button asChild variant="secondary">
-              <Link href="/products">
+              <Link href="/catalog">
                 <ShoppingBasket />
                 Aggiungi Prodotto
               </Link>
             </Button>
             <Button asChild variant="secondary">
-              <Link href="/supermarkets">
+              <Link href="/catalog">
                 <Store />
                 Aggiungi Supermercato
               </Link>
