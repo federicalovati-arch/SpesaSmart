@@ -2,20 +2,30 @@
 
 import { useState, useMemo } from 'react';
 import { mockProducts, mockSupermarkets } from '@/lib/data';
-import type { Product } from '@/lib/types';
+import type { Product, Supermarket } from '@/lib/types';
 import { ProductList } from './components/product-list';
 import { SupermarketList } from './components/supermarket-list';
 import { AddProductDialog } from './components/add-product-dialog';
+import { AddSupermarketDialog } from './components/add-supermarket-dialog';
+import { CategoryManagerDialog } from './components/category-manager-dialog';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, Plus } from 'lucide-react';
 
 export default function CatalogPage() {
   const [view, setView] = useState('products');
   const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
-  const [productToEdit, setProductToEdit] = useState<Product | undefined>(undefined);
+  const [supermarkets, setSupermarkets] = useState<Supermarket[]>(mockSupermarkets);
 
-  const supermarkets = mockSupermarkets;
+  const initialCategories = useMemo(() => {
+    return [...new Set(products.map((p) => p.category))];
+  }, [products]);
+  const [categories, setCategories] = useState<string[]>(initialCategories);
+
+  const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
+  const [isAddSupermarketDialogOpen, setIsAddSupermarketDialogOpen] = useState(false);
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+  
+  const [productToEdit, setProductToEdit] = useState<Product | undefined>(undefined);
 
   const handleAddOrUpdateProduct = (productData: Omit<Product, 'id'>) => {
     if (productToEdit) {
@@ -25,6 +35,10 @@ export default function CatalogPage() {
       // Add new product
       const newProductWithId = { ...productData, id: `p${Date.now()}` };
       setProducts((prev) => [newProductWithId, ...prev]);
+    }
+    // Add new category if it doesn't exist
+    if (!categories.includes(productData.category)) {
+      setCategories(prev => [...prev, productData.category]);
     }
   };
 
@@ -37,11 +51,43 @@ export default function CatalogPage() {
       setProductToEdit(product);
       setIsAddProductDialogOpen(true);
   }
+
+  const handleDeleteProduct = (productId: string) => {
+    setProducts(prev => prev.filter(p => p.id !== productId));
+  };
   
-  const categories = useMemo(() => {
-    const allCategories = products.map((p) => p.category);
-    return [...new Set(allCategories)];
-  }, [products]);
+  const handleAddSupermarket = (supermarketData: Omit<Supermarket, 'id'>) => {
+    const newSupermarket = { ...supermarketData, id: `s${Date.now()}` };
+    setSupermarkets(prev => [...prev, newSupermarket]);
+  };
+
+  const handleDeleteSupermarket = (supermarketId: string) => {
+    setSupermarkets(prev => prev.filter(s => s.id !== supermarketId));
+    // Also remove prices associated with this supermarket from all products
+    setProducts(prevProducts => prevProducts.map(p => ({
+      ...p,
+      prices: p.prices.filter(price => price.supermarketId !== supermarketId)
+    })));
+  };
+
+  const handleAddCategory = (category: string) => {
+    if (category && !categories.includes(category)) {
+      setCategories(prev => [...prev, category].sort());
+    }
+  };
+
+  const handleDeleteCategory = (category: string) => {
+    setCategories(prev => prev.filter(c => c !== category));
+    // Products in the deleted category will remain, but the category won't be selectable.
+    // A production app might require re-assigning products to a new category.
+  };
+
+  const handleUpdateCategory = (oldName: string, newName: string) => {
+    if (newName && !categories.includes(newName)) {
+      setCategories(prev => prev.map(c => c === oldName ? newName : c).sort());
+      setProducts(prev => prev.map(p => p.category === oldName ? { ...p, category: newName } : p));
+    }
+  };
 
   return (
     <>
@@ -53,14 +99,21 @@ export default function CatalogPage() {
             </div>
             
             <div className="flex flex-col sm:flex-row items-center gap-2 my-6">
-                 <Button variant="outline" className="bg-white shadow rounded-lg h-12 w-full sm:w-auto">
+                 <Button variant="outline" className="bg-white shadow rounded-lg h-12 w-full sm:w-auto" onClick={() => setIsCategoryManagerOpen(true)}>
                     <LayoutGrid className="mr-2 h-4 w-4" />
                     CATEGORIE
                 </Button>
-                <Button className="shadow rounded-lg h-12 w-full sm:flex-1" onClick={handleOpenAddDialog}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    NUOVO PRODOTTO
-                </Button>
+                {view === 'products' ? (
+                  <Button className="shadow rounded-lg h-12 w-full sm:flex-1" onClick={handleOpenAddDialog}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      NUOVO PRODOTTO
+                  </Button>
+                ) : (
+                  <Button className="shadow rounded-lg h-12 w-full sm:flex-1" onClick={() => setIsAddSupermarketDialogOpen(true)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      NUOVO NEGOZIO
+                  </Button>
+                )}
             </div>
 
             <div className="flex items-center justify-center p-1 rounded-full bg-gray-200/60 w-full max-w-xs mx-auto mb-6">
@@ -73,9 +126,17 @@ export default function CatalogPage() {
             </div>
 
             {view === 'products' ? (
-              <ProductList products={products} supermarkets={supermarkets} onEditProductClick={handleOpenEditDialog} />
+              <ProductList 
+                products={products} 
+                supermarkets={supermarkets} 
+                onEditProductClick={handleOpenEditDialog} 
+                onDeleteProduct={handleDeleteProduct}
+              />
             ) : (
-              <SupermarketList supermarkets={supermarkets} />
+              <SupermarketList 
+                supermarkets={supermarkets} 
+                onDeleteSupermarket={handleDeleteSupermarket}
+              />
             )}
         </div>
         
@@ -87,6 +148,19 @@ export default function CatalogPage() {
         onAddProduct={handleAddOrUpdateProduct}
         categories={categories}
         productToEdit={productToEdit}
+      />
+      <AddSupermarketDialog
+        isOpen={isAddSupermarketDialogOpen}
+        setIsOpen={setIsAddSupermarketDialogOpen}
+        onAddSupermarket={handleAddSupermarket}
+      />
+      <CategoryManagerDialog
+        isOpen={isCategoryManagerOpen}
+        setIsOpen={setIsCategoryManagerOpen}
+        categories={categories}
+        onAddCategory={handleAddCategory}
+        onDeleteCategory={handleDeleteCategory}
+        onUpdateCategory={handleUpdateCategory}
       />
     </>
   );

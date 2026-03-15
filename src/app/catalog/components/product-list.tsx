@@ -14,17 +14,30 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type ProductListProps = {
   products: Product[];
   supermarkets: Supermarket[];
   onEditProductClick: (product: Product) => void;
+  onDeleteProduct: (productId: string) => void;
 };
 
 export function ProductList({
   products: initialProducts,
   supermarkets,
   onEditProductClick,
+  onDeleteProduct,
 }: ProductListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tutte');
@@ -99,9 +112,25 @@ export function ProductList({
                             <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500" onClick={() => onEditProductClick(product)}>
                                 <ImageIcon className="h-5 w-5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-red-500 hover:text-red-600">
-                                <Trash2 className="h-5 w-5" />
-                            </Button>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-red-500 hover:text-red-600">
+                                        <Trash2 className="h-5 w-5" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Sei sicuro di voler eliminare {product.name}?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Questa azione non può essere annullata. Il prodotto verrà rimosso permanentemente.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => onDeleteProduct(product.id)}>Elimina</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </div>
                       </div>
                        <div className="mt-4 bg-gray-100/70 p-4 rounded-xl space-y-3">
