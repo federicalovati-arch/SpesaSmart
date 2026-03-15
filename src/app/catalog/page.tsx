@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { mockProducts, mockSupermarkets, mockCategories } from '@/lib/data';
 import type { Product, Supermarket, Category } from '@/lib/types';
 import { ProductList } from './components/product-list';
 import { SupermarketList } from './components/supermarket-list';
@@ -11,16 +10,25 @@ import { CategoryManagerDialog } from './components/category-manager-dialog';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useData } from '@/context/data-context';
 
 export default function CatalogPage() {
   const { toast } = useToast();
-  const [view, setView] = useState('products');
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [supermarkets, setSupermarkets] = useState<Supermarket[]>(mockSupermarkets);
+  const {
+    products,
+    supermarkets,
+    categories,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    addSupermarket,
+    deleteSupermarket,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+  } = useData();
 
-  const [categories, setCategories] = useState<Category[]>(
-    mockCategories.sort((a, b) => a.order - b.order)
-  );
+  const [view, setView] = useState('products');
 
   const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
   const [isAddSupermarketDialogOpen, setIsAddSupermarketDialogOpen] = useState(false);
@@ -32,16 +40,11 @@ export default function CatalogPage() {
 
   const handleAddOrUpdateProduct = (productData: Omit<Product, 'id'>) => {
     if (productToEdit) {
-      // Update existing product
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === productToEdit.id ? { ...productToEdit, ...productData } : p
-        )
-      );
+      updateProduct({ ...productToEdit, ...productData });
+      toast({ title: 'Prodotto aggiornato con successo!' });
     } else {
-      // Add new product
-      const newProductWithId = { ...productData, id: `p${Date.now()}` };
-      setProducts((prev) => [newProductWithId, ...prev]);
+      addProduct(productData);
+      toast({ title: 'Prodotto aggiunto con successo!' });
     }
   };
 
@@ -56,38 +59,29 @@ export default function CatalogPage() {
   };
 
   const handleDeleteProduct = (productId: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== productId));
+    deleteProduct(productId);
+    toast({ title: 'Prodotto eliminato.' });
   };
 
   const handleAddSupermarket = (supermarketData: Omit<Supermarket, 'id'>) => {
-    const newSupermarket = { ...supermarketData, id: `s${Date.now()}` };
-    setSupermarkets((prev) => [...prev, newSupermarket]);
+    addSupermarket(supermarketData);
+     toast({ title: 'Negozio aggiunto.' });
   };
 
   const handleDeleteSupermarket = (supermarketId: string) => {
-    setSupermarkets((prev) => prev.filter((s) => s.id !== supermarketId));
-    // Also remove prices associated with this supermarket from all products
-    setProducts((prevProducts) =>
-      prevProducts.map((p) => ({
-        ...p,
-        prices: p.prices.filter(
-          (price) => price.supermarketId !== supermarketId
-        ),
-      }))
-    );
+    deleteSupermarket(supermarketId);
+     toast({ title: 'Negozio eliminato.' });
   };
 
   const handleAddCategory = (categoryData: Omit<Category, 'id'>) => {
-    const newCategory: Category = { ...categoryData, id: `cat${Date.now()}` };
-    setCategories((prev) =>
-      [...prev, newCategory].sort((a, b) => a.order - b.order)
-    );
+    addCategory(categoryData);
+    toast({ title: 'Categoria aggiunta.' });
   };
 
   const handleDeleteCategory = (categoryId: string) => {
     const categoryToDelete = categories.find((c) => c.id === categoryId);
     if (!categoryToDelete) return;
-    
+
     const isCategoryInUse = products.some(p => p.category === categoryToDelete.name);
     if (isCategoryInUse) {
       toast({
@@ -97,30 +91,13 @@ export default function CatalogPage() {
       });
       return;
     }
-
-    setCategories((prev) => prev.filter((c) => c.id !== categoryId));
+    deleteCategory(categoryId);
+    toast({ title: 'Categoria eliminata.' });
   };
 
   const handleUpdateCategory = (updatedCategory: Category) => {
-    const oldCategory = categories.find((c) => c.id === updatedCategory.id);
-    if (!oldCategory) return;
-
-    setCategories((prev) =>
-      prev
-        .map((c) => (c.id === updatedCategory.id ? updatedCategory : c))
-        .sort((a, b) => a.order - b.order)
-    );
-
-    // Update products if category name changed
-    if (oldCategory.name !== updatedCategory.name) {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.category === oldCategory.name
-            ? { ...p, category: updatedCategory.name }
-            : p
-        )
-      );
-    }
+    updateCategory(updatedCategory);
+    toast({ title: 'Categoria aggiornata.' });
   };
 
   return (

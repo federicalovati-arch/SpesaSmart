@@ -8,6 +8,7 @@ import type {
   Product,
   Supermarket,
   ShoppingListItem,
+  Receipt,
 } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -34,13 +35,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Tag, Trophy, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Tag, Trophy, ShoppingCart, Archive } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ArchiveListDialog } from './archive-list-dialog';
 
 type ListDetailsProps = {
   list: ShoppingList;
   allProducts: Product[];
   allSupermarkets: Supermarket[];
+  onUpdateList: (list: ShoppingList) => void;
+  onArchive: (receipt: Receipt) => void;
 };
 
 type EnrichedListItem = ShoppingListItem & {
@@ -54,19 +58,24 @@ export function ShoppingListDetails({
   list: initialList,
   allProducts,
   allSupermarkets,
+  onUpdateList,
+  onArchive,
 }: ListDetailsProps) {
   const [list, setList] = useState(initialList);
   const [selectedSupermarket, setSelectedSupermarket] = useState<string>('all');
+  const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
 
   const handleToggleItem = (productId: string) => {
-    setList((prevList) => ({
-      ...prevList,
-      items: prevList.items.map((item) =>
+    const updatedList = {
+      ...list,
+      items: list.items.map((item) =>
         item.productId === productId
           ? { ...item, purchased: !item.purchased }
           : item
       ),
-    }));
+    };
+    setList(updatedList);
+    onUpdateList(updatedList);
   };
 
   const enrichedItems: EnrichedListItem[] = useMemo(() => {
@@ -135,12 +144,18 @@ export function ShoppingListDetails({
       <PageHeader
         title={list.name}
         actions={
-          <Button asChild variant="outline">
-            <Link href="/lists">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Torna alle Liste
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link href="/lists">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Liste
+              </Link>
+            </Button>
+            <Button onClick={() => setIsArchiveDialogOpen(true)}>
+                <Archive className="mr-2 h-4 w-4" />
+                Archivia Spesa
+            </Button>
+          </div>
         }
       />
       
@@ -243,6 +258,14 @@ export function ShoppingListDetails({
             </Card>
         </div>
       </div>
+      <ArchiveListDialog
+        isOpen={isArchiveDialogOpen}
+        setIsOpen={setIsArchiveDialogOpen}
+        list={list}
+        enrichedItems={enrichedItems}
+        optimalTotal={totals.optimalTotal}
+        onArchive={onArchive}
+      />
     </>
   );
 }

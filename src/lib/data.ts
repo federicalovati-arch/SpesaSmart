@@ -1,4 +1,4 @@
-import type { Product, Supermarket, ShoppingList, Category } from './types';
+import type { Product, Supermarket, ShoppingList, Category, Receipt } from './types';
 
 export const mockSupermarkets: Supermarket[] = [
   { id: 's1', name: 'Eurospin', location: 'Via Roma, 1' },
@@ -126,3 +126,6 @@ export const mockShoppingLists: ShoppingList[] = [
     ],
   },
 ];
+
+
+export const mockReceipts: Receipt[] = [];

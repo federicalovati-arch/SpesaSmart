@@ -6,7 +6,7 @@ export type Supermarket = {
 
 // New type for product images
 export type ProductImage = {
-  id: string;
+  id:string;
   url: string;
   supermarketId?: string; // Optional link to a supermarket
 };
@@ -45,4 +45,22 @@ export type Category = {
   name: string;
   icon: string;
   order: number;
+};
+
+export type ReceiptItem = {
+  productId: string;
+  productName: string;
+  quantity: number;
+  price: number;
+  supermarketId?: string;
+  supermarketName?: string;
+};
+
+export type Receipt = {
+  id: string;
+  listName: string;
+  archivedAt: string;
+  totalCost: number;
+  items: ReceiptItem[];
+  originalListId: string;
 };

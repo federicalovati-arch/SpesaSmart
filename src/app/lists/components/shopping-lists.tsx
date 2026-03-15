@@ -12,17 +12,21 @@ import { it } from 'date-fns/locale';
 
 type ShoppingListsProps = {
   lists: ShoppingList[];
+  onAddList: (list: Omit<ShoppingList, 'id' | 'createdAt'>) => void;
 };
 
-export function ShoppingLists({ lists: initialLists }: ShoppingListsProps) {
-  const [lists, setLists] = useState(initialLists);
+export function ShoppingLists({ lists }: ShoppingListsProps) {
+  // TODO: Implement Add List Dialog
+  const handleAddList = () => {
+    console.log("Add new list");
+  }
 
   return (
     <>
       <PageHeader
         title="Le Mie Liste"
         actions={
-          <Button>
+          <Button onClick={handleAddList}>
             <PlusCircle />
             Crea Lista
           </Button>
@@ -65,7 +69,7 @@ export function ShoppingLists({ lists: initialLists }: ShoppingListsProps) {
             <List className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-medium">Nessuna lista trovata</h3>
             <p className="mt-2 text-sm text-muted-foreground">Inizia creando la tua prima lista della spesa.</p>
-            <Button className="mt-6">
+            <Button className="mt-6" onClick={handleAddList}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Crea Lista
             </Button>

@@ -1,13 +1,13 @@
-import { mockShoppingLists } from '@/lib/data';
+'use client';
 import { ShoppingLists } from './components/shopping-lists';
+import { useData } from '@/context/data-context';
 
-export default async function ListsPage() {
-  // In a real app, this is fetched from a DB
-  const lists = mockShoppingLists;
+export default function ListsPage() {
+  const { shoppingLists, addShoppingList } = useData();
 
   return (
     <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8">
-      <ShoppingLists lists={lists} />
+      <ShoppingLists lists={shoppingLists} onAddList={addShoppingList} />
     </main>
   );
 }
