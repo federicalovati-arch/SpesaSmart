@@ -14,7 +14,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex-1 bg-gray-50">
+    <div className="flex-1">
       <main className="p-4 sm:p-6 lg:p-8">
         <div className="flex items-center gap-4 mb-8">
           <Avatar className="h-16 w-16">

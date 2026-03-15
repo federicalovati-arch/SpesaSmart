@@ -102,22 +102,22 @@ export function ProductList({
         {filteredProducts.map((product) => {
            return (
               <Card key={product.id} className="overflow-hidden shadow-md rounded-2xl">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h3 className="text-xl font-bold">{product.name}</h3>
-                          <Badge variant="secondary" className="font-semibold mt-1 bg-gray-200 text-gray-600 border-none">
+                          <h3 className="text-lg font-bold">{product.name}</h3>
+                          <Badge variant="secondary" className="font-semibold mt-1 bg-gray-200 text-gray-600 border-none text-xs">
                               {product.category}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500" onClick={() => onEditProductClick(product)}>
-                                <ImageIcon className="h-5 w-5" />
+                        <div className="flex items-center gap-0">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500" onClick={() => onEditProductClick(product)}>
+                                <ImageIcon className="h-4 w-4" />
                             </Button>
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-red-500 hover:text-red-600">
-                                        <Trash2 className="h-5 w-5" />
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600">
+                                        <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
@@ -135,7 +135,7 @@ export function ProductList({
                             </AlertDialog>
                         </div>
                       </div>
-                       <div className="mt-4 bg-gray-100/70 p-4 rounded-xl space-y-3">
+                       <div className="mt-3 bg-gray-100/70 p-3 rounded-lg space-y-2">
                           {product.prices.sort((a,b) => a.price - b.price).map(price => (
                               <div key={price.supermarketId} className="flex justify-between items-center text-sm">
                                   <span className="text-gray-700">{getSupermarketName(price.supermarketId)}</span>

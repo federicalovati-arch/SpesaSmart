@@ -102,9 +102,9 @@ export default function CatalogPage() {
 
   return (
     <>
-      <main className="flex flex-col flex-1 bg-gray-50">
-        <div className="p-4 sm:p-6 lg:p-8 flex-1">
-          <div className="pt-6">
+      <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8">
+        <div>
+          <div className="pt-6 md:pt-0">
             <h1 className="text-3xl font-bold">Catalogo</h1>
             <p className="text-muted-foreground mt-1">
               Gestisci prodotti, negozi e prezzi.
