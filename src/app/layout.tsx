@@ -3,6 +3,7 @@ import './globals.css';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Toaster } from '@/components/ui/toaster';
+import { BottomNav } from '@/components/bottom-nav';
 
 export const metadata: Metadata = {
   title: 'SpesaIntelligente',
@@ -25,10 +26,11 @@ export default function RootLayout({
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset>
-            {children}
+            <div className="pb-16 md:pb-0">{children}</div>
           </SidebarInset>
         </SidebarProvider>
         <Toaster />
+        <BottomNav />
       </body>
     </html>
   );

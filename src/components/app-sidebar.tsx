@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   ShoppingCart,
-  LayoutDashboard,
+  Home,
   ShoppingBasket,
   List,
 } from 'lucide-react';
@@ -19,7 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/', label: 'Dashboard', icon: Home },
   { href: '/catalog', label: 'Catalogo', icon: ShoppingBasket },
   { href: '/lists', label: 'Liste Spesa', icon: List },
 ];
@@ -28,11 +28,11 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <Sidebar className="border-r">
+    <Sidebar className="border-r hidden md:block">
       <SidebarHeader>
         <Link href="/" className="flex items-center gap-2 font-bold text-lg">
           <ShoppingCart className="w-6 h-6 text-primary" />
-          <span className="text-primary">Spesa</span>Intelligente
+          <span>SpesaIntelligente</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
