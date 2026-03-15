@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import type { Supermarket, Product } from '@/lib/types';
+import Image from 'next/image';
+import type { Supermarket, Product, ProductImage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
+  DialogClose,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -23,17 +24,27 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Sparkles, Trash2, Loader2 } from 'lucide-react';
-import { getCategorySuggestion } from '../actions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const productSchema = z.object({
   name: z.string().min(2, 'Il nome del prodotto è obbligatorio.'),
+  brand: z.string().optional(),
   category: z.string().min(2, 'La categoria è obbligatoria.'),
   prices: z.array(
     z.object({
       supermarketId: z.string(),
-      price: z.coerce.number().min(0, 'Il prezzo non può essere negativo.'),
+      price: z.coerce.number().optional().default(0),
+      brand: z.string().optional(),
+      imageId: z.string().optional(),
+    })
+  ),
+  images: z.array(
+    z.object({
+      id: z.string(),
+      url: z.string(),
+      file: z.any().optional(),
     })
   ),
 });
@@ -42,95 +53,159 @@ type AddProductDialogProps = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   supermarkets: Supermarket[];
+  categories: string[];
   onAddProduct: (product: Omit<Product, 'id'>) => void;
+  productToEdit?: Product;
 };
 
 export function AddProductDialog({
   isOpen,
   setIsOpen,
   supermarkets,
+  categories,
   onAddProduct,
+  productToEdit,
 }: AddProductDialogProps) {
-  const [isSuggesting, setIsSuggesting] = useState(false);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const defaultValues = useMemo(() => {
+    const baseValues = {
+        name: '',
+        brand: '',
+        category: '',
+        images: [],
+        prices: supermarkets.map((s) => ({
+            supermarketId: s.id,
+            price: 0,
+            brand: '',
+            imageId: '',
+        })),
+    };
+    if (productToEdit) {
+        return {
+            ...baseValues,
+            name: productToEdit.name,
+            brand: productToEdit.brand || '',
+            category: productToEdit.category,
+            images: productToEdit.images.map(img => ({...img, file: undefined})),
+            prices: supermarkets.map((s) => {
+                const priceInfo = productToEdit.prices.find(p => p.supermarketId === s.id);
+                return {
+                    supermarketId: s.id,
+                    price: priceInfo?.price || 0,
+                    brand: priceInfo?.brand || '',
+                    imageId: priceInfo?.imageId || '',
+                };
+            }),
+        }
+    }
+    return baseValues;
+  }, [productToEdit, supermarkets])
 
   const form = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: '',
-      category: '',
-      prices: supermarkets.map((s) => ({ supermarketId: s.id, price: 0 })),
-    },
+    defaultValues,
   });
 
-  const { fields } = useFieldArray({
+  const { fields: priceFields } = useFieldArray({
     control: form.control,
     name: 'prices',
   });
+  
+  const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
+    control: form.control,
+    name: 'images',
+  });
 
-  const handleSuggestion = async () => {
-    const productName = form.getValues('name');
-    if (!productName) {
-      toast({
-        variant: 'destructive',
-        title: 'Errore',
-        description: 'Inserisci un nome prodotto per ricevere un suggerimento.',
-      });
-      return;
-    }
-    setIsSuggesting(true);
-    const result = await getCategorySuggestion(productName);
-    if (result.success && result.data) {
-      form.setValue('name', result.data.standardizedProductName, { shouldValidate: true });
-      form.setValue('category', result.data.suggestedCategory, { shouldValidate: true });
-      toast({
-        title: 'Suggerimento ricevuto!',
-        description: 'Nome e categoria sono stati aggiornati.',
-      });
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Errore AI',
-        description: result.error,
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      Array.from(files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          appendImage({
+            id: `new-${Math.random()}`,
+            url: e.target?.result as string,
+            file: file,
+          });
+        };
+        reader.readAsDataURL(file);
       });
     }
-    setIsSuggesting(false);
   };
 
+  const getSupermarketIcon = (supermarketId: string) => {
+    const supermarket = supermarkets.find(s => s.id === supermarketId);
+    const name = supermarket?.name.toLowerCase() || '';
+    // This is a simplified version of the icon logic in supermarket-list
+    if (name.includes('eurospin')) return 'https://picsum.photos/seed/s1-logo/40/40';
+    if (name.includes('conad')) return 'https://picsum.photos/seed/s2-logo/40/40';
+    if (name.includes('coop')) return 'https://picsum.photos/seed/s3-logo/40/40';
+    return 'https://picsum.photos/seed/s-default/40/40';
+  }
+
   function onSubmit(values: z.infer<typeof productSchema>) {
-    const pricesWithValue = values.prices.filter(p => p.price > 0);
-    onAddProduct({...values, prices: pricesWithValue});
-    form.reset();
+    const pricesWithValue = values.prices.filter(p => p.price && p.price > 0);
+    // In a real app, you'd upload images and get back URLs.
+    // For now, we'll just use the data URLs or existing URLs.
+    const finalImages = values.images.map(img => ({ id: img.id.startsWith('new-') ? `img-${Date.now()}` : img.id, url: img.url }));
+    
+    // Logic to associate images to supermarkets would go here
+    // based on some UI element we would add.
+    
+    const productData: Omit<Product, 'id'> = {
+      name: values.name,
+      brand: values.brand,
+      category: values.category,
+      prices: pricesWithValue,
+      images: finalImages,
+    }
+    
+    onAddProduct(productData);
+    form.reset(defaultValues);
     setIsOpen(false);
   }
+  
+  const watchedImages = form.watch('images');
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Aggiungi Nuovo Prodotto</DialogTitle>
-          <DialogDescription>
-            Inserisci i dettagli del prodotto e i prezzi nei vari supermercati.
-          </DialogDescription>
+      <DialogContent className="sm:max-w-[480px] bg-gray-50 p-0">
+        <DialogHeader className="p-6 pb-0">
+          <DialogTitle className="text-xl font-bold text-center">
+            {productToEdit ? 'Modifica Prodotto' : 'Nuovo Prodotto'}
+          </DialogTitle>
+           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+            <X className="h-5 w-5" />
+            <span className="sr-only">Close</span>
+          </DialogClose>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="px-6 space-y-4">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome Prodotto</FormLabel>
-                    <div className="flex items-center gap-2">
-                      <FormControl>
-                        <Input placeholder="Es. Latte Intero" {...field} />
-                      </FormControl>
-                      <Button type="button" variant="outline" size="icon" onClick={handleSuggestion} disabled={isSuggesting}>
-                        {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                        <span className="sr-only">Suggerisci con AI</span>
-                      </Button>
-                    </div>
+                    <FormLabel className="text-xs font-semibold text-gray-500">NOME PRODOTTO</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Es. Acciughe" {...field} className="bg-white border-primary/50 focus-visible:ring-primary/50" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="brand"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold text-gray-500">MARCA PRINCIPALE</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Es. Granarolo..." {...field} className="bg-white" />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -140,47 +215,112 @@ export function AddProductDialog({
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Categoria</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Es. Latticini" {...field} />
-                    </FormControl>
+                    <FormLabel className="text-xs font-semibold text-gray-500">CATEGORIA</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Seleziona una categoria" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
             
-            <div className="space-y-2">
-                <h3 className="text-sm font-medium">Prezzi</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {fields.map((field, index) => {
+            <div className="bg-white p-6 rounded-t-2xl space-y-4">
+                <h3 className="text-xs font-semibold text-gray-500">PREZZI PER NEGOZIO</h3>
+                <div className="space-y-2">
+                {priceFields.map((field, index) => {
                     const supermarket = supermarkets.find(s => s.id === field.supermarketId);
                     if (!supermarket) return null;
+                    const priceImageId = form.watch(`prices.${index}.imageId`);
+                    const priceImage = watchedImages.find(img => img.id === priceImageId);
+
                     return (
-                    <FormField
-                        key={field.id}
-                        control={form.control}
-                        name={`prices.${index}.price`}
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>{supermarket.name}</FormLabel>
-                            <FormControl>
-                            <Input type="number" step="0.01" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
+                    <div key={field.id} className="flex items-center gap-3 p-2 rounded-xl bg-gray-50">
+                        <Image
+                            src={priceImage?.url || getSupermarketIcon(supermarket.id)}
+                            alt={supermarket.name}
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover w-10 h-10 bg-white"
+                        />
+                        <div className="flex-1 font-semibold">{supermarket.name}</div>
+                        <FormField
+                            control={form.control}
+                            name={`prices.${index}.price`}
+                            render={({ field: priceField }) => (
+                            <FormItem className="flex items-center gap-1">
+                                <FormControl>
+                                    <Input type="number" step="0.01" {...priceField} className="w-20 text-right font-bold bg-white" placeholder="€ 0.00" />
+                                </FormControl>
+                            </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name={`prices.${index}.brand`}
+                            render={({ field: brandField }) => (
+                            <FormItem>
+                                <FormControl>
+                                    <Input {...brandField} className="w-24 bg-white" placeholder="Marca" />
+                                </FormControl>
+                            </FormItem>
+                            )}
+                        />
+                    </div>
                     );
                 })}
                 </div>
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
-                Annulla
+             <div className="bg-white p-6 pt-0 space-y-4">
+                <h3 className="text-xs font-semibold text-gray-500">GALLERIA IMMAGINI</h3>
+                <div className="grid grid-cols-3 gap-4">
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="aspect-square flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg text-sm text-gray-500 hover:bg-gray-50 hover:border-primary/50"
+                    >
+                        <Upload className="h-6 w-6" />
+                        <span>Carica</span>
+                    </button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        className="hidden"
+                        multiple
+                        accept="image/*"
+                    />
+
+                    {imageFields.map((image, index) => (
+                        <div key={image.id} className="relative group aspect-square">
+                            <Image src={image.url} alt={`Product image ${index + 1}`} fill className="object-cover rounded-lg" />
+                            <button
+                                type="button"
+                                onClick={() => removeImage(index)}
+                                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                            {/* Here we would add a select to associate image to store price */}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+
+            <DialogFooter className="bg-white p-6 flex-col-reverse gap-2">
+              <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90 text-lg">SALVA</Button>
+              <Button type="button" variant="ghost" onClick={() => setIsOpen(false)} className="w-full text-lg">
+                ANNULLA
               </Button>
-              <Button type="submit">Aggiungi Prodotto</Button>
             </DialogFooter>
           </form>
         </Form>

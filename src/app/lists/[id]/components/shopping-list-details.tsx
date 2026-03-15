@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type {
   ShoppingList,
   Product,
@@ -46,6 +47,7 @@ type EnrichedListItem = ShoppingListItem & {
   product: Product;
   bestPrice: number | null;
   bestSupermarket: Supermarket | null;
+  imageUrl: string | null;
 };
 
 export function ShoppingListDetails({
@@ -75,22 +77,30 @@ export function ShoppingListDetails({
 
         let bestPrice: number | null = null;
         let bestSupermarket: Supermarket | null = null;
+        let imageUrl: string | null = null;
+        
+        const generalImage = product.images.length > 0 ? product.images[0].url : null;
 
         if (selectedSupermarket === 'all') {
           const sortedPrices = [...product.prices].sort((a, b) => a.price - b.price);
           if (sortedPrices.length > 0) {
-            bestPrice = sortedPrices[0].price;
-            bestSupermarket = allSupermarkets.find(s => s.id === sortedPrices[0].supermarketId) || null;
+            const bestPriceInfo = sortedPrices[0];
+            bestPrice = bestPriceInfo.price;
+            bestSupermarket = allSupermarkets.find(s => s.id === bestPriceInfo.supermarketId) || null;
+            const priceImage = product.images.find(img => img.id === bestPriceInfo.imageId);
+            imageUrl = priceImage?.url || generalImage;
           }
         } else {
             const storePrice = product.prices.find(p => p.supermarketId === selectedSupermarket);
             if(storePrice) {
                 bestPrice = storePrice.price;
                 bestSupermarket = allSupermarkets.find(s => s.id === selectedSupermarket) || null;
+                const priceImage = product.images.find(img => img.id === storePrice.imageId);
+                imageUrl = priceImage?.url || generalImage;
             }
         }
         
-        return { ...item, product, bestPrice, bestSupermarket };
+        return { ...item, product, bestPrice, bestSupermarket, imageUrl };
       })
       .filter((item): item is EnrichedListItem => item !== null);
   }, [list.items, allProducts, allSupermarkets, selectedSupermarket]);
@@ -158,12 +168,16 @@ export function ShoppingListDetails({
 
                     <div className="space-y-4">
                         {enrichedItems.map((item) => (
-                            <div key={item.productId} className={`flex items-center gap-4 p-3 rounded-lg ${item.purchased ? 'bg-muted/50' : 'bg-card'}`}>
+                            <div key={item.productId} className={`flex items-start gap-4 p-3 rounded-lg ${item.purchased ? 'bg-muted/50' : 'bg-card'}`}>
                                 <Checkbox
                                     id={`item-${item.productId}`}
                                     checked={item.purchased}
                                     onCheckedChange={() => handleToggleItem(item.productId)}
+                                    className="mt-1"
                                 />
+                                {item.imageUrl && 
+                                    <Image src={item.imageUrl} alt={item.product.name} width={48} height={48} className="rounded-md object-cover bg-gray-100" />
+                                }
                                 <div className="flex-1">
                                     <label htmlFor={`item-${item.productId}`} className={`font-medium ${item.purchased ? 'line-through text-muted-foreground' : ''}`}>
                                         {item.product.name}
@@ -176,7 +190,7 @@ export function ShoppingListDetails({
                                             <div className="font-bold text-lg text-primary">€{(item.bestPrice * item.quantity).toFixed(2)}</div>
                                             <div className="text-xs text-muted-foreground">
                                                 (€{item.bestPrice.toFixed(2)} / pz)
-                                                {item.bestSupermarket && <Badge variant="secondary" className="ml-2">{item.bestSupermarket.name}</Badge>}
+                                                {item.bestSupermarket && <Badge variant="secondary" className="ml-2 mt-1">{item.bestSupermarket.name}</Badge>}
                                             </div>
                                         </>
                                     ) : (

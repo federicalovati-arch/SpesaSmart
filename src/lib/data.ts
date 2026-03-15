@@ -11,6 +11,8 @@ export const mockProducts: Product[] = [
     id: 'p1',
     name: 'Latte Intero',
     category: 'Latticini',
+    brand: 'Granarolo',
+    images: [],
     prices: [
       { supermarketId: 's1', price: 1.2 },
       { supermarketId: 's2', price: 1.15 },
@@ -21,6 +23,7 @@ export const mockProducts: Product[] = [
     id: 'p2',
     name: 'Pane Casereccio',
     category: 'Forno',
+    images: [],
     prices: [
       { supermarketId: 's1', price: 2.5 },
       { supermarketId: 's2', price: 2.6 },
@@ -31,6 +34,7 @@ export const mockProducts: Product[] = [
     id: 'p3',
     name: 'Mele Golden (1kg)',
     category: 'Frutta e Verdura',
+    images: [],
     prices: [
       { supermarketId: 's1', price: 1.99 },
       { supermarketId: 's2', price: 2.1 },
@@ -41,6 +45,8 @@ export const mockProducts: Product[] = [
     id: 'p4',
     name: 'Pasta di Grano Duro (500g)',
     category: 'Alimentari',
+    brand: 'Barilla',
+    images: [],
     prices: [
       { supermarketId: 's1', price: 0.9 },
       { supermarketId: 's2', price: 0.85 },
@@ -51,6 +57,7 @@ export const mockProducts: Product[] = [
     id: 'p5',
     name: 'Petto di Pollo (500g)',
     category: 'Carne',
+    images: [],
     prices: [
       { supermarketId: 's1', price: 5.5 },
       { supermarketId: 's2', price: 5.8 },
@@ -61,10 +68,27 @@ export const mockProducts: Product[] = [
     id: 'p6',
     name: 'Acqua Minerale Naturale (1.5L)',
     category: 'Bevande',
+    images: [],
     prices: [
         { supermarketId: 's1', price: 0.25 },
         { supermarketId: 's2', price: 0.22 },
         { supermarketId: 's3', price: 0.30 },
+    ]
+  },
+   {
+    id: 'p7',
+    name: 'Acciughe',
+    category: 'Barattoli',
+    brand: 'Marca Principale',
+    images: [
+        { id: 'img1', url: 'https://picsum.photos/seed/acciughe1/200/200' },
+        { id: 'img2', url: 'https://picsum.photos/seed/acciughe2/200/200' },
+        { id: 'img3', url: 'https://picsum.photos/seed/acciughe3/200/200' },
+    ],
+    prices: [
+      { supermarketId: 's2', price: 2.41, brand: 'Conad', imageId: 'img1' },
+      { supermarketId: 's3', price: 2.60, brand: 'Gli sp...', imageId: 'img2' },
+      { supermarketId: 's1', price: 1.79, brand: 'Ondina', imageId: 'img3' },
     ]
   }
 ];
