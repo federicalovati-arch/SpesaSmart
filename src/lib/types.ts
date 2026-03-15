@@ -39,3 +39,10 @@ export type ShoppingList = {
   createdAt: string;
   items: ShoppingListItem[];
 };
+
+export type Category = {
+  id: string;
+  name: string;
+  icon: string;
+  order: number;
+};

@@ -1,15 +1,42 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetClose,
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
+import type { Category } from '@/lib/types';
+import {
+  Apple,
+  Beef,
+  CakeSlice,
+  Carrot,
+  Coffee,
+  Cookie,
+  Egg,
+  Fish,
+  GlassWater,
+  Archive,
+  Package,
+  Pizza,
+  GripVertical,
+  Edit,
+  Trash2,
+  X,
+  Save,
+  LucideIcon,
+  ShoppingBasket,
+  Wine,
+  Sparkles,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,20 +47,35 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Input } from '@/components/ui/input';
-import { Trash2, Edit, Save, X } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
+} from '@/components/ui/alert-dialog';
 
+export const iconMap: { [key: string]: LucideIcon } = {
+  apple: Apple,
+  beef: Beef,
+  'cake-slice': CakeSlice,
+  carrot: Carrot,
+  coffee: Coffee,
+  cookie: Cookie,
+  egg: Egg,
+  fish: Fish,
+  'glass-water': GlassWater,
+  archive: Archive,
+  package: Package,
+  pizza: Pizza,
+  'shopping-basket': ShoppingBasket,
+  wine: Wine,
+  sparkles: Sparkles,
+};
+
+const availableIcons = Object.keys(iconMap);
 
 type CategoryManagerDialogProps = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  categories: string[];
-  onAddCategory: (category: string) => void;
-  onDeleteCategory: (category: string) => void;
-  onUpdateCategory: (oldName: string, newName: string) => void;
+  categories: Category[];
+  onAddCategory: (category: Omit<Category, 'id'>) => void;
+  onDeleteCategory: (categoryId: string) => void;
+  onUpdateCategory: (category: Category) => void;
 };
 
 export function CategoryManagerDialog({
@@ -44,118 +86,214 @@ export function CategoryManagerDialog({
   onDeleteCategory,
   onUpdateCategory,
 }: CategoryManagerDialogProps) {
-    const { toast } = useToast();
-    const [newCategory, setNewCategory] = useState('');
-    const [editingCategory, setEditingCategory] = useState<string | null>(null);
-    const [editingValue, setEditingValue] = useState('');
+  const { toast } = useToast();
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryOrder, setNewCategoryOrder] = useState(1);
+  const [newCategoryIcon, setNewCategoryIcon] = useState(availableIcons[0]);
 
-    const handleAdd = () => {
-        if (newCategory.trim() === '') {
-            toast({ variant: 'destructive', description: 'Il nome della categoria non può essere vuoto.' });
-            return;
-        }
-        if (categories.map(c => c.toLowerCase()).includes(newCategory.toLowerCase())) {
-            toast({ variant: 'destructive', description: 'Questa categoria esiste già.' });
-            return;
-        }
-        onAddCategory(newCategory);
-        setNewCategory('');
-    };
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+  const [editingOrder, setEditingOrder] = useState(1);
+  const [editingIcon, setEditingIcon] = useState('');
 
-    const handleStartEdit = (category: string) => {
-        setEditingCategory(category);
-        setEditingValue(category);
-    };
+  useEffect(() => {
+    // Set default order to max order + 1
+    if (categories.length > 0) {
+      const maxOrder = Math.max(...categories.map(c => c.order));
+      setNewCategoryOrder(maxOrder + 1);
+    }
+  }, [categories]);
 
-    const handleCancelEdit = () => {
-        setEditingCategory(null);
-        setEditingValue('');
-    };
+  const handleAdd = () => {
+    if (newCategoryName.trim() === '') {
+      toast({
+        variant: 'destructive',
+        description: 'Il nome della categoria non può essere vuoto.',
+      });
+      return;
+    }
+    if (categories.some(c => c.name.toLowerCase() === newCategoryName.toLowerCase())) {
+        toast({ variant: 'destructive', description: 'Questa categoria esiste già.' });
+        return;
+    }
+    onAddCategory({ name: newCategoryName, order: newCategoryOrder, icon: newCategoryIcon });
+    setNewCategoryName('');
+    const maxOrder = Math.max(...categories.map(c => c.order), 0);
+    setNewCategoryOrder(maxOrder + 2);
+  };
 
-    const handleSaveEdit = () => {
-        if (!editingCategory) return;
-        if (editingValue.trim() === '') {
-            toast({ variant: 'destructive', description: 'Il nome della categoria non può essere vuoto.' });
-            return;
-        }
-        if (categories.map(c => c.toLowerCase()).includes(editingValue.toLowerCase()) && editingValue.toLowerCase() !== editingCategory.toLowerCase()) {
-            toast({ variant: 'destructive', description: 'Questa categoria esiste già.' });
-            return;
-        }
-        onUpdateCategory(editingCategory, editingValue);
-        handleCancelEdit();
-    };
+  const handleStartEdit = (category: Category) => {
+    setEditingCategory(category.id);
+    setEditingName(category.name);
+    setEditingOrder(category.order);
+    setEditingIcon(category.icon);
+  };
 
-    return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Gestisci Categorie</DialogTitle>
-                    <DialogDescription>
-                        Aggiungi, modifica o elimina le categorie dei prodotti.
-                    </DialogDescription>
-                </DialogHeader>
+  const handleCancelEdit = () => {
+    setEditingCategory(null);
+  };
 
-                <ScrollArea className="max-h-64 pr-4">
-                    <div className="space-y-2">
-                        {categories.map(category => (
-                            <div key={category} className="flex items-center gap-2 p-2 rounded-md bg-muted/50">
-                                {editingCategory === category ? (
-                                    <>
-                                        <Input
-                                            value={editingValue}
-                                            onChange={(e) => setEditingValue(e.target.value)}
-                                            className="h-8"
-                                        />
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveEdit}><Save className="h-4 w-4" /></Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCancelEdit}><X className="h-4 w-4" /></Button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="flex-1 text-sm font-medium">{category}</span>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleStartEdit(category)}>
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        L'eliminazione di una categoria è irreversibile. I prodotti in questa categoria non saranno eliminati, ma potrebbero dover essere riclassificati.
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Annulla</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => onDeleteCategory(category)}>Elimina</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </>
-                                )}
-                            </div>
-                        ))}
+  const handleSaveEdit = () => {
+    if (!editingCategory) return;
+    if (editingName.trim() === '') {
+        toast({ variant: 'destructive', description: 'Il nome della categoria non può essere vuoto.' });
+        return;
+    }
+    const existingCategory = categories.find(c => c.name.toLowerCase() === editingName.toLowerCase());
+    if (existingCategory && existingCategory.id !== editingCategory) {
+        toast({ variant: 'destructive', description: 'Questa categoria esiste già.' });
+        return;
+    }
+
+    onUpdateCategory({ id: editingCategory, name: editingName, order: editingOrder, icon: editingIcon });
+    handleCancelEdit();
+  };
+
+  const IconComponent = ({ name }: { name: string }) => {
+    const Icon = iconMap[name] || Sparkles;
+    return <Icon className="h-6 w-6 text-primary" />;
+  };
+
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetContent
+        side="bottom"
+        className="rounded-t-2xl max-h-[90vh] flex flex-col bg-gray-50"
+      >
+        <SheetHeader className="text-center p-4 border-b">
+          <SheetTitle className="font-bold text-lg">
+            Gestione Categorie
+          </SheetTitle>
+          <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+            <X className="h-5 w-5" />
+            <span className="sr-only">Close</span>
+          </SheetClose>
+        </SheetHeader>
+
+        <div className="p-4">
+            <div className="p-4 rounded-xl bg-white shadow-sm space-y-4">
+                <div className="flex gap-4">
+                    <div className="flex-1">
+                        <label className="text-xs font-semibold text-gray-500">NOME</label>
+                        <Input
+                            placeholder="Nome..."
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            className="bg-gray-100 border-gray-200"
+                        />
                     </div>
-                </ScrollArea>
-
-                <div className="flex gap-2 pt-4">
-                    <Input
-                        placeholder="Nuova categoria..."
-                        value={newCategory}
-                        onChange={e => setNewCategory(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                    />
-                    <Button onClick={handleAdd}>Aggiungi</Button>
+                    <div className="w-20">
+                        <label className="text-xs font-semibold text-gray-500">ORDINE</label>
+                        <Input
+                            type="number"
+                            value={newCategoryOrder}
+                            onChange={(e) => setNewCategoryOrder(Number(e.target.value))}
+                             className="bg-gray-100 border-gray-200"
+                        />
+                    </div>
                 </div>
-            
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsOpen(false)}>Chiudi</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
+                <div>
+                     <label className="text-xs font-semibold text-gray-500 mb-2 block">ICONA</label>
+                     <ScrollArea className="w-full">
+                        <div className="flex gap-2 pb-2">
+                         {availableIcons.map(iconKey => (
+                            <Button key={iconKey} variant="outline" size="icon" className={cn("w-12 h-12 bg-gray-100 border-gray-200", newCategoryIcon === iconKey && "ring-2 ring-primary border-primary")} onClick={() => setNewCategoryIcon(iconKey)}>
+                                {React.createElement(iconMap[iconKey], { className: "h-6 w-6 text-gray-600"})}
+                            </Button>
+                         ))}
+                        </div>
+                         <div className="h-1 w-full" />
+                     </ScrollArea>
+                </div>
+                <Button onClick={handleAdd} className="w-full h-12 bg-primary hover:bg-primary/90 text-lg">CREA</Button>
+            </div>
+        </div>
+
+        <h3 className="text-sm font-semibold text-muted-foreground px-4 mt-2 mb-2">
+          TUTTE LE CATEGORIE
+        </h3>
+        <ScrollArea className="flex-1 px-4">
+          <div className="space-y-2 pb-4">
+            {categories.map((category) => (
+              <div key={category.id}>
+                {editingCategory === category.id ? (
+                    // Editing state
+                     <div className="flex flex-col gap-2 p-3 rounded-xl bg-white shadow-md border border-primary">
+                        <div className="flex gap-2">
+                            <Input
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                className="h-8 flex-1"
+                            />
+                            <Input
+                                type="number"
+                                value={editingOrder}
+                                onChange={(e) => setEditingOrder(Number(e.target.value))}
+                                className="h-8 w-16"
+                            />
+                        </div>
+                        <ScrollArea className="w-full">
+                            <div className="flex gap-2 pb-2">
+                            {availableIcons.map(iconKey => (
+                                <Button key={iconKey} variant="outline" size="icon" className={cn("w-10 h-10 bg-gray-100 border-gray-200", editingIcon === iconKey && "ring-2 ring-primary border-primary")} onClick={() => setEditingIcon(iconKey)}>
+                                    {React.createElement(iconMap[iconKey], { className: "h-5 w-5 text-gray-600"})}
+                                </Button>
+                            ))}
+                            </div>
+                        </ScrollArea>
+                        <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={handleCancelEdit}><X className="h-4 w-4 mr-1" /> Annulla</Button>
+                            <Button size="sm" onClick={handleSaveEdit}><Save className="h-4 w-4 mr-1" /> Salva</Button>
+                        </div>
+                     </div>
+                ) : (
+                    // Display state
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-white shadow-sm">
+                        <GripVertical className="h-5 w-5 text-gray-400" />
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                           <IconComponent name={category.icon} />
+                        </div>
+                        <span className="flex-1 font-semibold">{category.name}</span>
+                        <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={() => handleStartEdit(category)}
+                        >
+                        <Edit className="h-5 w-5 text-gray-600" />
+                        </Button>
+                        <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-destructive/70 hover:text-destructive"
+                            >
+                            <Trash2 className="h-5 w-5" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                            <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                L'eliminazione di una categoria è irreversibile.
+                            </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                            <AlertDialogCancel>Annulla</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => onDeleteCategory(category.id)}>
+                                Elimina
+                            </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
+  );
 }

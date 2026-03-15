@@ -1,4 +1,4 @@
-import type { Product, Supermarket, ShoppingList } from './types';
+import type { Product, Supermarket, ShoppingList, Category } from './types';
 
 export const mockSupermarkets: Supermarket[] = [
   { id: 's1', name: 'Eurospin', location: 'Via Roma, 1' },
@@ -6,11 +6,22 @@ export const mockSupermarkets: Supermarket[] = [
   { id: 's3', name: 'Coop', location: 'Piazza Garibaldi, 5' },
 ];
 
+export const mockCategories: Category[] = [
+  { id: 'cat1', name: 'Frutta e Verdura', icon: 'carrot', order: 1 },
+  { id: 'cat2', name: 'Carne', icon: 'beef', order: 2 },
+  { id: 'cat3', name: 'Affettati', icon: 'package', order: 3 },
+  { id: 'cat4', name: 'Latticini e uova', icon: 'egg', order: 4 },
+  { id: 'cat5', name: 'Forno', icon: 'cookie', order: 5 },
+  { id: 'cat6', name: 'Alimentari', icon: 'archive', order: 6 },
+  { id: 'cat7', name: 'Barattoli', icon: 'archive', order: 7 },
+  { id: 'cat8', name: 'Bevande', icon: 'glass-water', order: 8 },
+];
+
 export const mockProducts: Product[] = [
   {
     id: 'p1',
     name: 'Latte Intero',
-    category: 'Latticini',
+    category: 'Latticini e uova',
     brand: 'Granarolo',
     images: [],
     prices: [

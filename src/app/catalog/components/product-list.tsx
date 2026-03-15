@@ -1,15 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { Product, Supermarket } from '@/lib/types';
+import type { Product, Supermarket, Category } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Search,
   LayoutGrid,
   Trash2,
   Image as ImageIcon,
-  Carrot,
-  Beef,
+  LucideIcon,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,10 +24,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { iconMap } from './category-manager-dialog';
 
 type ProductListProps = {
   products: Product[];
   supermarkets: Supermarket[];
+  allCategories: Category[];
   onEditProductClick: (product: Product) => void;
   onDeleteProduct: (productId: string) => void;
 };
@@ -36,16 +37,16 @@ type ProductListProps = {
 export function ProductList({
   products: initialProducts,
   supermarkets,
+  allCategories,
   onEditProductClick,
   onDeleteProduct,
 }: ProductListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tutte');
 
-  const categories = useMemo(() => {
-    const allCategories = initialProducts.map((p) => p.category);
-    return ['Tutte', ...Array.from(new Set(allCategories))];
-  }, [initialProducts]);
+  const filterCategories = useMemo(() => {
+    return [{name: 'Tutte', icon: 'layout-grid'}, ...allCategories];
+  }, [allCategories]);
 
   const filteredProducts = useMemo(() => {
     return initialProducts
@@ -53,11 +54,12 @@ export function ProductList({
       .filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [initialProducts, selectedCategory, searchQuery]);
 
-  const getCategoryIcon = (category: string) => {
-    const cat = category.toLowerCase();
-    if (cat === 'tutte') return <LayoutGrid className="mr-2 h-4 w-4" />;
-    if (cat.includes('frutta') || cat.includes('verdura')) return <Carrot className="mr-2 h-4 w-4" />;
-    if (cat.includes('carne') || cat.includes('affettat')) return <Beef className="mr-2 h-4 w-4" />;
+  const getCategoryIcon = (iconName: string) => {
+    const Icon = (iconMap as { [key: string]: LucideIcon | undefined })[iconName.toLowerCase()];
+    if (iconName === 'layout-grid') return <LayoutGrid className="mr-2 h-4 w-4" />;
+    if (Icon) {
+      return <Icon className="mr-2 h-4 w-4" />;
+    }
     // Return a transparent icon to maintain alignment
     return <LayoutGrid className="mr-2 h-4 w-4 opacity-0" />;
   };
@@ -79,19 +81,19 @@ export function ProductList({
       </div>
 
       <div className="flex gap-2 -mx-4 px-4 overflow-x-auto pb-2 -mb-2">
-        {categories.slice(0, 5).map((category) => (
+        {filterCategories.slice(0, 5).map((category) => (
           <Button
-            key={category}
-            variant={selectedCategory === category ? 'default' : 'outline'}
+            key={category.name}
+            variant={selectedCategory === category.name ? 'default' : 'outline'}
             className={`rounded-full whitespace-nowrap border-gray-300 h-10 ${
-              selectedCategory === category
+              selectedCategory === category.name
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-white text-foreground'
             }`}
-            onClick={() => setSelectedCategory(category)}
+            onClick={() => setSelectedCategory(category.name)}
           >
-            {getCategoryIcon(category)}
-            {category}
+            {getCategoryIcon(category.icon)}
+            {category.name}
           </Button>
         ))}
       </div>
