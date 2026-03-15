@@ -4,6 +4,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { BottomNav } from '@/components/bottom-nav';
+import { AppFooter } from '@/components/app-footer';
 
 export const metadata: Metadata = {
   title: 'SpesaIntelligente',
@@ -25,8 +26,9 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <SidebarProvider>
           <AppSidebar />
-          <SidebarInset>
-            <div className="pb-16 md:pb-0">{children}</div>
+          <SidebarInset className="flex flex-col">
+            <div className="flex-grow pb-16 md:pb-0">{children}</div>
+            <AppFooter />
           </SidebarInset>
         </SidebarProvider>
         <Toaster />
