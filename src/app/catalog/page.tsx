@@ -52,12 +52,12 @@ export default function CatalogPage() {
                 <p className="text-muted-foreground mt-1">Gestisci prodotti, negozi e prezzi.</p>
             </div>
             
-            <div className="flex items-center gap-2 my-6">
-                 <Button variant="outline" className="bg-white shadow rounded-lg h-12">
+            <div className="flex flex-col sm:flex-row items-center gap-2 my-6">
+                 <Button variant="outline" className="bg-white shadow rounded-lg h-12 w-full sm:w-auto">
                     <LayoutGrid className="mr-2 h-4 w-4" />
                     CATEGORIE
                 </Button>
-                <Button className="shadow rounded-lg h-12 flex-1" onClick={handleOpenAddDialog}>
+                <Button className="shadow rounded-lg h-12 w-full sm:flex-1" onClick={handleOpenAddDialog}>
                     <Plus className="mr-2 h-4 w-4" />
                     NUOVO PRODOTTO
                 </Button>
