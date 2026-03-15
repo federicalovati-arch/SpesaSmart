@@ -6,6 +6,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { BottomNav } from '@/components/bottom-nav';
 import { AppFooter } from '@/components/app-footer';
 import { DataProvider } from '@/context/data-context';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export const metadata: Metadata = {
   title: 'SpesaIntelligente',
@@ -25,17 +27,20 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <DataProvider>
-          <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset className="flex flex-col">
-              <div className="flex-grow pb-16 md:pb-0">{children}</div>
-              <AppFooter />
-            </SidebarInset>
-          </SidebarProvider>
-          <Toaster />
-          <BottomNav />
-        </DataProvider>
+        <FirebaseClientProvider>
+          <DataProvider>
+            <SidebarProvider>
+              <AppSidebar />
+              <SidebarInset className="flex flex-col">
+                <div className="flex-grow pb-16 md:pb-0">{children}</div>
+                <AppFooter />
+              </SidebarInset>
+            </SidebarProvider>
+            <Toaster />
+            <BottomNav />
+            <FirebaseErrorListener />
+          </DataProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

@@ -1,0 +1,168 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The user's unique ID." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "photoURL": { "type": "string", "format": "uri", "description": "URL of the user's profile picture." }
+      },
+      "required": ["uid", "email"]
+    },
+    "Supermarket": {
+        "title": "Supermarket",
+        "description": "Represents a supermarket or store.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "location": { "type": "string" }
+        },
+        "required": ["id", "name"]
+    },
+    "ProductImage": {
+        "title": "Product Image",
+        "description": "Represents an image for a product.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "url": { "type": "string", "format": "uri" },
+            "supermarketId": { "type": "string" }
+        },
+        "required": ["id", "url"]
+    },
+    "ProductPrice": {
+        "title": "Product Price",
+        "description": "Represents the price of a product at a specific supermarket.",
+        "type": "object",
+        "properties": {
+            "supermarketId": { "type": "string" },
+            "price": { "type": "number" },
+            "brand": { "type": "string" },
+            "imageId": { "type": "string" }
+        },
+        "required": ["supermarketId", "price"]
+    },
+    "Product": {
+        "title": "Product",
+        "description": "Represents a product in the catalog.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "brand": { "type": "string" },
+            "category": { "type": "string" },
+            "prices": {
+                "type": "array",
+                "items": { "$ref": "#/entities/ProductPrice" }
+            },
+            "images": {
+                "type": "array",
+                "items": { "$ref": "#/entities/ProductImage" }
+            }
+        },
+        "required": ["id", "name", "category", "prices", "images"]
+    },
+    "ShoppingListItem": {
+        "title": "Shopping List Item",
+        "description": "Represents an item within a shopping list.",
+        "type": "object",
+        "properties": {
+            "productId": { "type": "string" },
+            "quantity": { "type": "number" },
+            "purchased": { "type": "boolean" }
+        },
+        "required": ["productId", "quantity", "purchased"]
+    },
+    "ShoppingList": {
+        "title": "Shopping List",
+        "description": "Represents a user's shopping list.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "items": {
+                "type": "array",
+                "items": { "$ref": "#/entities/ShoppingListItem" }
+            }
+        },
+        "required": ["id", "name", "createdAt", "items"]
+    },
+    "Category": {
+        "title": "Category",
+        "description": "Represents a product category.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "icon": { "type": "string" },
+            "order": { "type": "number" }
+        },
+        "required": ["id", "name", "icon", "order"]
+    },
+    "ReceiptItem": {
+        "title": "Receipt Item",
+        "description": "Represents a single item on an archived receipt.",
+        "type": "object",
+        "properties": {
+            "productId": { "type": "string" },
+            "productName": { "type": "string" },
+            "quantity": { "type": "number" },
+            "price": { "type": "number" },
+            "supermarketId": { "type": "string" },
+            "supermarketName": { "type": "string" }
+        },
+        "required": ["productId", "productName", "quantity", "price"]
+    },
+    "Receipt": {
+        "title": "Receipt",
+        "description": "Represents an archived shopping list.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "listName": { "type": "string" },
+            "archivedAt": { "type": "string", "format": "date-time" },
+            "totalCost": { "type": "number" },
+            "items": {
+                "type": "array",
+                "items": { "$ref": "#/entities/ReceiptItem" }
+            },
+            "originalListId": { "type": "string" }
+        },
+        "required": ["id", "listName", "archivedAt", "totalCost", "items", "originalListId"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Stores user profile information."
+    },
+    "/users/{userId}/products/{productId}": {
+        "schema": { "$ref": "#/entities/Product" },
+        "description": "Stores user-specific products."
+    },
+    "/users/{userId}/supermarkets/{supermarketId}": {
+        "schema": { "$ref": "#/entities/Supermarket" },
+        "description": "Stores user-specific supermarkets."
+    },
+    "/users/{userId}/categories/{categoryId}": {
+        "schema": { "$ref": "#/entities/Category" },
+        "description": "Stores user-specific categories."
+    },
+    "/users/{userId}/shoppingLists/{shoppingListId}": {
+        "schema": { "$ref": "#/entities/ShoppingList" },
+        "description": "Stores user's shopping lists."
+    },
+    "/users/{userId}/receipts/{receiptId}": {
+        "schema": { "$ref": "#/entities/Receipt" },
+        "description": "Stores user's archived receipts."
+    }
+  }
+}
