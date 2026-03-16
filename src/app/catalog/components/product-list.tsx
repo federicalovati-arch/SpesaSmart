@@ -83,7 +83,7 @@ export function ProductList({
           const isActive = selectedCategory === category.name;
           return (
             <Button
-              key={category.name}
+              key={category.id}
               variant={isActive ? 'default' : 'outline'}
               className={cn(`rounded-full whitespace-nowrap h-10 border-gray-300`,
                 !isActive && 'bg-white text-foreground'
