@@ -1,37 +1,24 @@
 /**
- * This ruleset enforces a hybrid security model designed for a collaborative shopping application.
- * It combines globally readable "catalog" collections with strictly private, user-owned data.
+ * This ruleset enforces a private data model for all logged-in users.
+ * All user data is stored within subcollections under `/users/{userId}`.
  *
  * Core Philosophy:
- * The security model allows any authenticated user to read and browse shared data like products and
- * supermarkets, fostering a collaborative environment for price discovery. However, all write operations
- * (creating, updating, deleting) on this shared data are restricted to the original author.
- * Personal data, such as shopping lists, is strictly segregated and accessible only to its owner.
+ * User data is strictly private and accessible only by the owner. There is no
+ * shared or public data between users in the current application logic.
  *
  * Data Structure:
- * - /supermarkets/{supermarketId}: Publicly readable, owner-writable supermarket information.
- * - /products/{productId}: Publicly readable, owner-writable product catalog.
- * - /productPrices/{productPriceId}: Publicly readable, owner-writable price records.
- * - /users/{userId}/shoppingLists/{shoppingListId}: Private shopping lists, exclusively managed by the user.
- * - /users/{userId}/shoppingLists/{shoppingListId}/shoppingListItems/{shoppingListItemId}: Private items within a shopping list.
+ * - /users/{userId}/{collection}/{docId}: All of a user's data, including
+ *   products, supermarkets, shopping lists, categories, and receipts, are
+ *   stored in subcollections under their unique user ID.
  *
  * Key Security Decisions:
- * - Default Read Access: Authenticated users have read-only access to the top-level catalog collections
- *   (`supermarkets`, `products`, `productPrices`) to enable core app features like price comparison.
- * - Write Access (Ownership): All write operations are protected by an ownership model. For catalog data,
- *   an `ownerId` field on the document determines access. For personal data, the document's path
- *   (/users/{userId}/...) determines ownership.
- * - No User Enumeration: The top-level `/users` collection cannot be listed, preventing bad actors
- *   from discovering the application's user base.
- * - Flexible Schema: In this prototyping phase, rules focus on authorization (who can access what) and
- *   relational integrity, not on the specific shape or type of data being written. This allows for
- *   rapid application development.
- *
- * Denormalization for Authorization:
- * Authorization decisions are fast and efficient because required data is denormalized. Every document
- * in a catalog collection (`supermarkets`, `products`, etc.) contains an `ownerId` field. Every document
- * in a user's private space (`shoppingLists`, `shoppingListItems`) also contains an `ownerId` that
- * must match the user ID in the path. This avoids slow and costly cross-document `get()` calls in rules.
+ * - Strict User Ownership: All read and write operations on any user-related
+ *   document are restricted to the authenticated user whose UID matches the
+ *   {userId} in the document path.
+ * - No User Enumeration: The top-level `/users` collection cannot be listed,
+ *   protecting the privacy of the user base.
+ * - Simplified Rules: Since all data is private, the rules are simplified to
+ *   enforce ownership based on the path, which is secure and efficient.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -41,9 +28,6 @@ service cloud.firestore {
     // Helper Functions
     // --------------------------------------------------------------------
 
-    /**
-     * Verifies that the user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
@@ -55,141 +39,46 @@ service cloud.firestore {
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
-
-    /**
-     * Verifies that the document being modified already exists.
-     * Crucial for all update and delete operations.
-     */
-    function isExistingDoc() {
-      return resource != null;
-    }
-
-    /**
-     * Verifies ownership of an existing document for update/delete operations.
-     */
-    function isOwnerOfExistingDoc(ownerId) {
-      return isOwner(ownerId) && isExistingDoc();
-    }
-
-    /**
-     * Verifies the incoming document has an 'ownerId' field matching the user on create.
-     * Enforces that users can only create content for themselves.
-     */
-    function isCreatingOwnContent() {
-      return request.resource.data.ownerId == request.auth.uid;
-    }
-
-    /**
-     * Verifies that the 'ownerId' field cannot be changed after creation.
-     */
-    function ownerIsImmutable() {
-      return request.resource.data.ownerId == resource.data.ownerId;
-    }
     
-    /**
-     * Verifies the parent ShoppingList document exists before allowing operations on a subcollection item.
-     * This prevents orphaned data.
-     */
-    function parentShoppingListExists(userId, shoppingListId) {
-      return exists(/databases/$(database)/documents/users/$(userId)/shoppingLists/$(shoppingListId));
-    }
-
     // --------------------------------------------------------------------
-    // Collections
+    // Global Collections (currently unused by logged-in user flow)
+    // These are read-only for any signed-in user. Writes are disabled.
     // --------------------------------------------------------------------
 
-    /**
-     * @description Globally readable catalog of supermarkets. Any signed-in user can read, but only the original creator can modify or delete their own entries.
-     * @path /supermarkets/{supermarketId}
-     * @allow (get) Any authenticated user can read a supermarket document. `auth.uid: "user_abc"`
-     * @deny (create) An anonymous user cannot create a supermarket. `auth.uid: null`
-     * @deny (update) A user cannot update a supermarket they did not create. `auth.uid: "user_abc", resource.data.ownerId: "user_xyz"`
-     * @principle Enforces public read for authenticated users with owner-only writes, a common pattern for collaborative catalogs.
-     */
     match /supermarkets/{supermarketId} {
       allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isCreatingOwnContent();
-      allow update: if isOwnerOfExistingDoc(resource.data.ownerId) && ownerIsImmutable();
-      allow delete: if isOwnerOfExistingDoc(resource.data.ownerId);
+      allow write: if false;
     }
 
-    /**
-     * @description Globally readable catalog of products. Any signed-in user can read, but only the original creator can modify or delete their own entries.
-     * @path /products/{productId}
-     * @allow (get) Any authenticated user can read a product document. `auth.uid: "user_abc"`
-     * @deny (create) A user cannot create a product and assign it to another user. `auth.uid: "user_abc", request.resource.data.ownerId: "user_xyz"`
-     * @deny (delete) A user cannot delete a product they did not create. `auth.uid: "user_abc", resource.data.ownerId: "user_xyz"`
-     * @principle Enforces public read for authenticated users with owner-only writes, a common pattern for collaborative catalogs.
-     */
     match /products/{productId} {
       allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isCreatingOwnContent();
-      allow update: if isOwnerOfExistingDoc(resource.data.ownerId) && ownerIsImmutable();
-      allow delete: if isOwnerOfExistingDoc(resource.data.ownerId);
+      allow write: if false;
     }
 
-    /**
-     * @description Globally readable list of product prices. Any signed-in user can read, but only the original creator can modify or delete their own price entries.
-     * @path /productPrices/{productPriceId}
-     * @allow (list) Any authenticated user can list all product prices. `auth.uid: "user_abc"`
-     * @deny (create) An anonymous user cannot submit a price. `auth.uid: null`
-     * @deny (update) A user cannot change another user's submitted price. `auth.uid: "user_abc", resource.data.ownerId: "user_xyz"`
-     * @principle Enforces public read for authenticated users with owner-only writes, a common pattern for collaborative catalogs.
-     */
     match /productPrices/{productPriceId} {
       allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isCreatingOwnContent();
-      allow update: if isOwnerOfExistingDoc(resource.data.ownerId) && ownerIsImmutable();
-      allow delete: if isOwnerOfExistingDoc(resource.data.ownerId);
+      allow write: if false;
     }
 
-    /**
-     * @description User data is stored in subcollections. Direct access to the top-level user document is disallowed to prevent enumeration of all app users.
-     * @path /users/{userId}
-     * @allow (none) No operations are permitted on this path.
-     * @deny (list) Listing users is explicitly forbidden. `auth.uid: "any_user"`
-     * @principle Prevents user enumeration, a critical security measure to protect user privacy.
-     */
+    // --------------------------------------------------------------------
+    // User-Specific Data
+    // --------------------------------------------------------------------
+    
+    // Prevent anyone from reading the list of users.
     match /users/{userId} {
-      allow get: if false;
-      allow list: if false;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow read, write: if false;
     }
 
-    /**
-     * @description A user's private shopping list. Only the user specified in the path ({userId}) can access or modify their own lists.
-     * @path /users/{userId}/shoppingLists/{shoppingListId}
-     * @allow (create) A user can create a shopping list for themselves. `auth.uid: "user_abc", path: /users/user_abc/...`
-     * @deny (get) A user cannot read another user's shopping list. `auth.uid: "user_abc", path: /users/user_xyz/...`
-     * @deny (update) A user cannot update another user's shopping list. `auth.uid: "user_abc", path: /users/user_xyz/...`
-     * @principle Restricts access to a user's own data tree using path-based security. Enforces relational integrity by ensuring the document's internal `ownerId` matches the path.
-     */
-    match /users/{userId}/shoppingLists/{shoppingListId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.ownerId == userId;
-      allow update: if isOwner(userId) && isExistingDoc() && request.resource.data.ownerId == resource.data.ownerId;
-      allow delete: if isOwner(userId) && isExistingDoc();
+    // Secure all primary user data subcollections (products, supermarkets, etc.)
+    // Only the owner of the data can read or write to it.
+    match /users/{userId}/{collection}/{docId}
+      where collection in ['products', 'supermarkets', 'categories', 'receipts', 'shoppingLists'] {
+        allow read, write: if isOwner(userId);
     }
-
-    /**
-     * @description An item within a user's private shopping list. Access is inherited from the parent list, meaning only the list owner can manage items.
-     * @path /users/{userId}/shoppingLists/{shoppingListId}/shoppingListItems/{shoppingListItemId}
-     * @allow (create) The list owner can add an item to their own list. `auth.uid: "user_abc", path: /users/user_abc/shoppingLists/list123/...`
-     * @deny (get) A user cannot read items from another user's list. `auth.uid: "user_abc", path: /users/user_xyz/...`
-     * @deny (create) A user cannot add an item to another user's list. `auth.uid: "user_abc", path: /users/user_xyz/...`
-     * @principle Restricts access to a user's own data tree. Ensures data integrity by verifying the parent list exists and that internal IDs match the path structure.
-     */
+    
+    // Secure the nested shopping list items.
     match /users/{userId}/shoppingLists/{shoppingListId}/shoppingListItems/{shoppingListItemId} {
-      allow get, list: if isOwner(userId) && parentShoppingListExists(userId, shoppingListId);
-      allow create: if isOwner(userId) && parentShoppingListExists(userId, shoppingListId)
-                       && request.resource.data.ownerId == userId
-                       && request.resource.data.shoppingListId == shoppingListId;
-      allow update: if isOwner(userId) && isExistingDoc() && parentShoppingListExists(userId, shoppingListId)
-                       && request.resource.data.ownerId == resource.data.ownerId
-                       && request.resource.data.shoppingListId == resource.data.shoppingListId;
-      allow delete: if isOwner(userId) && isExistingDoc() && parentShoppingListExists(userId, shoppingListId);
+        allow read, write: if isOwner(userId);
     }
   }
 }
