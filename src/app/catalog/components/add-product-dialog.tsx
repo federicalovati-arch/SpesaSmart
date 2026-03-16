@@ -320,13 +320,30 @@ export function AddProductDialog({
                           key={field.id}
                           className="flex items-center gap-3 p-2 rounded-xl bg-gray-50"
                         >
-                          <Image
-                            src={imageUrlToShow}
-                            alt={supermarket.name}
-                            width={40}
-                            height={40}
-                            className="rounded-full object-cover w-10 h-10 bg-white"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (
+                                imageUrlToShow &&
+                                !imageUrlToShow.includes('picsum.photos')
+                              ) {
+                                setEnlargedImage(imageUrlToShow);
+                              }
+                            }}
+                            disabled={
+                              !imageUrlToShow ||
+                              imageUrlToShow.includes('picsum.photos')
+                            }
+                            className="disabled:cursor-default"
+                          >
+                            <Image
+                              src={imageUrlToShow}
+                              alt={supermarket.name}
+                              width={40}
+                              height={40}
+                              className="rounded-full object-cover w-10 h-10 bg-white"
+                            />
+                          </button>
                           <div className="flex-1 font-semibold">
                             {supermarket.name}
                           </div>
@@ -395,9 +412,7 @@ export function AddProductDialog({
                         key={image.id}
                         className="relative group aspect-square"
                       >
-                        <button
-                          type="button"
-                          onClick={() => setEnlargedImage(image.url)}
+                        <div
                           className="w-full h-full aspect-square block rounded-lg overflow-hidden"
                         >
                           <Image
@@ -406,7 +421,7 @@ export function AddProductDialog({
                             fill
                             className="object-cover"
                           />
-                        </button>
+                        </div>
                         <button
                           type="button"
                           onClick={() => removeImage(index)}
