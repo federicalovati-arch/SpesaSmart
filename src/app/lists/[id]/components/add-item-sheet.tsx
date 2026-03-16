@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Form,
@@ -129,7 +128,7 @@ export function AddItemSheet({
                   />
                 </div>
               </div>
-              <ScrollArea className="flex-1 px-4">
+              <div className="flex-1 overflow-y-auto px-4">
                 <div className="space-y-2 pb-4">
                   {filteredProducts.map((product) => (
                     <div
@@ -156,7 +155,7 @@ export function AddItemSheet({
                     </div>
                   ))}
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
             <TabsContent value="quick" className="flex-1 overflow-y-auto mt-4">
               <Form {...form}>
