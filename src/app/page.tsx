@@ -14,24 +14,22 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex-1">
-      <main className="p-4 sm:p-6 lg:p-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={user.imageUrl} alt={user.name} />
-            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="text-sm text-muted-foreground">Benvenuto,</p>
-            <h1 className="text-2xl font-bold">{user.name}</h1>
-          </div>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex items-center gap-4 mb-8">
+        <Avatar className="h-16 w-16">
+          <AvatarImage src={user.imageUrl} alt={user.name} />
+          <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+        </Avatar>
+        <div>
+          <p className="text-sm text-muted-foreground">Benvenuto,</p>
+          <h1 className="text-2xl font-bold">{user.name}</h1>
         </div>
+      </div>
 
-        <div className="space-y-8">
-          <CostAnalysis />
-          <RecentReceipts />
-        </div>
-      </main>
+      <div className="space-y-8">
+        <CostAnalysis />
+        <RecentReceipts />
+      </div>
     </div>
   );
 }

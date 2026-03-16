@@ -102,10 +102,10 @@ export function ProductList({
         {filteredProducts.map((product) => {
            return (
               <Card key={product.id} className="overflow-hidden shadow-md rounded-2xl">
-                  <CardContent className="p-3">
+                  <CardContent className="p-2">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h3 className="text-lg font-bold">{product.name}</h3>
+                          <h3 className="text-base font-bold">{product.name}</h3>
                           <Badge variant="secondary" className="font-semibold mt-1 bg-gray-200 text-gray-600 border-none text-xs">
                               {product.category}
                           </Badge>
@@ -135,7 +135,7 @@ export function ProductList({
                             </AlertDialog>
                         </div>
                       </div>
-                       <div className="mt-3 bg-gray-100/70 p-3 rounded-lg space-y-2">
+                       <div className="mt-2 bg-gray-100/70 p-2 rounded-lg space-y-1">
                           {product.prices.sort((a,b) => a.price - b.price).map(price => (
                               <div key={price.supermarketId} className="flex justify-between items-center text-sm">
                                   <span className="text-gray-700">{getSupermarketName(price.supermarketId)}</span>

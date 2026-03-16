@@ -30,7 +30,7 @@ export default function HistoryPage() {
     );
 
   return (
-    <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8">
+    <div className="flex flex-col p-4 sm:p-6 lg:p-8">
       <div className="flex items-center gap-4 mb-6">
         <div className="p-3 bg-primary/10 rounded-xl">
           <Receipt className="h-7 w-7 text-primary" />
@@ -69,6 +69,6 @@ export default function HistoryPage() {
           </p>
         </div>
       )}
-    </main>
+    </div>
   );
 }

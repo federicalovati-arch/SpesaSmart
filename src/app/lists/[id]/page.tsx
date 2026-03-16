@@ -38,7 +38,7 @@ export default function ListDetailPage({ params }: PageProps) {
 
   if (!list) {
      return (
-      <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col p-4 sm:p-6 lg:p-8">
         <div className="text-center py-16">
             <h1 className="text-2xl font-bold">Lista non trovata</h1>
             <p className="text-muted-foreground mt-2">
@@ -46,13 +46,13 @@ export default function ListDetailPage({ params }: PageProps) {
             </p>
              <button onClick={() => router.push('/lists')} className="mt-4 text-primary underline">Torna alle liste</button>
         </div>
-      </main>
+      </div>
      )
   }
 
 
   return (
-    <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8">
+    <div className="flex flex-col p-4 sm:p-6 lg:p-8">
       <ShoppingListDetails
         list={list}
         allProducts={products}
@@ -60,6 +60,6 @@ export default function ListDetailPage({ params }: PageProps) {
         onUpdateList={updateShoppingList}
         onArchive={handleArchive}
       />
-    </main>
+    </div>
   );
 }

@@ -102,7 +102,7 @@ export default function CatalogPage() {
 
   return (
     <>
-      <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col p-4 sm:p-6 lg:p-8">
         <div>
           <div className="pt-6 md:pt-0">
             <h1 className="text-3xl font-bold">Catalogo</h1>
@@ -177,7 +177,7 @@ export default function CatalogPage() {
             />
           )}
         </div>
-      </main>
+      </div>
       <AddProductDialog
         isOpen={isAddProductDialogOpen}
         setIsOpen={setIsAddProductDialogOpen}

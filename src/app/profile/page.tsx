@@ -16,7 +16,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8">
+    <div className="flex flex-col p-4 sm:p-6 lg:p-8">
       <PageHeader title="Profilo" />
       <div className="max-w-md mx-auto space-y-6">
         <Card>
@@ -52,6 +52,6 @@ export default function ProfilePage() {
             </CardContent>
         </Card>
       </div>
-    </main>
+    </div>
   );
 }

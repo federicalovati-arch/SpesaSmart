@@ -40,19 +40,19 @@ export function ShoppingLists({ lists }: ShoppingListsProps) {
             
             return (
               <Card key={list.id} className="flex flex-col">
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-lg">{list.name}</CardTitle>
+                <CardHeader className="p-3 pb-2">
+                  <CardTitle className="text-base">{list.name}</CardTitle>
                   <CardDescription className="flex items-center gap-2 pt-1">
                     <Calendar className="h-4 w-4" />
                     Creato {formatDistanceToNow(new Date(list.createdAt), { addSuffix: true, locale: it })}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="flex-grow p-4 pt-0">
+                <CardContent className="flex-grow p-3 pt-0">
                   <div className="text-sm text-muted-foreground">
                     {purchasedCount} di {itemsCount} prodotti acquistati.
                   </div>
                 </CardContent>
-                <CardFooter className="p-4">
+                <CardFooter className="p-3">
                   <Button asChild className="w-full">
                     <Link href={`/lists/${list.id}`}>
                       Vai alla Lista
