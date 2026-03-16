@@ -24,7 +24,7 @@ export function ShoppingLists({ lists }: ShoppingListsProps) {
   return (
     <>
       <PageHeader
-        title="Le Mie Liste"
+        title="Liste"
         actions={
           <Button onClick={handleAddList}>
             <PlusCircle />

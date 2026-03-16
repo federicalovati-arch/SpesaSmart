@@ -1,10 +1,11 @@
 'use client';
 
-import { notFound, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useData } from '@/context/data-context';
 import { ShoppingListDetails } from './components/shopping-list-details';
-import type { Receipt } from '@/lib/types';
+import type { Receipt, ShoppingList } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft } from 'lucide-react';
 
 
 type PageProps = {
@@ -16,7 +17,7 @@ type PageProps = {
 export default function ListDetailPage({ params }: PageProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const { shoppingLists, products, supermarkets, updateShoppingList, archiveShoppingList } = useData();
+  const { shoppingLists, products, supermarkets, categories, updateShoppingList, archiveShoppingList, addProduct } = useData();
 
   const list = shoppingLists.find((l) => l.id === params.id);
   
@@ -35,31 +36,36 @@ export default function ListDetailPage({ params }: PageProps) {
     })
     router.push('/history');
   }
+  
+  const handleUpdateList = (updatedList: ShoppingList) => {
+    updateShoppingList(updatedList);
+  }
 
   if (!list) {
      return (
-      <div className="flex flex-col p-4 sm:p-6 lg:p-8">
-        <div className="text-center py-16">
-            <h1 className="text-2xl font-bold">Lista non trovata</h1>
-            <p className="text-muted-foreground mt-2">
-                La lista potrebbe essere stata archiviata o eliminata.
-            </p>
-             <button onClick={() => router.push('/lists')} className="mt-4 text-primary underline">Torna alle liste</button>
-        </div>
+      <div className="flex flex-col items-center justify-center text-center py-16">
+        <h1 className="text-2xl font-bold">Lista non trovata</h1>
+        <p className="text-muted-foreground mt-2">
+            La lista potrebbe essere stata archiviata o eliminata.
+        </p>
+         <Button onClick={() => router.push('/lists')} className="mt-6" variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Torna alle liste
+        </Button>
       </div>
      )
   }
 
 
   return (
-    <div className="flex flex-col p-4 sm:p-6 lg:p-8">
-      <ShoppingListDetails
-        list={list}
-        allProducts={products}
-        allSupermarkets={supermarkets}
-        onUpdateList={updateShoppingList}
-        onArchive={handleArchive}
-      />
-    </div>
+    <ShoppingListDetails
+      list={list}
+      allProducts={products}
+      allSupermarkets={supermarkets}
+      allCategories={categories}
+      onUpdateList={handleUpdateList}
+      onArchive={handleArchive}
+      onAddProduct={addProduct}
+    />
   );
 }

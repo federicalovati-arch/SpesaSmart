@@ -31,6 +31,8 @@ export type ShoppingListItem = {
   productId: string;
   quantity: number;
   purchased: boolean;
+  assignedSupermarketId?: string | null; // null or 'automatic' for auto-selection
+  overridePrice?: number | null;
 };
 
 export type ShoppingList = {

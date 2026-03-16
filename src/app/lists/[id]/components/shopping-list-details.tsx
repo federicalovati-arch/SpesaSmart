@@ -1,58 +1,68 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
 import type {
   ShoppingList,
   Product,
   Supermarket,
   ShoppingListItem,
   Receipt,
+  Category,
 } from '@/lib/types';
-import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ArrowLeft, Tag, Trophy, ShoppingCart, Archive } from 'lucide-react';
+  ArrowLeft,
+  Copy,
+  Plus,
+  Sparkles,
+  TrendingUp,
+  Pencil,
+  Trash2,
+  Archive,
+  Store,
+  Clover,
+  Zap,
+  Carrot,
+  LucideIcon
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ArchiveListDialog } from './archive-list-dialog';
+import { cn } from '@/lib/utils';
+
 
 type ListDetailsProps = {
   list: ShoppingList;
   allProducts: Product[];
   allSupermarkets: Supermarket[];
+  allCategories: Category[];
   onUpdateList: (list: ShoppingList) => void;
   onArchive: (receipt: Receipt) => void;
+  onAddProduct: (product: Omit<Product, 'id'>) => void;
 };
 
 type EnrichedListItem = ShoppingListItem & {
   product: Product;
-  bestPrice: number | null;
-  bestSupermarket: Supermarket | null;
+  price: number | null;
+  supermarket: Supermarket | null;
+  brand: string | null;
   imageUrl: string | null;
+  priceStatus: 'offer' | 'increase' | 'normal';
 };
+
+const getSupermarketIcon = (supermarketName: string): LucideIcon => {
+    const lowerCaseName = supermarketName.toLowerCase();
+    if (lowerCaseName.includes('eurospin')) return Zap;
+    if (lowerCaseName.includes('conad')) return Clover;
+    if (lowerCaseName.includes('coop')) return Carrot;
+    return Store;
+}
+
 
 export function ShoppingListDetails({
   list: initialList,
@@ -61,22 +71,32 @@ export function ShoppingListDetails({
   onUpdateList,
   onArchive,
 }: ListDetailsProps) {
+  const router = useRouter();
   const [list, setList] = useState(initialList);
-  const [selectedSupermarket, setSelectedSupermarket] = useState<string>('all');
+  const [view, setView] = useState<'standard' | 'risparmio'>('risparmio');
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
 
-  const handleToggleItem = (productId: string) => {
+  const handleItemChange = (productId: string, values: Partial<ShoppingListItem>) => {
     const updatedList = {
       ...list,
       items: list.items.map((item) =>
         item.productId === productId
-          ? { ...item, purchased: !item.purchased }
+          ? { ...item, ...values }
           : item
       ),
     };
     setList(updatedList);
     onUpdateList(updatedList);
   };
+  
+  const handleDeleteItem = (productId: string) => {
+    const updatedList = {
+        ...list,
+        items: list.items.filter((item) => item.productId !== productId),
+    };
+    setList(updatedList);
+    onUpdateList(updatedList);
+  }
 
   const enrichedItems: EnrichedListItem[] = useMemo(() => {
     return list.items
@@ -84,186 +104,194 @@ export function ShoppingListDetails({
         const product = allProducts.find((p) => p.id === item.productId);
         if (!product) return null;
 
-        let bestPrice: number | null = null;
-        let bestSupermarket: Supermarket | null = null;
-        let imageUrl: string | null = null;
-        
-        const generalImage = product.images.length > 0 ? product.images[0].url : null;
+        let price: number | null = null;
+        let supermarket: Supermarket | null = null;
+        let brand: string | null = product.brand || null;
+        let imageUrl: string | null = product.images.length > 0 ? product.images[0].url : null;
+        let priceStatus: 'offer' | 'increase' | 'normal' = 'normal';
 
-        if (selectedSupermarket === 'all') {
-          const sortedPrices = [...product.prices].sort((a, b) => a.price - b.price);
-          if (sortedPrices.length > 0) {
-            const bestPriceInfo = sortedPrices[0];
-            bestPrice = bestPriceInfo.price;
-            bestSupermarket = allSupermarkets.find(s => s.id === bestPriceInfo.supermarketId) || null;
-            const priceImage = product.images.find(img => img.id === bestPriceInfo.imageId);
-            imageUrl = priceImage?.url || generalImage;
-          }
-        } else {
-            const storePrice = product.prices.find(p => p.supermarketId === selectedSupermarket);
-            if(storePrice) {
-                bestPrice = storePrice.price;
-                bestSupermarket = allSupermarkets.find(s => s.id === selectedSupermarket) || null;
-                const priceImage = product.images.find(img => img.id === storePrice.imageId);
-                imageUrl = priceImage?.url || generalImage;
-            }
+        const supermarketIdToUse = item.assignedSupermarketId; // For now, we only use optimal
+        
+        let priceInfo;
+
+        if (supermarketIdToUse) {
+            priceInfo = product.prices.find(p => p.supermarketId === supermarketIdToUse);
+        } else { // 'automatic'
+            priceInfo = [...product.prices].sort((a, b) => a.price - b.price)[0];
+        }
+
+        if (priceInfo) {
+            price = priceInfo.price;
+            supermarket = allSupermarkets.find(s => s.id === priceInfo.supermarketId) || null;
+            if(priceInfo.brand) brand = priceInfo.brand;
+            const imageForPrice = product.images.find(i => i.id === priceInfo.imageId);
+            if (imageForPrice) imageUrl = imageForPrice.url;
         }
         
-        return { ...item, product, bestPrice, bestSupermarket, imageUrl };
+        if (item.overridePrice !== null && item.overridePrice !== undefined && price !== null) {
+            if (item.overridePrice < price) priceStatus = 'offer';
+            else if (item.overridePrice > price) priceStatus = 'increase';
+            price = item.overridePrice;
+        }
+
+        return { ...item, product, price, supermarket, brand, imageUrl, priceStatus };
       })
       .filter((item): item is EnrichedListItem => item !== null);
-  }, [list.items, allProducts, allSupermarkets, selectedSupermarket]);
+  }, [list.items, allProducts, allSupermarkets]);
 
-  const totals = useMemo(() => {
-    const optimalTotal = enrichedItems.reduce((acc, item) => {
-        if (item.bestPrice !== null) {
-            return acc + item.bestPrice * item.quantity;
+  const groupedItems = useMemo(() => {
+    if (view === 'standard') return null;
+
+    return enrichedItems.reduce((acc, item) => {
+        const key = item.supermarket?.id || 'unknown';
+        if (!acc[key]) {
+            acc[key] = {
+                supermarket: item.supermarket,
+                items: [],
+                subtotal: 0,
+            };
+        }
+        acc[key].items.push(item);
+        if(item.price) {
+            acc[key].subtotal += item.price * item.quantity;
         }
         return acc;
-    }, 0);
+    }, {} as Record<string, {supermarket: Supermarket | null, items: EnrichedListItem[], subtotal: number}>);
+  }, [enrichedItems, view]);
 
-    const supermarketTotals = allSupermarkets.map(supermarket => {
-        const total = list.items.reduce((acc, item) => {
-            const product = allProducts.find(p => p.id === item.productId);
-            const priceInfo = product?.prices.find(p => p.supermarketId === supermarket.id);
-            if (priceInfo) {
-                return acc + (priceInfo.price * item.quantity);
-            }
-            // If item not available, this store cannot complete the list.
-            return Infinity; 
-        }, 0);
-        return { ...supermarket, total };
-    });
 
-    return { optimalTotal, supermarketTotals };
-  }, [enrichedItems, list.items, allProducts, allSupermarkets]);
-
+  const totalCost = useMemo(() => {
+    return enrichedItems.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
+  }, [enrichedItems]);
+  
+  const purchasedCount = useMemo(() => list.items.filter(i => i.purchased).length, [list.items]);
+  const progress = list.items.length > 0 ? (purchasedCount / list.items.length) * 100 : 0;
+  
+  const SupermarketIcon = ({name}: {name: string}) => {
+      const Icon = getSupermarketIcon(name);
+      return <Icon className="h-5 w-5 text-gray-500" />
+  }
 
   return (
     <>
-      <PageHeader
-        title={list.name}
-        actions={
-          <div className="flex gap-2">
-            <Button asChild variant="outline">
-              <Link href="/lists">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Liste
-              </Link>
-            </Button>
-            <Button onClick={() => setIsArchiveDialogOpen(true)}>
-                <Archive className="mr-2 h-4 w-4" />
-                Archivia Spesa
-            </Button>
-          </div>
-        }
-      />
-      
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><ShoppingCart /> Lista Prodotti</CardTitle>
-                    <CardDescription>
-                        Seleziona un supermercato per vedere i prezzi specifici o "Tutti" per il miglior prezzo.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="mb-4">
-                        <Select value={selectedSupermarket} onValueChange={setSelectedSupermarket}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Seleziona un supermercato" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Tutti (prezzo migliore)</SelectItem>
-                                {allSupermarkets.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
+      <div className="flex flex-col bg-gray-50 flex-1 min-h-screen">
+        {/* Header */}
+        <header className="p-4 bg-gray-50">
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                    <ArrowLeft className="h-6 w-6" />
+                </Button>
+                <div>
+                    <h1 className="text-2xl font-bold">{list.name}</h1>
+                    <p className="text-sm text-muted-foreground">
+                        {list.items.length} ARTICOLI • {format(new Date(list.createdAt), 'dd/MM/yyyy', { locale: it })}
+                    </p>
+                </div>
+                <Button variant="ghost" size="icon" className="ml-auto">
+                    <Copy className="h-5 w-5" />
+                </Button>
+            </div>
+            <div className="flex items-center gap-2 my-4">
+                <Button className="flex-1 h-11 rounded-lg bg-white text-primary shadow hover:bg-gray-100"><Plus className="mr-2"/> AGGIUNGI</Button>
+                <Button className="flex-1 h-11 rounded-lg bg-white text-primary shadow hover:bg-gray-100" disabled><Sparkles className="mr-2"/> AI Advisor</Button>
+            </div>
+             <div className="flex items-center justify-center p-1 rounded-full bg-gray-200/60 w-full mb-2">
+                <button
+                    onClick={() => setView('standard')}
+                    className={`flex-1 text-center py-2 px-4 rounded-full text-sm font-semibold transition-all ${
+                    view === 'standard' ? 'bg-white shadow text-primary' : 'bg-transparent text-gray-500'
+                    }`}
+                    >
+                    STANDARD
+                </button>
+                <button
+                    onClick={() => setView('risparmio')}
+                    className={`flex-1 text-center py-2 px-4 rounded-full text-sm font-semibold transition-all ${
+                    view === 'risparmio' ? 'bg-white shadow text-primary' : 'bg-transparent text-gray-500'
+                    }`}
+                >
+                    RISPARMIO
+                </button>
+            </div>
+        </header>
 
-                    <div className="space-y-4">
-                        {enrichedItems.map((item) => (
-                            <div key={item.productId} className={`flex items-start gap-4 p-3 rounded-lg ${item.purchased ? 'bg-muted/50' : 'bg-card'}`}>
-                                <Checkbox
-                                    id={`item-${item.productId}`}
-                                    checked={item.purchased}
-                                    onCheckedChange={() => handleToggleItem(item.productId)}
-                                    className="mt-1"
-                                />
-                                {item.imageUrl && 
-                                    <Image src={item.imageUrl} alt={item.product.name} width={48} height={48} className="rounded-md object-cover bg-gray-100" />
-                                }
-                                <div className="flex-1">
-                                    <label htmlFor={`item-${item.productId}`} className={`font-medium ${item.purchased ? 'line-through text-muted-foreground' : ''}`}>
-                                        {item.product.name}
-                                    </label>
-                                    <div className="text-sm text-muted-foreground">Quantità: {item.quantity}</div>
-                                </div>
-                                <div className="text-right">
-                                    {item.bestPrice !== null ? (
-                                        <>
-                                            <div className="font-bold text-lg text-primary">€{(item.bestPrice * item.quantity).toFixed(2)}</div>
-                                            <div className="text-xs text-muted-foreground">
-                                                (€{item.bestPrice.toFixed(2)} / pz)
-                                                {item.bestSupermarket && <Badge variant="secondary" className="ml-2 mt-1">{item.bestSupermarket.name}</Badge>}
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <Badge variant="destructive">Non disponibile</Badge>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-        
-        <div className="lg:col-span-1 space-y-8">
-            <Card className="bg-primary/10 border-primary">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-primary"><Trophy /> Spesa Ottimale</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-4xl font-bold text-primary">€{totals.optimalTotal.toFixed(2)}</p>
-                    <p className="text-sm text-primary/80">Totale acquistando ogni prodotto al prezzo più basso disponibile.</p>
-                </CardContent>
-            </Card>
+        {/* Body */}
+        <main className="flex-1 overflow-y-auto px-4 pb-40">
+             <div className="space-y-2 mb-4">
+                <p className="text-xs font-semibold text-gray-500">PROGRESSIVO SPESA</p>
+                <div className="flex items-center gap-3">
+                    <Progress value={progress} className="h-2" />
+                    <span className="text-sm font-bold w-12 text-right">{Math.round(progress)}%</span>
+                </div>
+            </div>
             
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Tag/> Totale per Supermercato</CardTitle>
-                    <CardDescription>Costo totale se acquistassi tutto in un unico negozio.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Supermercato</TableHead>
-                                <TableHead className="text-right">Totale</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {totals.supermarketTotals.map(s => (
-                                <TableRow key={s.id}>
-                                    <TableCell>{s.name}</TableCell>
-                                    <TableCell className="text-right font-medium">
-                                        {isFinite(s.total) ? `€${s.total.toFixed(2)}` : 'Incompleto'}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
+            {view === 'risparmio' && groupedItems && (
+                <div className="space-y-4">
+                    {Object.values(groupedItems).sort((a,b) => b.subtotal - a.subtotal).map(({supermarket, items, subtotal}) => (
+                        <div key={supermarket?.id || 'unknown'}>
+                            <div className="flex items-center gap-2 mb-2">
+                               {supermarket && <SupermarketIcon name={supermarket.name} />}
+                                <h2 className="font-bold text-lg">{supermarket?.name || 'Senza Negozio'}</h2>
+                                <Badge className="ml-auto bg-gray-200 text-gray-700 font-bold hover:bg-gray-200">€{subtotal.toFixed(2)}</Badge>
+                            </div>
+                            <div className="space-y-2">
+                                {items.map(item => (
+                                   <div key={item.productId} className={cn("flex items-start gap-3 p-3 rounded-2xl bg-white shadow-sm", item.purchased && "opacity-60")}>
+                                        <Checkbox
+                                            checked={item.purchased}
+                                            onCheckedChange={(checked) => handleItemChange(item.productId, { purchased: !!checked })}
+                                            className="h-6 w-6 rounded-full mt-1 border-2"
+                                        />
+                                        {item.imageUrl ? 
+                                            <Image src={item.imageUrl} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14" />
+                                            : <div className="h-14 w-14 rounded-lg bg-gray-100" />
+                                        }
+                                        <div className="flex-1">
+                                            <p className={cn("font-bold", item.purchased && "line-through")}>{item.product.name}</p>
+                                            <p className="text-sm text-gray-500">
+                                                {item.quantity} x €{(item.price || 0).toFixed(2)}
+                                                {item.brand && <span className="text-primary"> • {item.brand}</span>}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <p className="font-bold text-primary text-lg">€{((item.price || 0) * item.quantity).toFixed(2)}</p>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70" onClick={() => handleDeleteItem(item.productId)}><Trash2 className="h-4 w-4" /></Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+             {view === 'standard' && (
+                 <div className="space-y-2">
+                    <div className="p-4 text-center bg-gray-100 rounded-lg">
+                        <p className="text-muted-foreground">La vista standard non è ancora stata implementata.</p>
+                    </div>
+                </div>
+            )}
+        </main>
+        
+        {/* Footer */}
+        <footer className="fixed bottom-0 left-0 right-0 bg-primary/95 backdrop-blur-sm text-primary-foreground p-4 pt-3 rounded-t-3xl md:hidden">
+            <div className="text-center mb-2">
+                <p className="text-xs uppercase font-bold opacity-80">Riepilogo Spesa</p>
+                <p className="text-sm opacity-80">Totale Stimato</p>
+                <p className="text-4xl font-bold">€{totalCost.toFixed(2)}</p>
+            </div>
+            <Button className="w-full h-14 text-lg bg-white text-primary rounded-xl shadow hover:bg-gray-100" onClick={() => setIsArchiveDialogOpen(true)}>
+                <Archive className="mr-2"/> Archivia Spesa
+            </Button>
+        </footer>
       </div>
       <ArchiveListDialog
         isOpen={isArchiveDialogOpen}
         setIsOpen={setIsArchiveDialogOpen}
         list={list}
-        enrichedItems={enrichedItems}
-        optimalTotal={totals.optimalTotal}
+        enrichedItems={[]}
+        optimalTotal={totalCost}
         onArchive={onArchive}
       />
     </>
