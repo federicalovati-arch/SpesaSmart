@@ -315,14 +315,17 @@ export function AddProductDialog({
                                 name={`images.${index}.supermarketId`}
                                 render={({ field }) => (
                                 <div className="absolute bottom-1 left-1 right-1 z-0">
-                                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                                    <Select
+                                        onValueChange={(value) => field.onChange(value === 'general' ? '' : value)}
+                                        value={field.value ? field.value : 'general'}
+                                    >
                                         <FormControl>
                                         <SelectTrigger className="h-7 text-xs bg-black/60 backdrop-blur-sm text-white border-none focus:ring-0 focus:ring-offset-0">
                                             <SelectValue placeholder="Assegna..." />
                                         </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="">Immagine Generale</SelectItem>
+                                            <SelectItem value="general">Immagine Generale</SelectItem>
                                             {supermarkets.map(s => (
                                                 <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                                             ))}
