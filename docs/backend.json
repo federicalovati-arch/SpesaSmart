@@ -20,9 +20,10 @@
             "id": { "type": "string" },
             "name": { "type": "string" },
             "location": { "type": "string" },
-            "order": { "type": "number" }
+            "order": { "type": "number" },
+            "icon": { "type": "string" }
         },
-        "required": ["id", "name", "order"]
+        "required": ["id", "name", "order", "icon"]
     },
     "ProductImage": {
         "title": "Product Image",

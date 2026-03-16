@@ -41,6 +41,7 @@ interface DataContextType extends AllData {
   updateProduct: (product: Product) => void;
   deleteProduct: (productId: string) => void;
   addSupermarket: (supermarket: Omit<Supermarket, 'id' | 'order'>) => void;
+  updateSupermarket: (supermarket: Supermarket) => void;
   deleteSupermarket: (supermarketId: string) => void;
   addCategory: (category: Omit<Category, 'id'>) => void;
   updateCategory: (category: Category) => void;
@@ -176,6 +177,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const newSupermarket = { ...supermarketData, id: `s${Date.now()}`, order: newOrder };
       if (user) { writeToFirestore('supermarkets', newSupermarket); }
       else setLocalSupermarkets((prev) => [...prev, newSupermarket]);
+  };
+   const updateSupermarket = (updatedSupermarket: Supermarket) => {
+    if (user) { writeToFirestore('supermarkets', updatedSupermarket); }
+    else setLocalSupermarkets(prev => prev.map(s => s.id === updatedSupermarket.id ? updatedSupermarket : s).sort((a,b) => a.order - b.order));
   };
   const deleteSupermarket = async (supermarketId: string) => {
       if (user && firestore) {
@@ -352,6 +357,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     updateProduct,
     deleteProduct,
     addSupermarket,
+    updateSupermarket,
     deleteSupermarket,
     addCategory,
     updateCategory,

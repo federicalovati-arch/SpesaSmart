@@ -7,6 +7,7 @@ import { SupermarketList } from './components/supermarket-list';
 import { AddProductDialog } from './components/add-product-dialog';
 import { AddSupermarketDialog } from './components/add-supermarket-dialog';
 import { CategoryManagerDialog } from './components/category-manager-dialog';
+import { SupermarketProductsSheet } from './components/supermarket-products-sheet';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +23,7 @@ export default function CatalogPage() {
     updateProduct,
     deleteProduct,
     addSupermarket,
+    updateSupermarket,
     deleteSupermarket,
     addCategory,
     updateCategory,
@@ -33,12 +35,14 @@ export default function CatalogPage() {
   const [view, setView] = useState('products');
 
   const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
-  const [isAddSupermarketDialogOpen, setIsAddSupermarketDialogOpen] = useState(false);
+  const [isUpsertSupermarketDialogOpen, setIsUpsertSupermarketDialogOpen] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+  const [isProductsSheetOpen, setIsProductsSheetOpen] = useState(false);
 
-  const [productToEdit, setProductToEdit] = useState<Product | undefined>(
-    undefined
-  );
+  const [productToEdit, setProductToEdit] = useState<Product | undefined>(undefined);
+  const [supermarketToEdit, setSupermarketToEdit] = useState<Supermarket | undefined>(undefined);
+  const [selectedSupermarketForSheet, setSelectedSupermarketForSheet] = useState<Supermarket | null>(null);
+
 
   const handleAddOrUpdateProduct = (productData: Omit<Product, 'id'>) => {
     if (productToEdit) {
@@ -50,12 +54,12 @@ export default function CatalogPage() {
     }
   };
 
-  const handleOpenAddDialog = () => {
+  const handleOpenAddProductDialog = () => {
     setProductToEdit(undefined);
     setIsAddProductDialogOpen(true);
   };
 
-  const handleOpenEditDialog = (product: Product) => {
+  const handleOpenEditProductDialog = (product: Product) => {
     setProductToEdit(product);
     setIsAddProductDialogOpen(true);
   };
@@ -65,10 +69,28 @@ export default function CatalogPage() {
     toast({ title: 'Prodotto eliminato.' });
   };
 
-  const handleAddSupermarket = (supermarketData: Omit<Supermarket, 'id'| 'order'>) => {
-    addSupermarket(supermarketData);
-     toast({ title: 'Negozio aggiunto.' });
+  const handleSaveSupermarket = (supermarketData: Omit<Supermarket, 'id' | 'order'>, id?: string) => {
+    if (id) {
+      const existingSupermarket = supermarkets.find(s => s.id === id);
+      if(existingSupermarket) {
+        updateSupermarket({ ...existingSupermarket, ...supermarketData });
+        toast({ title: 'Negozio aggiornato.' });
+      }
+    } else {
+      addSupermarket(supermarketData);
+      toast({ title: 'Negozio aggiunto.' });
+    }
   };
+
+  const handleOpenAddSupermarketDialog = () => {
+    setSupermarketToEdit(undefined);
+    setIsUpsertSupermarketDialogOpen(true);
+  };
+
+  const handleOpenEditSupermarketDialog = (supermarket: Supermarket) => {
+    setSupermarketToEdit(supermarket);
+    setIsUpsertSupermarketDialogOpen(true);
+  }
 
   const handleDeleteSupermarket = (supermarketId: string) => {
     deleteSupermarket(supermarketId);
@@ -78,6 +100,11 @@ export default function CatalogPage() {
   const handleReorderSupermarkets = (reorderedSupermarkets: Supermarket[]) => {
     setSupermarkets(reorderedSupermarkets);
     toast({ title: 'Ordine negozi aggiornato' });
+  };
+
+  const handleShowSupermarketProducts = (supermarket: Supermarket) => {
+    setSelectedSupermarketForSheet(supermarket);
+    setIsProductsSheetOpen(true);
   };
 
   const handleAddCategory = (categoryData: Omit<Category, 'id'>) => {
@@ -133,7 +160,7 @@ export default function CatalogPage() {
           </Button>
             <Button
               className="shadow rounded-lg h-12 flex-1"
-              onClick={view === 'products' ? handleOpenAddDialog : () => setIsAddSupermarketDialogOpen(true)}
+              onClick={view === 'products' ? handleOpenAddProductDialog : handleOpenAddSupermarketDialog}
             >
               <Plus className="mr-2 h-4 w-4" />
               {view === 'products' ? 'NUOVO PRODOTTO' : 'NUOVO NEGOZIO'}
@@ -168,7 +195,7 @@ export default function CatalogPage() {
             products={products}
             supermarkets={supermarkets}
             allCategories={categories}
-            onEditProductClick={handleOpenEditDialog}
+            onEditProductClick={handleOpenEditProductDialog}
             onDeleteProduct={handleDeleteProduct}
           />
         ) : (
@@ -176,6 +203,8 @@ export default function CatalogPage() {
             supermarkets={supermarkets}
             onDeleteSupermarket={handleDeleteSupermarket}
             onReorder={handleReorderSupermarkets}
+            onEditSupermarket={handleOpenEditSupermarketDialog}
+            onShowProducts={handleShowSupermarketProducts}
           />
         )}
       </div>
@@ -188,9 +217,10 @@ export default function CatalogPage() {
         productToEdit={productToEdit}
       />
       <AddSupermarketDialog
-        isOpen={isAddSupermarketDialogOpen}
-        setIsOpen={setIsAddSupermarketDialogOpen}
-        onAddSupermarket={handleAddSupermarket}
+        isOpen={isUpsertSupermarketDialogOpen}
+        setIsOpen={setIsUpsertSupermarketDialogOpen}
+        onSave={handleSaveSupermarket}
+        supermarketToEdit={supermarketToEdit}
       />
       <CategoryManagerDialog
         isOpen={isCategoryManagerOpen}
@@ -200,6 +230,12 @@ export default function CatalogPage() {
         onDeleteCategory={handleDeleteCategory}
         onUpdateCategory={handleUpdateCategory}
         onReorder={handleReorderCategories}
+      />
+      <SupermarketProductsSheet
+        isOpen={isProductsSheetOpen}
+        setIsOpen={setIsProductsSheetOpen}
+        supermarket={selectedSupermarketForSheet}
+        allProducts={products}
       />
     </>
   );

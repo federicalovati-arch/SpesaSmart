@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   DndContext,
   closestCenter,
@@ -8,6 +9,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragEndEvent,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -19,7 +21,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { Supermarket } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Zap, Clover, Carrot, Store, GripVertical } from 'lucide-react';
+import { Edit, Trash2, GripVertical, LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   AlertDialog,
@@ -31,51 +33,67 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { supermarketIcons } from '@/lib/icons';
+import { Store } from 'lucide-react';
 
 type SupermarketListProps = {
   supermarkets: Supermarket[];
   onDeleteSupermarket: (id: string) => void;
   onReorder: (supermarkets: Supermarket[]) => void;
+  onEditSupermarket: (supermarket: Supermarket) => void;
+  onShowProducts: (supermarket: Supermarket) => void;
 };
 
-const getSupermarketIcon = (name: string) => {
-    const lowerCaseName = name.toLowerCase();
-    if (lowerCaseName.includes('eurospin')) {
-        return <Zap className="h-6 w-6 text-primary" />;
-    }
-    if (lowerCaseName.includes('conad')) {
-        return <Clover className="h-6 w-6 text-primary" />;
-    }
-    if (lowerCaseName.includes('coop')) {
-        return <Carrot className="h-6 w-6 text-primary" />;
-    }
-    return <Store className="h-6 w-6 text-primary" />;
+const SupermarketIcon = ({ iconName }: { iconName: string }) => {
+  const Icon = supermarketIcons[iconName] || Store;
+  return <Icon className="h-6 w-6 text-primary" />;
 };
 
-function SortableSupermarketItem({ supermarket, onDeleteSupermarket }: {supermarket: Supermarket, onDeleteSupermarket: (id: string) => void}) {
+function SortableSupermarketItem({ supermarket, onDeleteSupermarket, onEditSupermarket, onShowProducts }: {
+  supermarket: Supermarket;
+  onDeleteSupermarket: (id: string) => void;
+  onEditSupermarket: (supermarket: Supermarket) => void;
+  onShowProducts: (supermarket: Supermarket) => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: supermarket.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+  
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // We check if the click target or its parent is a button or has a drag handle listener
+    // This prevents the sheet from opening when interacting with actions.
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('[role="button"]') || target.closest('[aria-roledescription="sortable"]')) {
+      return;
+    }
+    onShowProducts(supermarket);
+  };
+
 
   return (
     <Card ref={setNodeRef} style={style} className="shadow-sm rounded-2xl bg-white">
       <CardContent className="p-3 flex items-center gap-4">
-        <div {...attributes} {...listeners} className="cursor-grab touch-none p-2">
+        <div {...attributes} {...listeners} className="cursor-grab touch-none p-2" aria-roledescription="sortable">
             <GripVertical className="h-5 w-5 text-gray-400" />
         </div>
-        <div className="bg-primary/10 p-3 rounded-xl">
-            {getSupermarketIcon(supermarket.name)}
-        </div>
-        <div className="flex-grow">
-          <h3 className="font-bold text-lg">{supermarket.name}</h3>
-          {supermarket.location && <p className="text-sm text-muted-foreground">{supermarket.location}</p>}
+        <div 
+          className="flex-grow flex items-center gap-4 cursor-pointer"
+          onClick={() => onShowProducts(supermarket)}
+        >
+          <div className="bg-primary/10 p-3 rounded-xl">
+              <SupermarketIcon iconName={supermarket.icon} />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg">{supermarket.name}</h3>
+            {supermarket.location && <p className="text-sm text-muted-foreground">{supermarket.location}</p>}
+          </div>
         </div>
         <div className="flex items-center gap-0">
-            <Button variant="ghost" size="icon" className="h-9 w-9" disabled>
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => onEditSupermarket(supermarket)}>
                 <Edit className="h-5 w-5 text-gray-600" />
                 <span className="sr-only">Modifica</span>
             </Button>
@@ -109,7 +127,7 @@ function SortableSupermarketItem({ supermarket, onDeleteSupermarket }: {supermar
   )
 }
 
-export function SupermarketList({ supermarkets, onDeleteSupermarket, onReorder }: SupermarketListProps) {
+export function SupermarketList({ supermarkets, onDeleteSupermarket, onReorder, onEditSupermarket, onShowProducts }: SupermarketListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -117,9 +135,9 @@ export function SupermarketList({ supermarkets, onDeleteSupermarket, onReorder }
     })
   );
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over.id) {
+    if (over && active.id !== over.id) {
       const oldIndex = supermarkets.findIndex((s) => s.id === active.id);
       const newIndex = supermarkets.findIndex((s) => s.id === over.id);
       const newOrder = arrayMove(supermarkets, oldIndex, newIndex);
@@ -132,7 +150,13 @@ export function SupermarketList({ supermarkets, onDeleteSupermarket, onReorder }
         <SortableContext items={supermarkets.map(s => s.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-2 pb-20">
             {supermarkets.map((supermarket) => (
-                <SortableSupermarketItem key={supermarket.id} supermarket={supermarket} onDeleteSupermarket={onDeleteSupermarket} />
+                <SortableSupermarketItem 
+                  key={supermarket.id} 
+                  supermarket={supermarket} 
+                  onDeleteSupermarket={onDeleteSupermarket}
+                  onEditSupermarket={onEditSupermarket}
+                  onShowProducts={onShowProducts}
+                />
             ))}
             </div>
         </SortableContext>

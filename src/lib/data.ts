@@ -1,9 +1,9 @@
 import type { Product, Supermarket, ShoppingList, Category, Receipt } from './types';
 
 export const mockSupermarkets: Supermarket[] = [
-  { id: 's1', name: 'Eurospin', location: 'Via Roma, 1', order: 1 },
-  { id: 's2', name: 'Conad', location: 'Corso Italia, 20', order: 2 },
-  { id: 's3', name: 'Coop', location: 'Piazza Garibaldi, 5', order: 3 },
+  { id: 's1', name: 'Eurospin', location: 'Via Roma, 1', order: 1, icon: 'zap' },
+  { id: 's2', name: 'Conad', location: 'Corso Italia, 20', order: 2, icon: 'clover' },
+  { id: 's3', name: 'Coop', location: 'Piazza Garibaldi, 5', order: 3, icon: 'carrot' },
 ];
 
 export const mockCategories: Category[] = [

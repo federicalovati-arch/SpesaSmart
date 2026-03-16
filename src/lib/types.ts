@@ -3,6 +3,7 @@ export type Supermarket = {
   name: string;
   location?: string;
   order: number;
+  icon: string;
 };
 
 // New type for product images
