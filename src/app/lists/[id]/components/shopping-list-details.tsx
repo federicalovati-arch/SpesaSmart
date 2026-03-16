@@ -43,11 +43,14 @@ import {
   Box,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { ArchiveListDialog } from './archive-list-dialog';
-import { PriceOverrideDialog } from './price-override-dialog';
-import { AddItemSheet } from './add-item-sheet';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import dynamic from 'next/dynamic';
+
+const ArchiveListDialog = dynamic(() => import('./archive-list-dialog').then(mod => mod.ArchiveListDialog), { ssr: false });
+const PriceOverrideDialog = dynamic(() => import('./price-override-dialog').then(mod => mod.PriceOverrideDialog), { ssr: false });
+const AddItemSheet = dynamic(() => import('./add-item-sheet').then(mod => mod.AddItemSheet), { ssr: false });
+
 
 type ListDetailsProps = {
   list: ShoppingList;

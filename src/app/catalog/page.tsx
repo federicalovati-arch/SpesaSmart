@@ -4,14 +4,16 @@ import { useState } from 'react';
 import type { Product, Supermarket, Category } from '@/lib/types';
 import { ProductList } from './components/product-list';
 import { SupermarketList } from './components/supermarket-list';
-import { AddProductDialog } from './components/add-product-dialog';
-import { AddSupermarketDialog } from './components/add-supermarket-dialog';
-import { CategoryManagerDialog } from './components/category-manager-dialog';
-import { SupermarketProductsSheet } from './components/supermarket-products-sheet';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useData } from '@/context/data-context';
+import dynamic from 'next/dynamic';
+
+const AddProductDialog = dynamic(() => import('./components/add-product-dialog').then(mod => mod.AddProductDialog), { ssr: false });
+const AddSupermarketDialog = dynamic(() => import('./components/add-supermarket-dialog').then(mod => mod.AddSupermarketDialog), { ssr: false });
+const CategoryManagerDialog = dynamic(() => import('./components/category-manager-dialog').then(mod => mod.CategoryManagerDialog), { ssr: false });
+const SupermarketProductsSheet = dynamic(() => import('./components/supermarket-products-sheet').then(mod => mod.SupermarketProductsSheet), { ssr: false });
 
 export default function CatalogPage() {
   const { toast } = useToast();

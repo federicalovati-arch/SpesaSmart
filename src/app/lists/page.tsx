@@ -4,9 +4,11 @@ import { ShoppingLists } from './components/shopping-lists';
 import { useData } from '@/context/data-context';
 import type { ShoppingList } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { AddListDialog } from './components/add-list-dialog';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const AddListDialog = dynamic(() => import('./components/add-list-dialog').then(mod => mod.AddListDialog), { ssr: false });
 
 export default function ListsPage() {
   const { shoppingLists, addShoppingList, setShoppingLists, deleteShoppingList, duplicateShoppingList } = useData();
