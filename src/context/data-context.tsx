@@ -6,7 +6,6 @@ import {
   useState,
   ReactNode,
   useEffect,
-  useCallback,
 } from 'react';
 import {
   mockProducts,
@@ -23,7 +22,7 @@ import type {
   Receipt,
   ShoppingListItem,
 } from '@/lib/types';
-import { useUser, useFirestore, useCollection } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
@@ -111,16 +110,35 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const getCollectionRef = useCallback((name: string) => {
+  const productsCollection = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return collection(firestore, 'users', user.uid, name);
+    return collection(firestore, 'users', user.uid, 'products');
   }, [user, firestore]);
+  const { data: firestoreProducts, loading: loadingProducts } = useCollection<Product>(productsCollection);
 
-  const { data: firestoreProducts, loading: loadingProducts } = useCollection<Product>(getCollectionRef('products'));
-  const { data: firestoreSupermarkets, loading: loadingSupermarkets } = useCollection<Supermarket>(getCollectionRef('supermarkets'));
-  const { data: firestoreCategories, loading: loadingCategories } = useCollection<Category>(getCollectionRef('categories'));
-  const { data: firestoreShoppingLists, loading: loadingShoppingLists } = useCollection<ShoppingList>(getCollectionRef('shoppingLists'));
-  const { data: firestoreReceipts, loading: loadingReceipts } = useCollection<Receipt>(getCollectionRef('receipts'));
+  const supermarketsCollection = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, 'users', user.uid, 'supermarkets');
+  }, [user, firestore]);
+  const { data: firestoreSupermarkets, loading: loadingSupermarkets } = useCollection<Supermarket>(supermarketsCollection);
+
+  const categoriesCollection = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, 'users', user.uid, 'categories');
+  }, [user, firestore]);
+  const { data: firestoreCategories, loading: loadingCategories } = useCollection<Category>(categoriesCollection);
+
+  const shoppingListsCollection = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, 'users', user.uid, 'shoppingLists');
+  }, [user, firestore]);
+  const { data: firestoreShoppingLists, loading: loadingShoppingLists } = useCollection<ShoppingList>(shoppingListsCollection);
+
+  const receiptsCollection = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, 'users', user.uid, 'receipts');
+  }, [user, firestore]);
+  const { data: firestoreReceipts, loading: loadingReceipts } = useCollection<Receipt>(receiptsCollection);
 
   const loading = user ? (loadingProducts || loadingSupermarkets || loadingCategories || loadingShoppingLists || loadingReceipts) : false;
 
@@ -129,9 +147,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const syncData = async () => {
       if (!user || !firestore || isSyncing) return;
       
-      // Check if remote is empty by checking one collection
-      const productCol = getCollectionRef('products');
-      if (!productCol) return;
+      const productCol = collection(firestore, 'users', user.uid, 'products');
       
       const remoteSnapshot = await getDocs(productCol);
       if (!remoteSnapshot.empty) {
@@ -177,7 +193,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (user && firestore && !loading) {
       syncData();
     }
-  }, [user, firestore, loading, isSyncing, toast, getCollectionRef]);
+  }, [user, firestore, loading, isSyncing, toast]);
 
   // Determine which data to use
   const products = user ? firestoreProducts || [] : localProducts;
