@@ -80,6 +80,25 @@ const getSupermarketIcon = (supermarketName: string): LucideIcon => {
     return Store;
 }
 
+const ListFooter = ({ totalCost, onArchiveClick, disabled }: { totalCost: number; onArchiveClick: () => void; disabled: boolean }) => (
+    <div className="max-w-md mx-auto">
+        <div className="bg-primary text-primary-foreground p-4 text-center rounded-2xl shadow-lg">
+            <p className="text-xs uppercase font-bold opacity-80">RIEPILOGO SPESA</p>
+            <p className="text-sm opacity-80">Totale Stimato</p>
+            <p className="text-4xl font-bold tracking-tight">€{totalCost.toFixed(2)}</p>
+        </div>
+        <div className="px-4 -mt-6">
+            <Button 
+                className="w-full h-14 text-lg bg-white text-primary rounded-xl shadow-lg hover:bg-gray-100" 
+                onClick={onArchiveClick}
+                disabled={disabled}
+            >
+                <CheckIcon className="mr-2"/> Archivia Spesa
+            </Button>
+        </div>
+    </div>
+);
+
 
 export function ShoppingListDetails({
   list: initialList,
@@ -286,7 +305,7 @@ export function ShoppingListDetails({
 
   return (
     <>
-      <div className="flex flex-col bg-gray-50 flex-1 min-h-screen">
+      <div className="flex flex-col bg-gray-50 flex-1">
         {/* Header */}
         <header className="p-4 bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
             <div className="flex items-center gap-2">
@@ -343,7 +362,7 @@ export function ShoppingListDetails({
         </header>
 
         {/* Body */}
-        <main className="flex-1 overflow-y-auto px-4 pb-64">
+        <main className="flex-1 overflow-y-auto px-4 pb-40 md:pb-4">
             
             {view === 'risparmio' && groupedItems && (
                 <div className="space-y-4 pt-2">
@@ -464,26 +483,24 @@ export function ShoppingListDetails({
             )}
         </main>
         
-        {/* Footer */}
-        <div className="fixed bottom-16 left-0 right-0 p-4 bg-gray-50/90 backdrop-blur-sm md:hidden z-30 border-t">
-            <div className="max-w-md mx-auto">
-                <div className="bg-primary text-primary-foreground p-4 text-center rounded-2xl shadow-lg">
-                    <p className="text-xs uppercase font-bold opacity-80">RIEPILOGO SPESA</p>
-                    <p className="text-sm opacity-80">Totale Stimato</p>
-                    <p className="text-4xl font-bold tracking-tight">€{totalCost.toFixed(2)}</p>
-                </div>
-                <div className="px-4 -mt-6">
-                    <Button 
-                        className="w-full h-14 text-lg bg-white text-primary rounded-xl shadow-lg hover:bg-gray-100" 
-                        onClick={() => setIsArchiveDialogOpen(true)}
-                        disabled={list.items.length === 0}
-                    >
-                        <CheckIcon className="mr-2"/> Archivia Spesa
-                    </Button>
-                </div>
-            </div>
-        </div>
+        {/* Desktop Footer */}
+        <footer className="hidden md:block p-4 bg-gray-50 border-t">
+          <ListFooter 
+            totalCost={totalCost}
+            onArchiveClick={() => setIsArchiveDialogOpen(true)}
+            disabled={list.items.length === 0}
+          />
+        </footer>
       </div>
+      
+      {/* Mobile Footer */}
+      <footer className="fixed bottom-16 left-0 right-0 p-4 bg-gray-50/90 backdrop-blur-sm md:hidden z-30 border-t">
+        <ListFooter 
+          totalCost={totalCost}
+          onArchiveClick={() => setIsArchiveDialogOpen(true)}
+          disabled={list.items.length === 0}
+        />
+      </footer>
       <ArchiveListDialog
         isOpen={isArchiveDialogOpen}
         setIsOpen={setIsArchiveDialogOpen}
