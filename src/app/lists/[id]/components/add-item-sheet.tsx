@@ -7,8 +7,6 @@ import * as z from 'zod';
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
   SheetClose,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -99,26 +97,25 @@ export function AddItemSheet({
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl max-h-[90vh] flex flex-col bg-gray-50 p-0"
+        className="rounded-t-2xl max-h-[85vh] flex flex-col bg-background p-0"
       >
-        <SheetHeader className="p-4 pb-0 text-center">
-          <SheetTitle className="font-bold text-lg">Aggiungi Prodotto</SheetTitle>
-          <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-            <X className="h-5 w-5" />
-            <span className="sr-only">Close</span>
-          </SheetClose>
-        </SheetHeader>
-        <div className="flex-1 flex flex-col overflow-y-hidden">
-          <Tabs defaultValue="catalog" className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 bg-gray-200/60 mx-auto max-w-sm rounded-full h-11 p-1 my-4">
-              <TabsTrigger value="catalog" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">
-                DAL CATALOGO
-              </TabsTrigger>
-              <TabsTrigger value="quick" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">
-                AGGIUNTA RAPIDA
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="catalog" className="flex-1 flex flex-col overflow-y-hidden">
+        <Tabs defaultValue="catalog" className="flex-1 flex flex-col pt-4">
+           <div className="relative px-4">
+              <TabsList className="grid w-full grid-cols-2 bg-gray-100 rounded-full h-11 p-1">
+                  <TabsTrigger value="catalog" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">
+                  DAL CATALOGO
+                  </TabsTrigger>
+                  <TabsTrigger value="quick" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">
+                  AGGIUNTA RAPIDA
+                  </TabsTrigger>
+              </TabsList>
+              <SheetClose className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full p-1 bg-gray-200/80 h-7 w-7 flex items-center justify-center ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                  <X className="h-5 w-5 text-gray-600" />
+                  <span className="sr-only">Close</span>
+              </SheetClose>
+            </div>
+          
+            <TabsContent value="catalog" className="flex-1 flex flex-col overflow-y-hidden mt-4">
               <div className="px-4 mb-4">
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -159,7 +156,7 @@ export function AddItemSheet({
                 </div>
               </ScrollArea>
             </TabsContent>
-            <TabsContent value="quick" className="flex-1 overflow-y-auto">
+            <TabsContent value="quick" className="flex-1 overflow-y-auto mt-4">
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onQuickAddSubmit)}
@@ -224,8 +221,7 @@ export function AddItemSheet({
                 </form>
               </Form>
             </TabsContent>
-          </Tabs>
-        </div>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );

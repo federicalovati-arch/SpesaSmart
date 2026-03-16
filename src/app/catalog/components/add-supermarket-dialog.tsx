@@ -76,7 +76,7 @@ export function AddSupermarketDialog({
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl p-0 flex flex-col max-h-[90vh]"
+        className="rounded-t-2xl p-0 flex flex-col max-h-[85vh]"
       >
         <SheetHeader className="p-4 text-center border-b">
           <SheetTitle>

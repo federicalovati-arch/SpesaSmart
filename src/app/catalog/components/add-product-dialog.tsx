@@ -197,7 +197,7 @@ export function AddProductDialog({
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl max-h-[90vh] flex flex-col bg-background p-0"
+        className="rounded-t-2xl max-h-[85vh] flex flex-col bg-background p-0"
       >
         <SheetHeader className="p-4 text-center border-b">
           <SheetTitle className="font-bold text-lg">

@@ -247,7 +247,7 @@ export function CategoryManagerDialog({
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl max-h-[90vh] flex flex-col bg-gray-50"
+        className="rounded-t-2xl max-h-[85vh] flex flex-col bg-gray-50"
       >
         <SheetHeader className="text-center p-4 border-b">
           <SheetTitle className="font-bold text-lg">
