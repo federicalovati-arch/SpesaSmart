@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 
 // Helper to get initial state from localStorage or fallback
 const getInitialState = <T>(key: string, fallback: T[]): T[] => {
+  // This function should only be called on the client.
   if (typeof window === 'undefined') {
     return fallback;
   }
@@ -94,19 +95,35 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  // Local state for guest users, initialized from localStorage or mock data
-  const [localProducts, setLocalProducts] = useState<Product[]>(() => getInitialState(LOCAL_STORAGE_KEYS.products, mockProducts));
-  const [localSupermarkets, setLocalSupermarkets] = useState<Supermarket[]>(() => getInitialState(LOCAL_STORAGE_KEYS.supermarkets, mockSupermarkets).sort((a,b) => a.order - b.order));
-  const [localCategories, setLocalCategories] = useState<Category[]>(() => getInitialState(LOCAL_STORAGE_KEYS.categories, mockCategories).sort((a,b)=>a.order - b.order));
-  const [localShoppingLists, setLocalShoppingLists] = useState<ShoppingList[]>(() => getInitialState(LOCAL_STORAGE_KEYS.shoppingLists, mockShoppingLists).sort((a,b) => a.order - b.order));
-  const [localReceipts, setLocalReceipts] = useState<Receipt[]>(() => getInitialState(LOCAL_STORAGE_KEYS.receipts, mockReceipts));
+  const [localDataLoaded, setLocalDataLoaded] = useState(false);
+
+  // Initialize with empty arrays to prevent hydration mismatch.
+  // The server and initial client render will both have empty data.
+  const [localProducts, setLocalProducts] = useState<Product[]>([]);
+  const [localSupermarkets, setLocalSupermarkets] = useState<Supermarket[]>([]);
+  const [localCategories, setLocalCategories] = useState<Category[]>([]);
+  const [localShoppingLists, setLocalShoppingLists] = useState<ShoppingList[]>([]);
+  const [localReceipts, setLocalReceipts] = useState<Receipt[]>([]);
   
+  // Load guest data from localStorage on the client after mount.
+  useEffect(() => {
+    // is triggered on mount, and when the user logs out.
+    if (!user) {
+      setLocalProducts(getInitialState(LOCAL_STORAGE_KEYS.products, mockProducts));
+      setLocalSupermarkets(getInitialState(LOCAL_STORAGE_KEYS.supermarkets, mockSupermarkets).sort((a,b) => a.order - b.order));
+      setLocalCategories(getInitialState(LOCAL_STORAGE_KEYS.categories, mockCategories).sort((a,b)=>a.order - b.order));
+      setLocalShoppingLists(getInitialState(LOCAL_STORAGE_KEYS.shoppingLists, mockShoppingLists).sort((a,b) => a.order - b.order));
+      setLocalReceipts(getInitialState(LOCAL_STORAGE_KEYS.receipts, mockReceipts));
+      setLocalDataLoaded(true);
+    }
+  }, [user]);
+
   // Effects to save guest data to localStorage
-  useEffect(() => { if (!user) localStorage.setItem(LOCAL_STORAGE_KEYS.products, JSON.stringify(localProducts)); }, [localProducts, user]);
-  useEffect(() => { if (!user) localStorage.setItem(LOCAL_STORAGE_KEYS.supermarkets, JSON.stringify(localSupermarkets)); }, [localSupermarkets, user]);
-  useEffect(() => { if (!user) localStorage.setItem(LOCAL_STORAGE_KEYS.categories, JSON.stringify(localCategories)); }, [localCategories, user]);
-  useEffect(() => { if (!user) localStorage.setItem(LOCAL_STORAGE_KEYS.shoppingLists, JSON.stringify(localShoppingLists)); }, [localShoppingLists, user]);
-  useEffect(() => { if (!user) localStorage.setItem(LOCAL_STORAGE_KEYS.receipts, JSON.stringify(localReceipts)); }, [localReceipts, user]);
+  useEffect(() => { if (!user && localDataLoaded) localStorage.setItem(LOCAL_STORAGE_KEYS.products, JSON.stringify(localProducts)); }, [localProducts, user, localDataLoaded]);
+  useEffect(() => { if (!user && localDataLoaded) localStorage.setItem(LOCAL_STORAGE_KEYS.supermarkets, JSON.stringify(localSupermarkets)); }, [localSupermarkets, user, localDataLoaded]);
+  useEffect(() => { if (!user && localDataLoaded) localStorage.setItem(LOCAL_STORAGE_KEYS.categories, JSON.stringify(localCategories)); }, [localCategories, user, localDataLoaded]);
+  useEffect(() => { if (!user && localDataLoaded) localStorage.setItem(LOCAL_STORAGE_KEYS.shoppingLists, JSON.stringify(localShoppingLists)); }, [localShoppingLists, user, localDataLoaded]);
+  useEffect(() => { if (!user && localDataLoaded) localStorage.setItem(LOCAL_STORAGE_KEYS.receipts, JSON.stringify(localReceipts)); }, [localReceipts, user, localDataLoaded]);
 
 
   const [isSyncing, setIsSyncing] = useState(false);
@@ -141,7 +158,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [user, firestore]);
   const { data: firestoreReceipts, loading: loadingReceipts } = useCollection<Receipt>(receiptsCollection);
 
-  const loading = user ? (loadingProducts || loadingSupermarkets || loadingCategories || loadingShoppingLists || loadingReceipts) : false;
+  const firestoreDataLoading = user ? (loadingProducts || loadingSupermarkets || loadingCategories || loadingShoppingLists || loadingReceipts) : false;
+  const guestDataLoading = !user && !localDataLoaded;
+
+  const loading = firestoreDataLoading || guestDataLoading;
 
   // Sync local data to Firestore on first login
   useEffect(() => {
@@ -322,8 +342,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addShoppingList = useCallback((listData: Omit<ShoppingList, 'id' | 'createdAt' | 'order'>) => {
       const currentLists = user ? firestoreShoppingLists || [] : localShoppingLists;
-      const newOrder = currentLists.length > 0 ? Math.max(...currentLists.map(l => l.order)) + 1 : 1;
-      const newList = { ...listData, id: `l${Date.now()}`, createdAt: new Date().toISOString(), order: newOrder };
+      const maxOrder = currentLists.length > 0 ? Math.max(...currentLists.map(l => l.order)) : 0;
+      const newList = { ...listData, id: `l${Date.now()}`, createdAt: new Date().toISOString(), order: maxOrder + 1 };
       if (user) { writeToFirestore('shoppingLists', newList); }
       else setLocalShoppingLists(prev => [newList, ...prev]);
   }, [user, writeToFirestore, firestoreShoppingLists, localShoppingLists]);
