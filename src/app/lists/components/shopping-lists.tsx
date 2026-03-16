@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import * as React from 'react';
 import {
@@ -10,6 +9,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragEndEvent,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -20,20 +20,38 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { ShoppingList } from '@/lib/types';
-import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, List, Calendar, ArrowRight, GripVertical } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatDistanceToNow } from 'date-fns';
-import { it } from 'date-fns/locale';
+import { Plus, List, GripVertical, ArrowRight, Copy, Trash2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Badge } from '@/components/ui/badge';
+
 
 type ShoppingListsProps = {
   lists: ShoppingList[];
-  onAddList: (list: Omit<ShoppingList, 'id' | 'createdAt' | 'order'>) => void;
   onReorder: (lists: ShoppingList[]) => void;
+  onAddList: () => void;
+  onEditList: (list: ShoppingList) => void;
+  onDeleteList: (listId: string) => void;
+  onDuplicateList: (listId: string) => void;
 };
 
-function SortableListItem({ list }: {list: ShoppingList}) {
+function SortableListItem({ list, onDuplicate, onDelete, onEdit }: {
+  list: ShoppingList;
+  onDuplicate: (listId: string) => void;
+  onDelete: (listId: string) => void;
+  onEdit: (list: ShoppingList) => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: list.id });
 
   const style = {
@@ -43,46 +61,59 @@ function SortableListItem({ list }: {list: ShoppingList}) {
   
   const itemsCount = list.items.length;
   const purchasedCount = list.items.filter(i => i.purchased).length;
+  const isCompleted = itemsCount > 0 && purchasedCount === itemsCount;
 
   return (
-    <Card ref={setNodeRef} style={style} className="flex flex-col">
-      <div className="flex items-start p-3">
-        <div {...attributes} {...listeners} className="cursor-grab touch-none p-3 -m-3 mr-1">
+    <Card ref={setNodeRef} style={style} className="bg-white shadow-md rounded-2xl">
+      <CardContent className="p-3 flex items-center gap-3">
+        <div {...attributes} {...listeners} className="cursor-grab p-2 touch-none">
           <GripVertical className="h-5 w-5 text-gray-400" />
         </div>
-        <div className='flex-grow'>
-          <CardHeader className="p-0 pb-2">
-            <CardTitle className="text-base">{list.name}</CardTitle>
-            <CardDescription className="flex items-center gap-2 pt-1">
-              <Calendar className="h-4 w-4" />
-              Creato {formatDistanceToNow(new Date(list.createdAt), { addSuffix: true, locale: it })}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-grow p-0">
-            <div className="text-sm text-muted-foreground">
-              {purchasedCount} di {itemsCount} prodotti acquistati.
-            </div>
-          </CardContent>
+        <div className="p-3 bg-primary/10 rounded-xl">
+          <List className="h-6 w-6 text-primary" />
         </div>
-      </div>
-      <CardFooter className="p-3">
-        <Button asChild className="w-full">
-          <Link href={`/lists/${list.id}`}>
-            Vai alla Lista
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
+        <div className="flex-1" onClick={() => onEdit(list)}>
+          <p className="font-bold cursor-pointer hover:underline">{list.name}</p>
+          <div className="flex items-center gap-2">
+            {isCompleted && <Badge className="bg-green-100 text-green-700 text-xs px-1.5 py-0">OK</Badge>}
+            <p className="text-sm text-muted-foreground">{list.items.length} articoli</p>
+          </div>
+        </div>
+        <Link href={`/lists/${list.id}`} passHref>
+          <Button asChild variant="ghost" size="icon" className="h-9 w-9">
+            <a aria-label={`Vai alla lista ${list.name}`}><ArrowRight className="h-5 w-5 text-gray-500" /></a>
+          </Button>
+        </Link>
+        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => onDuplicate(list.id)}>
+          <Copy className="h-5 w-5 text-gray-500" />
+           <span className="sr-only">Duplica</span>
         </Button>
-      </CardFooter>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive/70 hover:text-destructive">
+              <Trash2 className="h-5 w-5" />
+               <span className="sr-only">Elimina</span>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Sei sicuro di voler eliminare "{list.name}"?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      Questa azione non può essere annullata. La lista verrà rimossa permanentemente.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>Annulla</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onDelete(list.id)}>Elimina</AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </CardContent>
     </Card>
   )
 }
 
-export function ShoppingLists({ lists, onReorder }: ShoppingListsProps) {
-  // TODO: Implement Add List Dialog
-  const handleAddList = () => {
-    console.log("Add new list");
-  }
-
+export function ShoppingLists({ lists, onReorder, onAddList, onEditList, onDeleteList, onDuplicateList }: ShoppingListsProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -90,9 +121,9 @@ export function ShoppingLists({ lists, onReorder }: ShoppingListsProps) {
     })
   );
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over.id) {
+    if (over && active.id !== over.id) {
       const oldIndex = lists.findIndex((l) => l.id === active.id);
       const newIndex = lists.findIndex((l) => l.id === over.id);
       const newOrder = arrayMove(lists, oldIndex, newIndex);
@@ -102,33 +133,40 @@ export function ShoppingLists({ lists, onReorder }: ShoppingListsProps) {
 
   return (
     <>
-      <PageHeader
-        title="Liste"
-        actions={
-          <Button onClick={handleAddList}>
-            <PlusCircle />
-            Crea Lista
-          </Button>
-        }
-      />
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          Le Mie Liste
+        </h1>
+        <Button onClick={onAddList} className="h-11 rounded-full text-base font-bold">
+          <Plus className="mr-2 h-4 w-4" />
+          Nuova
+        </Button>
+      </div>
+
       {lists.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={lists.map(l => l.id)} strategy={verticalListSortingStrategy}>
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 pb-20">
               {lists.map((list) => (
-                <SortableListItem key={list.id} list={list} />
+                <SortableListItem 
+                    key={list.id} 
+                    list={list}
+                    onDelete={onDeleteList}
+                    onDuplicate={onDuplicateList}
+                    onEdit={onEditList}
+                />
               ))}
             </div>
           </SortableContext>
         </DndContext>
       ) : (
-        <div className="text-center py-16 border-dashed border-2 rounded-lg">
+        <div className="text-center py-16 border-dashed border-2 rounded-lg mt-8">
             <List className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-medium">Nessuna lista trovata</h3>
             <p className="mt-2 text-sm text-muted-foreground">Inizia creando la tua prima lista della spesa.</p>
-            <Button className="mt-6" onClick={handleAddList}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Crea Lista
+            <Button className="mt-6" onClick={onAddList}>
+                <Plus className="mr-2 h-4 w-4" />
+                Crea Nuova Lista
             </Button>
         </div>
       )}

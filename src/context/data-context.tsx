@@ -49,6 +49,7 @@ interface DataContextType extends AllData {
   addShoppingList: (list: Omit<ShoppingList, 'id' | 'createdAt' | 'order'>) => void;
   updateShoppingList: (list: ShoppingList) => void;
   deleteShoppingList: (listId: string) => void;
+  duplicateShoppingList: (listId: string) => string | undefined;
   archiveShoppingList: (receipt: Receipt) => void;
   unarchiveReceipt: (receiptId: string) => void;
   setCategories: (categories: Category[]) => void;
@@ -253,6 +254,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
       else setLocalShoppingLists(prev => prev.filter(l => l.id !== listId));
   };
 
+  const duplicateShoppingList = (listId: string): string | undefined => {
+    const listToDuplicate = shoppingLists.find(l => l.id === listId);
+    if (listToDuplicate) {
+      const maxOrder = shoppingLists.length > 0 ? Math.max(...shoppingLists.map(l => l.order)) : 0;
+      const newListId = `l${Date.now()}`;
+      const newList = {
+        ...listToDuplicate,
+        id: newListId,
+        name: `${listToDuplicate.name} (Copia)`,
+        createdAt: new Date().toISOString(),
+        order: maxOrder + 1,
+      };
+      if (user) { writeToFirestore('shoppingLists', newList); }
+      else {
+        setLocalShoppingLists(prev => [newList, ...prev]);
+      }
+      return newListId;
+    }
+    return undefined;
+  };
+
   const archiveShoppingList = async (receipt: Receipt) => {
       if (user) {
           await writeToFirestore('receipts', receipt);
@@ -365,6 +387,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addShoppingList,
     updateShoppingList,
     deleteShoppingList,
+    duplicateShoppingList,
     archiveShoppingList,
     unarchiveReceipt,
     setCategories,

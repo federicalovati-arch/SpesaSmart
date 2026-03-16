@@ -3,7 +3,7 @@
 import { useRouter, useParams } from 'next/navigation';
 import { useData } from '@/context/data-context';
 import { ShoppingListDetails } from './components/shopping-list-details';
-import type { Receipt, ShoppingList } from '@/lib/types';
+import type { Receipt, ShoppingList, Product } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ export default function ListDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const { toast } = useToast();
-  const { shoppingLists, products, supermarkets, categories, updateShoppingList, archiveShoppingList, addProduct } = useData();
+  const { shoppingLists, products, supermarkets, categories, updateShoppingList, duplicateShoppingList, archiveShoppingList, addProduct } = useData();
 
   const list = shoppingLists.find((l) => l.id === params.id);
   
@@ -35,6 +35,29 @@ export default function ListDetailPage() {
   
   const handleUpdateList = (updatedList: ShoppingList) => {
     updateShoppingList(updatedList);
+  }
+
+  const handleDuplicateList = (listId: string) => {
+    const newListId = duplicateShoppingList(listId);
+    toast({ title: 'Lista duplicata!' });
+    if(newListId) {
+      router.push(`/lists/${newListId}`);
+    }
+  }
+
+  const handleAddProductToList = (product: Product, quantity: number) => {
+    const itemExists = list?.items.find(i => i.productId === product.id);
+
+    let newItems: ShoppingList['items'];
+
+    if(itemExists) {
+        newItems = list.items.map(i => i.productId === product.id ? {...i, quantity: i.quantity + quantity} : i);
+    } else {
+        newItems = [...list.items, { productId: product.id, quantity, purchased: false }];
+    }
+    
+    updateShoppingList({ ...list, items: newItems });
+    toast({ title: `${product.name} aggiunto alla lista!` });
   }
 
   if (!list) {
@@ -61,7 +84,8 @@ export default function ListDetailPage() {
       allCategories={categories}
       onUpdateList={handleUpdateList}
       onArchive={handleArchive}
-      onAddProduct={addProduct}
+      onDuplicateList={handleDuplicateList}
+      onAddProductToList={handleAddProductToList}
     />
   );
 }

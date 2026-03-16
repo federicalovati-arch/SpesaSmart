@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { format } from 'date-fns';
@@ -16,6 +16,7 @@ import type {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -26,7 +27,6 @@ import {
   Copy,
   Plus,
   Sparkles,
-  TrendingUp,
   Pencil,
   Trash2,
   Archive,
@@ -34,12 +34,13 @@ import {
   Clover,
   Zap,
   Carrot,
-  LucideIcon
+  LucideIcon,
+  Check as CheckIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ArchiveListDialog } from './archive-list-dialog';
 import { cn } from '@/lib/utils';
-
+import { useToast } from '@/hooks/use-toast';
 
 type ListDetailsProps = {
   list: ShoppingList;
@@ -48,7 +49,8 @@ type ListDetailsProps = {
   allCategories: Category[];
   onUpdateList: (list: ShoppingList) => void;
   onArchive: (receipt: Receipt) => void;
-  onAddProduct: (product: Omit<Product, 'id'>) => void;
+  onDuplicateList: (listId: string) => void;
+  onAddProductToList: (product: Product, quantity: number) => void;
 };
 
 type EnrichedListItem = ShoppingListItem & {
@@ -75,11 +77,35 @@ export function ShoppingListDetails({
   allSupermarkets,
   onUpdateList,
   onArchive,
+  onDuplicateList,
 }: ListDetailsProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [list, setList] = useState(initialList);
   const [view, setView] = useState<'standard' | 'risparmio'>('risparmio');
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [listName, setListName] = useState(initialList.name);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditingName) {
+      nameInputRef.current?.focus();
+    }
+  }, [isEditingName]);
+
+  const handleNameChange = () => {
+    if (listName.trim() === '') {
+      setListName(list.name); // revert
+      toast({ variant: 'destructive', title: 'Il nome non può essere vuoto.' });
+      return;
+    }
+    const updatedList = { ...list, name: listName };
+    setList(updatedList);
+    onUpdateList(updatedList);
+    setIsEditingName(false);
+    toast({ title: 'Nome lista aggiornato!' });
+  }
 
   const handleItemChange = (productId: string, values: Partial<ShoppingListItem>) => {
     const updatedList = {
@@ -199,22 +225,36 @@ export function ShoppingListDetails({
       <div className="flex flex-col bg-gray-50 flex-1 min-h-screen">
         {/* Header */}
         <header className="p-4 bg-gray-50">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" onClick={() => router.back()}>
                     <ArrowLeft className="h-6 w-6" />
                 </Button>
-                <div>
-                    <h1 className="text-2xl font-bold">{list.name}</h1>
-                    <p className="text-sm text-muted-foreground">
-                        {list.items.length} ARTICOLI • {format(new Date(list.createdAt), 'dd/MM/yyyy', { locale: it })}
-                    </p>
+                <div className="flex-1 flex items-center gap-2" >
+                    {isEditingName ? (
+                      <Input 
+                        ref={nameInputRef}
+                        value={listName}
+                        onChange={(e) => setListName(e.target.value)}
+                        onBlur={handleNameChange}
+                        onKeyDown={(e) => e.key === 'Enter' && handleNameChange()}
+                        className="text-2xl font-bold h-auto p-0 border-none focus-visible:ring-0 bg-transparent"
+                      />
+                    ) : (
+                      <h1 className="text-2xl font-bold" onClick={() => setIsEditingName(true)}>{list.name}</h1>
+                    )}
+                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isEditingName ? handleNameChange() : setIsEditingName(true)}>
+                       {isEditingName ? <CheckIcon className="h-5 w-5 text-primary"/> : <Pencil className="h-4 w-4"/>}
+                    </Button>
                 </div>
-                <Button variant="ghost" size="icon" className="ml-auto">
+                <Button variant="ghost" size="icon" onClick={() => onDuplicateList(list.id)}>
                     <Copy className="h-5 w-5" />
                 </Button>
             </div>
+             <p className="text-sm text-muted-foreground ml-12 -mt-2">
+                {list.items.length} ARTICOLI • {format(new Date(list.createdAt), 'dd/MM/yyyy', { locale: it })}
+            </p>
             <div className="flex items-center gap-2 my-4">
-                <Button className="flex-1 h-11 rounded-lg bg-white text-primary shadow hover:bg-gray-100"><Plus className="mr-2"/> AGGIUNGI</Button>
+                <Button className="flex-1 h-11 rounded-lg bg-white text-primary shadow hover:bg-gray-100" disabled><Plus className="mr-2"/> AGGIUNGI</Button>
                 <Button className="flex-1 h-11 rounded-lg bg-white text-primary shadow hover:bg-gray-100" disabled><Sparkles className="mr-2"/> AI Advisor</Button>
             </div>
              <div className="flex items-center justify-center p-1 rounded-full bg-gray-200/60 w-full mb-2">
@@ -284,7 +324,7 @@ export function ShoppingListDetails({
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <p className="font-bold text-primary text-lg">€{((item.price || 0) * item.quantity).toFixed(2)}</p>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" disabled><Pencil className="h-4 w-4" /></Button>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70" onClick={() => handleDeleteItem(item.productId)}><Trash2 className="h-4 w-4" /></Button>
                                         </div>
                                     </div>
@@ -296,9 +336,33 @@ export function ShoppingListDetails({
             )}
              {view === 'standard' && (
                  <div className="space-y-2">
-                    <div className="p-4 text-center bg-gray-100 rounded-lg">
-                        <p className="text-muted-foreground">La vista standard non è ancora stata implementata.</p>
-                    </div>
+                    {enrichedItems.map(item => (
+                         <div key={item.productId} className={cn("flex items-start gap-3 p-3 rounded-2xl bg-white shadow-sm", item.purchased && "opacity-60")}>
+                            <Checkbox
+                                checked={item.purchased}
+                                onCheckedChange={(checked) => handleItemChange(item.productId, { purchased: !!checked })}
+                                className="h-6 w-6 rounded-full mt-1 border-2"
+                            />
+                            {item.imageUrl ?
+                                <Image src={item.imageUrl} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14" />
+                                : <div className="h-14 w-14 rounded-lg bg-gray-100" />
+                            }
+                            <div className="flex-1">
+                                <p className={cn("font-bold", item.purchased && "line-through")}>{item.product.name}</p>
+                                <p className="text-sm text-gray-500">
+                                    {item.quantity} pz
+                                </p>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                                {item.price && <p className="font-bold text-primary text-lg">€{((item.price || 0) * item.quantity).toFixed(2)}</p>}
+                                {item.supermarket && <p className="text-xs text-gray-500 flex items-center gap-1"><SupermarketIcon name={item.supermarket.name} /> {item.supermarket.name}</p>}
+                                <div className="flex items-center">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" disabled><Pencil className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70" onClick={() => handleDeleteItem(item.productId)}><Trash2 className="h-4 w-4" /></Button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
         </main>
