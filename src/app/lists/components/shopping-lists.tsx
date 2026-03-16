@@ -41,16 +41,14 @@ type ShoppingListsProps = {
   lists: ShoppingList[];
   onReorder: (lists: ShoppingList[]) => void;
   onAddList: () => void;
-  onEditList: (list: ShoppingList) => void;
   onDeleteList: (listId: string) => void;
   onDuplicateList: (listId: string) => void;
 };
 
-function SortableListItem({ list, onDuplicate, onDelete, onEdit }: {
+function SortableListItem({ list, onDuplicate, onDelete }: {
   list: ShoppingList;
   onDuplicate: (listId: string) => void;
   onDelete: (listId: string) => void;
-  onEdit: (list: ShoppingList) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: list.id });
 
@@ -69,20 +67,18 @@ function SortableListItem({ list, onDuplicate, onDelete, onEdit }: {
         <div {...attributes} {...listeners} className="cursor-grab p-2 touch-none">
           <GripVertical className="h-5 w-5 text-gray-400" />
         </div>
-        <div className="p-3 bg-primary/10 rounded-xl">
-          <List className="h-6 w-6 text-primary" />
-        </div>
-        <div className="flex-1" onClick={() => onEdit(list)}>
-          <p className="font-bold cursor-pointer hover:underline">{list.name}</p>
-          <div className="flex items-center gap-2">
-            {isCompleted && <Badge className="bg-green-100 text-green-700 text-xs px-1.5 py-0">OK</Badge>}
-            <p className="text-sm text-muted-foreground">{list.items.length} articoli</p>
+        <Link href={`/lists/${list.id}`} className="flex-1 flex items-center gap-3">
+          <div className="p-3 bg-primary/10 rounded-xl">
+            <List className="h-6 w-6 text-primary" />
           </div>
-        </div>
-        <Link href={`/lists/${list.id}`} passHref>
-          <Button asChild variant="ghost" size="icon" className="h-9 w-9">
-            <a aria-label={`Vai alla lista ${list.name}`}><ArrowRight className="h-5 w-5 text-gray-500" /></a>
-          </Button>
+          <div className="flex-1">
+            <p className="font-bold">{list.name}</p>
+            <div className="flex items-center gap-2">
+              {isCompleted && <Badge className="bg-green-100 text-green-700 text-xs px-1.5 py-0">OK</Badge>}
+              <p className="text-sm text-muted-foreground">{list.items.length} articoli</p>
+            </div>
+          </div>
+          <ArrowRight className="h-5 w-5 text-gray-500" />
         </Link>
         <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => onDuplicate(list.id)}>
           <Copy className="h-5 w-5 text-gray-500" />
@@ -113,7 +109,7 @@ function SortableListItem({ list, onDuplicate, onDelete, onEdit }: {
   )
 }
 
-export function ShoppingLists({ lists, onReorder, onAddList, onEditList, onDeleteList, onDuplicateList }: ShoppingListsProps) {
+export function ShoppingLists({ lists, onReorder, onAddList, onDeleteList, onDuplicateList }: ShoppingListsProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -153,7 +149,6 @@ export function ShoppingLists({ lists, onReorder, onAddList, onEditList, onDelet
                     list={list}
                     onDelete={onDeleteList}
                     onDuplicate={onDuplicateList}
-                    onEdit={onEditList}
                 />
               ))}
             </div>

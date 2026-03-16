@@ -7,11 +7,10 @@ import { useToast } from '@/hooks/use-toast';
 import { AddListDialog } from './components/add-list-dialog';
 
 export default function ListsPage() {
-  const { shoppingLists, addShoppingList, updateShoppingList, deleteShoppingList, duplicateShoppingList, setShoppingLists } = useData();
+  const { shoppingLists, addShoppingList, setShoppingLists, deleteShoppingList, duplicateShoppingList } = useData();
   const { toast } = useToast();
 
   const [isAddListDialogOpen, setIsAddListDialogOpen] = useState(false);
-  const [listToEdit, setListToEdit] = useState<ShoppingList | undefined>(undefined);
   
   const handleReorderLists = (reorderedLists: ShoppingList[]) => {
     setShoppingLists(reorderedLists);
@@ -19,23 +18,12 @@ export default function ListsPage() {
   };
 
   const handleOpenAddDialog = () => {
-    setListToEdit(undefined);
-    setIsAddListDialogOpen(true);
-  }
-
-  const handleOpenEditDialog = (list: ShoppingList) => {
-    setListToEdit(list);
     setIsAddListDialogOpen(true);
   }
 
   const handleSaveList = (name: string, items?: ShoppingList['items']) => {
-    if (listToEdit) {
-      updateShoppingList({ ...listToEdit, name });
-      toast({ title: 'Lista aggiornata!' });
-    } else {
-      addShoppingList({ name, items: items || [] });
-      toast({ title: 'Lista creata!' });
-    }
+    addShoppingList({ name, items: items || [] });
+    toast({ title: 'Lista creata!' });
     setIsAddListDialogOpen(false);
   }
 
@@ -55,7 +43,6 @@ export default function ListsPage() {
         lists={shoppingLists} 
         onReorder={handleReorderLists}
         onAddList={handleOpenAddDialog}
-        onEditList={handleOpenEditDialog}
         onDeleteList={handleDelete}
         onDuplicateList={handleDuplicate}
       />
@@ -63,7 +50,6 @@ export default function ListsPage() {
         isOpen={isAddListDialogOpen}
         setIsOpen={setIsAddListDialogOpen}
         onSave={handleSaveList}
-        listToEdit={listToEdit}
       />
     </div>
   );
