@@ -23,8 +23,25 @@ import type {
   Receipt,
 } from '@/lib/types';
 import { useUser, useFirestore, useCollection } from '@/firebase';
-import { collection, doc, writeBatch, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+
+// Helper to get initial state from localStorage or fallback
+const getInitialState = <T>(key: string, fallback: T[]): T[] => {
+  if (typeof window === 'undefined') {
+    return fallback;
+  }
+  try {
+    const item = window.localStorage.getItem(key);
+    // Ensure we return an array, handle potential null from localStorage
+    const parsedItem = item ? JSON.parse(item) : null;
+    return Array.isArray(parsedItem) ? parsedItem : fallback;
+  } catch (error) {
+    console.warn(`Error reading localStorage key “${key}”:`, error);
+    return fallback;
+  }
+};
+
 
 type AllData = {
   products: Product[];
@@ -62,27 +79,35 @@ interface DataContextType extends AllData {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Define a mapping from collection names to their mock data
-const MOCK_DATA_MAP: { [key: string]: any[] } = {
-  products: mockProducts,
-  supermarkets: mockSupermarkets,
-  categories: mockCategories,
-  shoppingLists: mockShoppingLists,
-  receipts: mockReceipts,
+const LOCAL_STORAGE_KEYS = {
+  products: 'spesa-smart-products',
+  supermarkets: 'spesa-smart-supermarkets',
+  categories: 'spesa-smart-categories',
+  shoppingLists: 'spesa-smart-shoppingLists',
+  receipts: 'spesa-smart-receipts',
 };
+
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  // Local state for guest users
-  const [localProducts, setLocalProducts] = useState<Product[]>(mockProducts);
-  const [localSupermarkets, setLocalSupermarkets] = useState<Supermarket[]>(mockSupermarkets.sort((a,b) => a.order - b.order));
-  const [localCategories, setLocalCategories] = useState<Category[]>(mockCategories.sort((a,b)=>a.order - b.order));
-  const [localShoppingLists, setLocalShoppingLists] = useState<ShoppingList[]>(mockShoppingLists.sort((a,b) => a.order - b.order));
-  const [localReceipts, setLocalReceipts] = useState<Receipt[]>(mockReceipts);
+  // Local state for guest users, initialized from localStorage or mock data
+  const [localProducts, setLocalProducts] = useState<Product[]>(() => getInitialState(LOCAL_STORAGE_KEYS.products, mockProducts));
+  const [localSupermarkets, setLocalSupermarkets] = useState<Supermarket[]>(() => getInitialState(LOCAL_STORAGE_KEYS.supermarkets, mockSupermarkets).sort((a,b) => a.order - b.order));
+  const [localCategories, setLocalCategories] = useState<Category[]>(() => getInitialState(LOCAL_STORAGE_KEYS.categories, mockCategories).sort((a,b)=>a.order - b.order));
+  const [localShoppingLists, setLocalShoppingLists] = useState<ShoppingList[]>(() => getInitialState(LOCAL_STORAGE_KEYS.shoppingLists, mockShoppingLists).sort((a,b) => a.order - b.order));
+  const [localReceipts, setLocalReceipts] = useState<Receipt[]>(() => getInitialState(LOCAL_STORAGE_KEYS.receipts, mockReceipts));
   
+  // Effects to save guest data to localStorage
+  useEffect(() => { if (!user) localStorage.setItem(LOCAL_STORAGE_KEYS.products, JSON.stringify(localProducts)); }, [localProducts, user]);
+  useEffect(() => { if (!user) localStorage.setItem(LOCAL_STORAGE_KEYS.supermarkets, JSON.stringify(localSupermarkets)); }, [localSupermarkets, user]);
+  useEffect(() => { if (!user) localStorage.setItem(LOCAL_STORAGE_KEYS.categories, JSON.stringify(localCategories)); }, [localCategories, user]);
+  useEffect(() => { if (!user) localStorage.setItem(LOCAL_STORAGE_KEYS.shoppingLists, JSON.stringify(localShoppingLists)); }, [localShoppingLists, user]);
+  useEffect(() => { if (!user) localStorage.setItem(LOCAL_STORAGE_KEYS.receipts, JSON.stringify(localReceipts)); }, [localReceipts, user]);
+
+
   const [isSyncing, setIsSyncing] = useState(false);
 
   const getCollectionRef = useCallback((name: string) => {
@@ -90,54 +115,68 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return collection(firestore, 'users', user.uid, name);
   }, [user, firestore]);
 
-  // Firestore collections for authenticated users
   const { data: firestoreProducts, loading: loadingProducts } = useCollection<Product>(getCollectionRef('products'));
   const { data: firestoreSupermarkets, loading: loadingSupermarkets } = useCollection<Supermarket>(getCollectionRef('supermarkets'));
   const { data: firestoreCategories, loading: loadingCategories } = useCollection<Category>(getCollectionRef('categories'));
   const { data: firestoreShoppingLists, loading: loadingShoppingLists } = useCollection<ShoppingList>(getCollectionRef('shoppingLists'));
   const { data: firestoreReceipts, loading: loadingReceipts } = useCollection<Receipt>(getCollectionRef('receipts'));
 
-  
+  const loading = user ? (loadingProducts || loadingSupermarkets || loadingCategories || loadingShoppingLists || loadingReceipts) : false;
+
   // Sync local data to Firestore on first login
   useEffect(() => {
     const syncData = async () => {
-      if (user && firestore && !isSyncing) {
-        setIsSyncing(true);
-        toast({ title: 'Sincronizzazione...', description: 'Sincronizzazione dei dati locali con il cloud.' });
-        try {
-          const collectionsToSync = {
-            products: localProducts,
-            supermarkets: localSupermarkets,
-            categories: localCategories,
-            shoppingLists: localShoppingLists,
-            receipts: localReceipts,
-          };
-          
-          const batch = writeBatch(firestore);
+      if (!user || !firestore || isSyncing) return;
+      
+      // Check if remote is empty by checking one collection
+      const productCol = getCollectionRef('products');
+      if (!productCol) return;
+      
+      const remoteSnapshot = await getDocs(productCol);
+      if (!remoteSnapshot.empty) {
+        // Remote data exists, no need to sync from local.
+        return;
+      }
+      
+      setIsSyncing(true);
+      toast({ title: 'Sincronizzazione...', description: 'Sincronizzazione dei dati locali con il cloud.' });
+      
+      try {
+        const batch = writeBatch(firestore);
 
-          for (const [collectionName, localData] of Object.entries(collectionsToSync)) {
-             if (localData && localData.length > 0) {
-               for (const item of localData) {
-                 const docRef = doc(firestore, 'users', user.uid, collectionName, item.id);
-                 batch.set(docRef, item);
-               }
-             }
-          }
-          await batch.commit();
-          toast({ title: 'Sincronizzazione Completata!', description: 'I tuoi dati sono ora salvati nel cloud.' });
-        } catch (error) {
-          console.error("Error syncing data to Firestore:", error);
-          toast({ variant: 'destructive', title: 'Errore di Sincronizzazione', description: 'Impossibile salvare i dati nel cloud.' });
-        } finally {
-          setIsSyncing(false); 
-        }
+        const dataToSync = {
+          products: getInitialState(LOCAL_STORAGE_KEYS.products, mockProducts),
+          supermarkets: getInitialState(LOCAL_STORAGE_KEYS.supermarkets, mockSupermarkets),
+          categories: getInitialState(LOCAL_STORAGE_KEYS.categories, mockCategories),
+          shoppingLists: getInitialState(LOCAL_STORAGE_KEYS.shoppingLists, mockShoppingLists),
+          receipts: getInitialState(LOCAL_STORAGE_KEYS.receipts, mockReceipts),
+        };
+
+        Object.entries(dataToSync).forEach(([collectionName, data]) => {
+          data.forEach(item => {
+            // Ensure item has an ID before trying to sync
+            if (item && item.id) {
+              const docRef = doc(firestore, 'users', user.uid, collectionName, item.id);
+              batch.set(docRef, item);
+            }
+          });
+        });
+
+        await batch.commit();
+        toast({ title: 'Sincronizzazione Completata!', description: 'I tuoi dati sono ora salvati nel cloud.' });
+      } catch (error) {
+        console.error("Error syncing data to Firestore:", error);
+        toast({ variant: 'destructive', title: 'Errore di Sincronizzazione', description: 'Impossibile salvare i dati nel cloud.' });
+      } finally {
+        setIsSyncing(false);
       }
     };
-  
-    if (user && firestoreProducts?.length === 0 && localProducts.length > 0) {
+
+    // Trigger sync only when user logs in and all collections are loaded
+    if (user && firestore && !loading) {
       syncData();
     }
-  }, [user, firestore, firestoreProducts, localProducts, isSyncing, toast, localCategories, localReceipts, localShoppingLists, localSupermarkets]);
+  }, [user, firestore, loading, isSyncing, toast, getCollectionRef]);
 
   // Determine which data to use
   const products = user ? firestoreProducts || [] : localProducts;
@@ -145,7 +184,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const categories = user ? (firestoreCategories || []).sort((a,b)=>a.order - b.order) : localCategories;
   const shoppingLists = user ? (firestoreShoppingLists || []).sort((a,b) => a.order - b.order) : localShoppingLists;
   const receipts = user ? firestoreReceipts || [] : localReceipts;
-  const loading = user ? (loadingProducts || loadingSupermarkets || loadingCategories || loadingShoppingLists || loadingReceipts) : false;
 
   const writeToFirestore = async (collectionName: string, item: any) => {
     if (user && firestore) {

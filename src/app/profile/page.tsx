@@ -88,8 +88,6 @@ export default function ProfilePage() {
         importData(data);
 
         toast({ title: 'Importazione Riuscita', description: 'I tuoi dati sono stati ripristinati dal backup.' });
-        // Force a reload or a state update to reflect changes immediately
-         setTimeout(() => window.location.reload(), 1000);
       } catch (error: any) {
         toast({ variant: 'destructive', title: 'Errore Importazione', description: error.message || 'Il file potrebbe essere corrotto o non avere un formato JSON valido.' });
       } finally {
