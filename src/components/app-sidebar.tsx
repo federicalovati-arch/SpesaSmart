@@ -7,7 +7,6 @@ import {
   LayoutGrid,
   ShoppingBasket,
   List,
-  History,
   User,
   Receipt,
 } from 'lucide-react';

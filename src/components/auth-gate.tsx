@@ -61,7 +61,7 @@ export function AuthGate() {
 
   if (user) {
     return (
-      <Button onClick={handleSignOut} variant="destructive">
+      <Button onClick={handleSignOut} variant="link" className="text-destructive font-bold">
         <LogOut className="mr-2 h-4 w-4" />
         Esci
       </Button>
