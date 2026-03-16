@@ -25,27 +25,29 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import {
-  ArrowLeft,
-  Copy,
-  Plus,
-  Sparkles,
-  Pencil,
-  Trash2,
-  Archive,
-  Store,
-  Clover,
-  Zap,
-  Carrot,
-  LucideIcon,
-  Check as CheckIcon,
-  ShoppingBasket,
-  Minus,
-  Box,
+    ArrowLeft,
+    Copy,
+    Plus,
+    Sparkles,
+    Pencil,
+    Trash2,
+    Archive,
+    Store,
+    Clover,
+    Zap,
+    Carrot,
+    LucideIcon,
+    Check as CheckIcon,
+    ShoppingBasket,
+    Minus,
+    Box,
+    X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
+import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
 
 const ArchiveListDialog = dynamic(() => import('./archive-list-dialog').then(mod => mod.ArchiveListDialog), { ssr: false });
 const PriceOverrideDialog = dynamic(() => import('./price-override-dialog').then(mod => mod.PriceOverrideDialog), { ssr: false });
@@ -125,6 +127,7 @@ export function ShoppingListDetails({
   const [isPriceDialogOpen, setIsPriceDialogOpen] = useState(false);
   const [isAddItemSheetOpen, setIsAddItemSheetOpen] = useState(false);
   const [selectedItemForPrice, setSelectedItemForPrice] = useState<EnrichedListItem | null>(null);
+  const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
 
   useEffect(() => {
     setList(initialList);
@@ -384,13 +387,24 @@ export function ShoppingListDetails({
                                             onCheckedChange={(checked) => handleItemChange(item.productId, { purchased: !!checked })}
                                             className="h-6 w-6 rounded-full mt-1 border-2"
                                         />
-                                        {item.imageUrl ? 
-                                          <Image src={item.imageUrl} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14" />
-                                          : 
-                                          <div className="h-14 w-14 rounded-lg bg-gray-100 flex items-center justify-center">
-                                            <Box className="h-8 w-8 text-gray-400" />
-                                          </div>
-                                        }
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (item.imageUrl) {
+                                                    setEnlargedImage(item.imageUrl);
+                                                }
+                                            }}
+                                            disabled={!item.imageUrl}
+                                            className="shrink-0"
+                                        >
+                                            {item.imageUrl ? (
+                                                <Image src={item.imageUrl} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14" />
+                                            ) : (
+                                                <div className="h-14 w-14 rounded-lg bg-gray-100 flex items-center justify-center">
+                                                    <Box className="h-8 w-8 text-gray-400" />
+                                                </div>
+                                            )}
+                                        </button>
                                         <div className="flex-1">
                                             <p className={cn("font-bold", item.purchased && "line-through")}>{item.product.name}</p>
                                             <p className="text-sm text-gray-500">
@@ -431,13 +445,24 @@ export function ShoppingListDetails({
                                 onCheckedChange={(checked) => handleItemChange(item.productId, { purchased: !!checked })}
                                 className="h-6 w-6 rounded-full mt-1 border-2 border-primary data-[state=checked]:bg-primary"
                             />
-                             {item.imageUrl ? 
-                                <Image src={item.imageUrl} alt={item.product.name} width={48} height={48} className="rounded-lg object-cover bg-gray-100 h-12 w-12" />
-                                :
-                                <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center">
-                                  <Box className="h-6 w-6 text-gray-400" />
-                                </div>
-                            }
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (item.imageUrl) {
+                                        setEnlargedImage(item.imageUrl);
+                                    }
+                                }}
+                                disabled={!item.imageUrl}
+                                className="shrink-0"
+                            >
+                                {item.imageUrl ? (
+                                    <Image src={item.imageUrl} alt={item.product.name} width={48} height={48} className="rounded-lg object-cover bg-gray-100 h-12 w-12" />
+                                ) : (
+                                    <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                                    <Box className="h-6 w-6 text-gray-400" />
+                                    </div>
+                                )}
+                            </button>
                             <div className="flex-1 space-y-0.5 self-stretch flex flex-col">
                                 <p className={cn("font-bold", item.purchased && "line-through")}>{item.product.name}</p>
                                 
@@ -555,6 +580,25 @@ export function ShoppingListDetails({
         onAddCatalogProduct={(product) => onAddProductToList(product, 1)}
         onAddQuickProduct={onAddQuickProduct}
       />
+      {enlargedImage && (
+        <Dialog
+          open={!!enlargedImage}
+          onOpenChange={() => setEnlargedImage(null)}
+        >
+          <DialogContent className="p-0 bg-transparent border-none shadow-none w-auto max-w-[90vw] lg:max-w-2xl">
+            <Image
+              src={enlargedImage}
+              alt="Enlarged product image"
+              width={800}
+              height={800}
+              className="object-contain w-full h-auto max-h-[80vh] rounded-lg"
+            />
+            <DialogClose className="absolute -top-2 -right-2 z-50 rounded-full bg-white/80 p-1.5 text-black opacity-100 ring-offset-0 focus:ring-0 backdrop-blur-sm hover:bg-white">
+              <X className="h-5 w-5" />
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
