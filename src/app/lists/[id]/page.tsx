@@ -1,21 +1,17 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useData } from '@/context/data-context';
 import { ShoppingListDetails } from './components/shopping-list-details';
 import type { Receipt, ShoppingList } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 
-type PageProps = {
-  params: {
-    id: string;
-  };
-};
-
-export default function ListDetailPage({ params }: PageProps) {
+export default function ListDetailPage() {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
   const { toast } = useToast();
   const { shoppingLists, products, supermarkets, categories, updateShoppingList, archiveShoppingList, addProduct } = useData();
 
