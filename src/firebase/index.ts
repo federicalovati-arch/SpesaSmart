@@ -1,15 +1,22 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 import { getFirebaseConfig } from './config';
 
 // Provides the Firebase app, auth, and firestore instances.
-export function initializeFirebase() {
+export function initializeFirebase(): {
+  app: FirebaseApp;
+  auth: Auth;
+  firestore: Firestore;
+} | null {
+  const config = getFirebaseConfig();
+  if (!config) {
+    return null;
+  }
+
   const apps = getApps();
-  const app = apps.length
-    ? apps[0]
-    : initializeApp(getFirebaseConfig());
+  const app = apps.length ? apps[0] : initializeApp(config);
 
   const auth = getAuth(app);
   const firestore = getFirestore(app);

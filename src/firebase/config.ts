@@ -18,16 +18,14 @@ if (
   firebaseConfig.apiKey === 'change-me'
 ) {
   console.warn(
-    'Firebase configuration is missing. Please create a `.env.local` file with your Firebase project credentials.'
+    'Firebase configuration is missing. The app will run in guest mode only. Please create a `.env.local` file with your Firebase project credentials to enable cloud features.'
   );
 }
 
 
-export function getFirebaseConfig(): FirebaseOptions {
-  if (!firebaseConfig.apiKey) {
-    throw new Error(
-      'Missing Firebase config. Make sure to set the environment variables in your `.env.local` file.'
-    );
+export function getFirebaseConfig(): FirebaseOptions | null {
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'change-me') {
+    return null;
   }
   return firebaseConfig;
 }

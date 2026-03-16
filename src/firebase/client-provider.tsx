@@ -19,22 +19,24 @@ export function FirebaseClientProvider({
     auth: Auth;
     firestore: Firestore;
   } | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const firebaseInstances = initializeFirebase();
     setFirebase(firebaseInstances);
+    setIsInitialized(true);
   }, []);
 
-  if (!firebase) {
-    // You can render a loading spinner here
-    return <div></div>;
+  if (!isInitialized) {
+    // Render nothing until we have attempted to initialize Firebase.
+    return null;
   }
 
   return (
     <FirebaseProvider
-      app={firebase.app}
-      auth={firebase.auth}
-      firestore={firebase.firestore}
+      app={firebase?.app || null}
+      auth={firebase?.auth || null}
+      firestore={firebase?.firestore || null}
     >
       {children}
     </FirebaseProvider>
