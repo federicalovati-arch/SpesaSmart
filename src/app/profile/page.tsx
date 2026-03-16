@@ -18,6 +18,7 @@ import {
   Download,
   Upload,
   Check,
+  Loader2,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -28,6 +29,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dataUsage, setDataUsage] = useState(0);
+  const [isImporting, setIsImporting] = useState(false);
 
   const getInitials = (name?: string | null) => {
     if (!name) return '...';
@@ -48,7 +50,7 @@ export default function ProfilePage() {
       }
     };
     estimateSize();
-  }, [exportData]);
+  }, [exportData, importData]); // Rerun on importData to recalc size
 
   const handleExport = () => {
     try {
@@ -78,14 +80,15 @@ export default function ProfilePage() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        setIsImporting(true);
         const text = e.target?.result;
         if (typeof text !== 'string') throw new Error('Impossibile leggere il file.');
         
         const data = JSON.parse(text);
         
-        importData(data);
+        await importData(data);
 
         toast({ title: 'Importazione Riuscita', description: 'I tuoi dati sono stati ripristinati dal backup.' });
       } catch (error: any) {
@@ -93,6 +96,7 @@ export default function ProfilePage() {
       } finally {
         // Reset file input
         if(fileInputRef.current) fileInputRef.current.value = '';
+        setIsImporting(false);
       }
     };
     reader.readAsText(file);
@@ -161,9 +165,9 @@ export default function ProfilePage() {
                     <Download className="mr-2" />
                     Esporta JSON
                 </Button>
-                <Button className="w-full h-12" variant="outline" onClick={handleImportClick}>
-                    <Upload className="mr-2" />
-                    Importa JSON
+                <Button className="w-full h-12" variant="outline" onClick={handleImportClick} disabled={isImporting}>
+                    {isImporting ? <Loader2 className="mr-2 animate-spin" /> : <Upload className="mr-2" />}
+                    {isImporting ? 'Importazione...' : 'Importa JSON'}
                 </Button>
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".json" />
             </CardContent>

@@ -73,7 +73,7 @@ interface DataContextType extends AllData {
   setCategories: (categories: Category[]) => void;
   setSupermarkets: (supermarkets: Supermarket[]) => void;
   setShoppingLists: (lists: ShoppingList[]) => void;
-  importData: (data: Partial<AllData>) => void;
+  importData: (data: Partial<AllData>) => Promise<void>;
   exportData: () => AllData;
 }
 
@@ -400,15 +400,36 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const setBatch = async (collectionName: string, items: any[]) => {
-    if (user && firestore && items?.length > 0) {
-      const batch = writeBatch(firestore);
-      items.forEach(item => {
-        if (item.id) { // Ensure item has an id
-          const docRef = doc(firestore, 'users', user.uid, collectionName, item.id);
-          batch.set(docRef, item);
-        }
+    if (!user || !firestore) return;
+
+    const batch = writeBatch(firestore);
+    
+    // 1. Get all existing docs in the collection to delete them
+    const collectionRef = collection(firestore, 'users', user.uid, collectionName);
+    try {
+      const snapshot = await getDocs(collectionRef);
+      snapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
       });
+
+      // 2. Add new items from the imported file
+      if (items && Array.isArray(items)) {
+          items.forEach(item => {
+              if (item.id) { // Ensure item has an id
+                  const docRef = doc(firestore, 'users', user.uid, collectionName, item.id);
+                  batch.set(docRef, item);
+              }
+          });
+      }
+
       await batch.commit();
+    } catch (error) {
+      console.error(`Error during batch operation for ${collectionName}:`, error);
+      toast({
+        variant: 'destructive',
+        title: `Errore durante l'importazione`,
+        description: `Impossibile aggiornare la collezione ${collectionName}.`,
+      });
     }
   };
 
@@ -425,7 +446,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       else setLocalShoppingLists(newLists.sort((a,b) => a.order - b.order));
   };
 
-  const importData = (data: Partial<AllData>) => {
+  const importData = async (data: Partial<AllData>) => {
     const dataToImport: AllData = {
         products: Array.isArray(data.products) ? data.products : [],
         supermarkets: Array.isArray(data.supermarkets) ? data.supermarkets : [],
@@ -435,17 +456,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
     };
 
     if (user) {
-      setBatch('products', dataToImport.products);
-      setBatch('supermarkets', dataToImport.supermarkets);
-      setBatch('categories', dataToImport.categories);
-      setBatch('shoppingLists', dataToImport.shoppingLists);
-      setBatch('receipts', dataToImport.receipts);
+      await Promise.all([
+        setBatch('products', dataToImport.products),
+        setBatch('supermarkets', dataToImport.supermarkets),
+        setBatch('categories', dataToImport.categories),
+        setBatch('shoppingLists', dataToImport.shoppingLists),
+        setBatch('receipts', dataToImport.receipts),
+      ]);
     } else {
       setLocalProducts(dataToImport.products);
-      setLocalSupermarkets(dataToImport.supermarkets);
-      setLocalCategories(dataToImport.categories);
-      setLocalShoppingLists(dataToImport.shoppingLists);
-      setLocalReceipts(dataToImport.receipts);
+      setLocalSupermarkets(dataToImport.supermarkets.sort((a,b) => a.order - b.order));
+      setLocalCategories(dataToImport.categories.sort((a,b)=>a.order - b.order));
+      setLocalShoppingLists(dataToImport.shoppingLists.sort((a,b) => a.order - b.order));
+      setLocalReceipts(dataToImport.receipts.sort((a, b) => new Date(b.archivedAt).getTime() - new Date(a.archivedAt).getTime()));
     }
   };
 
