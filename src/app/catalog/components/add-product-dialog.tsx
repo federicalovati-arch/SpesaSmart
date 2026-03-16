@@ -309,11 +309,13 @@ export function AddProductDialog({
                         (img) => !img.supermarketId
                       );
 
-                      const imageUrlToShow = hasPrice
-                        ? imageForSupermarket?.url ||
-                          generalImage?.url ||
-                          getSupermarketIcon(supermarket.id)
-                        : getSupermarketIcon(supermarket.id);
+                      const productImageUrl =
+                        imageForSupermarket?.url || generalImage?.url;
+                      
+                      const imageUrlToShow =
+                        hasPrice && productImageUrl
+                          ? productImageUrl
+                          : getSupermarketIcon(supermarket.id);
 
                       return (
                         <div
