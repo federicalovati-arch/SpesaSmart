@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useState, useEffect, useMemo } from 'react';
-import { format, isToday, isYesterday, subDays } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { it } from 'date-fns/locale';
 import {
   Archive,
@@ -227,7 +227,10 @@ export function ArchiveListDialog({
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] flex flex-col p-0">
+      <SheetContent
+        side="bottom"
+        className="rounded-t-2xl max-h-[90vh] flex flex-col p-0"
+      >
         <SheetHeader className="p-6 pb-4 border-b text-center">
           <SheetTitle>Archivia Spesa</SheetTitle>
           <SheetDescription>
@@ -248,30 +251,28 @@ export function ArchiveListDialog({
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Data della Spesa</label>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant={date && isToday(date) ? 'default' : 'outline'}
-                  onClick={() => setDate(new Date())}
-                  className="h-12 text-base"
-                >
-                  Oggi
-                </Button>
-                <Button
-                  type="button"
-                  variant={date && isYesterday(date) ? 'default' : 'outline'}
-                  onClick={() => setDate(subDays(new Date(), 1))}
-                  className="h-12 text-base"
-                >
-                  Ieri
-                </Button>
-              </div>
-              <p className="text-center text-sm text-muted-foreground pt-2">
-                {date
-                  ? `Spesa del: ${format(date, 'PPP', { locale: it })}`
-                  : 'Seleziona una data'}
-              </p>
+              <label htmlFor="shopping-date" className="text-sm font-medium">
+                Data della Spesa
+              </label>
+              <Input
+                id="shopping-date"
+                type="date"
+                className="h-12 text-base"
+                value={date ? format(date, 'yyyy-MM-dd') : ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    // Use parse from date-fns to avoid timezone issues
+                    const parsedDate = parse(
+                      e.target.value,
+                      'yyyy-MM-dd',
+                      new Date()
+                    );
+                    setDate(parsedDate);
+                  } else {
+                    setDate(undefined);
+                  }
+                }}
+              />
             </div>
 
             <div className="space-y-4">
