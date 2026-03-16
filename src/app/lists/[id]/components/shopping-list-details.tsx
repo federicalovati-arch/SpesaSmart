@@ -23,6 +23,18 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
   ArrowLeft,
   Copy,
   Plus,
@@ -36,6 +48,8 @@ import {
   Carrot,
   LucideIcon,
   Check as CheckIcon,
+  ShoppingBasket,
+  Minus,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ArchiveListDialog } from './archive-list-dialog';
@@ -82,7 +96,7 @@ export function ShoppingListDetails({
   const router = useRouter();
   const { toast } = useToast();
   const [list, setList] = useState(initialList);
-  const [view, setView] = useState<'standard' | 'risparmio'>('risparmio');
+  const [view, setView] = useState<'standard' | 'risparmio'>('standard');
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [listName, setListName] = useState(initialList.name);
@@ -158,23 +172,21 @@ export function ShoppingListDetails({
 
             const generalImage = product.images.find(img => !img.supermarketId);
             const supermarketImage = product.images.find(img => img.supermarketId === priceInfo.supermarketId);
-
-            if (supermarketImage) {
-                imageUrl = supermarketImage.url;
-            } else if (generalImage) {
-                imageUrl = generalImage.url;
-            }
+            const fallbackImage = product.images.length > 0 ? product.images[0].url : null;
+            imageUrl = supermarketImage?.url || generalImage?.url || fallbackImage;
         }
         
-        if (item.overridePrice !== null && item.overridePrice !== undefined && price !== null) {
-            if (item.overridePrice < price) priceStatus = 'offer';
-            else if (item.overridePrice > price) priceStatus = 'increase';
+        if (item.overridePrice !== null && item.overridePrice !== undefined) {
+            const basePrice = price ?? 0;
+            if (item.overridePrice < basePrice) priceStatus = 'offer';
+            else if (item.overridePrice > basePrice) priceStatus = 'increase';
             price = item.overridePrice;
         }
 
         return { ...item, product, price, supermarket, brand, imageUrl, priceStatus };
       })
-      .filter((item): item is EnrichedListItem => item !== null);
+      .filter((item): item is EnrichedListItem => item !== null)
+      .sort((a, b) => (a.product.name > b.product.name ? 1 : -1));
   }, [list.items, allProducts, allSupermarkets]);
 
   const groupedItems = useMemo(() => {
@@ -224,11 +236,12 @@ export function ShoppingListDetails({
     <>
       <div className="flex flex-col bg-gray-50 flex-1 min-h-screen">
         {/* Header */}
-        <header className="p-4 bg-gray-50">
+        <header className="p-4 bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
             <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" onClick={() => router.back()}>
                     <ArrowLeft className="h-6 w-6" />
                 </Button>
+                 <ShoppingBasket className="h-7 w-7 text-gray-400" />
                 <div className="flex-1 flex items-center gap-2" >
                     {isEditingName ? (
                       <Input 
@@ -240,7 +253,7 @@ export function ShoppingListDetails({
                         className="text-2xl font-bold h-auto p-0 border-none focus-visible:ring-0 bg-transparent"
                       />
                     ) : (
-                      <h1 className="text-2xl font-bold" onClick={() => setIsEditingName(true)}>{list.name}</h1>
+                      <h1 className="text-2xl font-bold truncate" onClick={() => setIsEditingName(true)}>{list.name}</h1>
                     )}
                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => isEditingName ? handleNameChange() : setIsEditingName(true)}>
                        {isEditingName ? <CheckIcon className="h-5 w-5 text-primary"/> : <Pencil className="h-4 w-4"/>}
@@ -250,45 +263,38 @@ export function ShoppingListDetails({
                     <Copy className="h-5 w-5" />
                 </Button>
             </div>
-             <p className="text-sm text-muted-foreground ml-12 -mt-2">
+             <p className="text-sm text-muted-foreground ml-16 -mt-2">
                 {list.items.length} ARTICOLI • {format(new Date(list.createdAt), 'dd/MM/yyyy', { locale: it })}
             </p>
             <div className="flex items-center gap-2 my-4">
-                <Button className="flex-1 h-11 rounded-lg bg-white text-primary shadow hover:bg-gray-100" disabled><Plus className="mr-2"/> AGGIUNGI</Button>
-                <Button className="flex-1 h-11 rounded-lg bg-white text-primary shadow hover:bg-gray-100" disabled><Sparkles className="mr-2"/> AI Advisor</Button>
-            </div>
-             <div className="flex items-center justify-center p-1 rounded-full bg-gray-200/60 w-full mb-2">
-                <button
-                    onClick={() => setView('standard')}
-                    className={`flex-1 text-center py-2 px-4 rounded-full text-sm font-semibold transition-all ${
-                    view === 'standard' ? 'bg-white shadow text-primary' : 'bg-transparent text-gray-500'
-                    }`}
-                    >
-                    STANDARD
-                </button>
-                <button
-                    onClick={() => setView('risparmio')}
-                    className={`flex-1 text-center py-2 px-4 rounded-full text-sm font-semibold transition-all ${
-                    view === 'risparmio' ? 'bg-white shadow text-primary' : 'bg-transparent text-gray-500'
-                    }`}
+                <Button className="flex-1 h-11 rounded-lg shadow-sm" disabled><Plus className="mr-2"/> Aggiungi</Button>
+                <Button className="flex-1 h-11 rounded-lg bg-white text-foreground shadow-sm hover:bg-gray-100" disabled><Sparkles className="mr-2"/> AI Advisor</Button>
+                <Button
+                    onClick={() => setView(view === 'risparmio' ? 'standard' : 'risparmio')}
+                    variant={view === 'risparmio' ? 'default' : 'outline'}
+                    className={cn(
+                        "flex-1 h-11 rounded-lg shadow-sm",
+                        view === 'standard' && 'bg-white text-foreground border-gray-300'
+                    )}
                 >
-                    RISPARMIO
-                </button>
+                    <Zap className="mr-2"/> Risparmio
+                </Button>
             </div>
-        </header>
-
-        {/* Body */}
-        <main className="flex-1 overflow-y-auto px-4 pb-40">
-             <div className="space-y-2 mb-4">
-                <p className="text-xs font-semibold text-gray-500">PROGRESSIVO SPESA</p>
+            
+            <div className="space-y-1 mb-2 px-1">
+                <p className="text-xs font-semibold text-gray-500 uppercase">Progressivo Spesa</p>
                 <div className="flex items-center gap-3">
                     <Progress value={progress} className="h-2" />
                     <span className="text-sm font-bold w-12 text-right">{Math.round(progress)}%</span>
                 </div>
             </div>
+        </header>
+
+        {/* Body */}
+        <main className="flex-1 overflow-y-auto px-4 pb-40">
             
             {view === 'risparmio' && groupedItems && (
-                <div className="space-y-4">
+                <div className="space-y-4 pt-2">
                     {Object.values(groupedItems).sort((a,b) => b.subtotal - a.subtotal).map(({supermarket, items, subtotal}) => (
                         <div key={supermarket?.id || 'unknown'}>
                             <div className="flex items-center gap-2 mb-2">
@@ -302,31 +308,17 @@ export function ShoppingListDetails({
                                         <Checkbox
                                             checked={item.purchased}
                                             onCheckedChange={(checked) => handleItemChange(item.productId, { purchased: !!checked })}
-                                            className="h-6 w-6 rounded-full mt-1 border-2"
+                                            className="h-6 w-6 rounded-lg mt-1 border-2"
                                         />
-                                        {item.imageUrl ? 
-                                            <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <Image src={item.imageUrl} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14 cursor-pointer" />
-                                                </DialogTrigger>
-                                                <DialogContent className="p-0 max-w-lg bg-transparent border-none shadow-none">
-                                                    <Image src={item.imageUrl} alt={item.product.name} width={500} height={500} className="rounded-lg object-contain w-full h-full" />
-                                                </DialogContent>
-                                            </Dialog>
-                                            : <div className="h-14 w-14 rounded-lg bg-gray-100" />
-                                        }
+                                        <Image src={item.imageUrl || `https://picsum.photos/seed/${item.productId}/80`} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14" />
                                         <div className="flex-1">
                                             <p className={cn("font-bold", item.purchased && "line-through")}>{item.product.name}</p>
                                             <p className="text-sm text-gray-500">
                                                 {item.quantity} x €{(item.price || 0).toFixed(2)}
-                                                {item.brand && <span className="text-primary"> • {item.brand}</span>}
+                                                {item.brand && <span className="text-primary font-medium"> • {item.brand}</span>}
                                             </p>
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <p className="font-bold text-primary text-lg">€{((item.price || 0) * item.quantity).toFixed(2)}</p>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" disabled><Pencil className="h-4 w-4" /></Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70" onClick={() => handleDeleteItem(item.productId)}><Trash2 className="h-4 w-4" /></Button>
-                                        </div>
+                                        <p className="font-bold text-primary text-lg">€{((item.price || 0) * item.quantity).toFixed(2)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -335,29 +327,73 @@ export function ShoppingListDetails({
                 </div>
             )}
              {view === 'standard' && (
-                 <div className="space-y-2">
+                 <div className="space-y-2 pt-2">
                     {enrichedItems.map(item => (
-                         <div key={item.productId} className={cn("flex items-start gap-3 p-3 rounded-2xl bg-white shadow-sm", item.purchased && "opacity-60")}>
+                         <div key={item.productId} className={cn("flex items-start gap-3 p-3 rounded-xl bg-white shadow-sm", item.purchased && "opacity-50")}>
                             <Checkbox
                                 checked={item.purchased}
                                 onCheckedChange={(checked) => handleItemChange(item.productId, { purchased: !!checked })}
-                                className="h-6 w-6 rounded-full mt-1 border-2"
+                                className="h-6 w-6 rounded-lg mt-1 border-2"
                             />
-                            {item.imageUrl ?
-                                <Image src={item.imageUrl} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14" />
-                                : <div className="h-14 w-14 rounded-lg bg-gray-100" />
-                            }
-                            <div className="flex-1">
-                                <p className={cn("font-bold", item.purchased && "line-through")}>{item.product.name}</p>
-                                <p className="text-sm text-gray-500">
-                                    {item.quantity} pz
-                                </p>
+                            <Image src={item.imageUrl || `https://picsum.photos/seed/${item.productId}/80`} alt={item.product.name} width={48} height={48} className="rounded-lg object-cover bg-gray-100 h-12 w-12" />
+
+                            <div className="flex-1 space-y-0.5">
+                                <p className={cn("font-bold -mb-1", item.purchased && "line-through")}>{item.product.name}</p>
+                                
+                                <Select
+                                    value={item.assignedSupermarketId || 'automatic'}
+                                    onValueChange={(value) => handleItemChange(item.productId, { assignedSupermarketId: value === 'automatic' ? null : value, overridePrice: null })}
+                                >
+                                    <SelectTrigger className="h-auto p-1 border-none bg-gray-100 focus:ring-0 focus:ring-offset-0 w-fit text-xs text-muted-foreground font-semibold rounded-md">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="automatic">Miglior Prezzo</SelectItem>
+                                        {item.product.prices.map(p => {
+                                            const supermarket = allSupermarkets.find(s => s.id === p.supermarketId);
+                                            return supermarket ? (
+                                                <SelectItem key={p.supermarketId} value={p.supermarketId}>
+                                                    {supermarket.name} (€{p.price.toFixed(2)})
+                                                </SelectItem>
+                                            ) : null;
+                                        })}
+                                    </SelectContent>
+                                </Select>
+
+                                <p className="text-xs text-gray-500 pt-0.5">{item.brand || item.product.brand || ' '}</p>
                             </div>
+
                             <div className="flex flex-col items-end gap-1">
-                                {item.price && <p className="font-bold text-primary text-lg">€{((item.price || 0) * item.quantity).toFixed(2)}</p>}
-                                {item.supermarket && <p className="text-xs text-gray-500 flex items-center gap-1"><SupermarketIcon name={item.supermarket.name} /> {item.supermarket.name}</p>}
-                                <div className="flex items-center">
-                                    <Button variant="ghost" size="icon" className="h-8 w-8" disabled><Pencil className="h-4 w-4" /></Button>
+                                <div className="flex items-center gap-2 bg-gray-100 rounded-full">
+                                    <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full" onClick={() => handleItemChange(item.productId, { quantity: Math.max(1, item.quantity - 1) })}>
+                                        <Minus className="h-4 w-4" />
+                                    </Button>
+                                    <span className="font-bold text-sm w-4 text-center">{item.quantity}</span>
+                                    <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full" onClick={() => handleItemChange(item.productId, { quantity: item.quantity + 1 })}>
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                </div>
+
+                                <p className="font-bold text-primary text-base mt-1">€{((item.price || 0) * item.quantity).toFixed(2)}</p>
+                                
+                                <div className="flex items-center -mr-2 -mt-1">
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="h-4 w-4 text-gray-500" /></Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-48 p-3" align="end">
+                                            <div className="grid gap-2">
+                                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Prezzo Manuale (€)</label>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    defaultValue={item.overridePrice ?? undefined}
+                                                    placeholder={(item.price || 0).toFixed(2)}
+                                                    onBlur={(e) => handleItemChange(item.productId, { overridePrice: e.target.value === '' ? null : e.target.valueAsNumber })}
+                                                />
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70" onClick={() => handleDeleteItem(item.productId)}><Trash2 className="h-4 w-4" /></Button>
                                 </div>
                             </div>
@@ -368,16 +404,18 @@ export function ShoppingListDetails({
         </main>
         
         {/* Footer */}
-        <footer className="fixed bottom-0 left-0 right-0 bg-primary/95 backdrop-blur-sm text-primary-foreground p-4 pt-3 rounded-t-3xl md:hidden">
-            <div className="text-center mb-2">
+        <div className="fixed bottom-0 left-0 right-0 p-4 pt-0 bg-transparent md:hidden">
+            <div className="bg-primary/95 backdrop-blur-sm text-primary-foreground p-4 text-center rounded-2xl shadow-lg">
                 <p className="text-xs uppercase font-bold opacity-80">Riepilogo Spesa</p>
                 <p className="text-sm opacity-80">Totale Stimato</p>
-                <p className="text-4xl font-bold">€{totalCost.toFixed(2)}</p>
+                <p className="text-4xl font-bold tracking-tight">€{totalCost.toFixed(2)}</p>
             </div>
-            <Button className="w-full h-14 text-lg bg-white text-primary rounded-xl shadow hover:bg-gray-100" onClick={() => setIsArchiveDialogOpen(true)}>
-                <Archive className="mr-2"/> Archivia Spesa
-            </Button>
-        </footer>
+            <div className="px-4 -mt-6">
+                <Button className="w-full h-14 text-lg bg-white text-primary rounded-xl shadow-lg hover:bg-gray-100" onClick={() => setIsArchiveDialogOpen(true)}>
+                    <CheckIcon className="mr-2"/> Archivia Spesa
+                </Button>
+            </div>
+        </div>
       </div>
       <ArchiveListDialog
         isOpen={isArchiveDialogOpen}
