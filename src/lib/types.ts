@@ -2,6 +2,7 @@ export type Supermarket = {
   id: string;
   name: string;
   location?: string;
+  order: number;
 };
 
 // New type for product images
@@ -39,6 +40,7 @@ export type ShoppingList = {
   name: string;
   createdAt: string;
   items: ShoppingListItem[];
+  order: number;
 };
 
 export type Category = {

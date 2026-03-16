@@ -26,6 +26,8 @@ export default function CatalogPage() {
     addCategory,
     updateCategory,
     deleteCategory,
+    setCategories,
+    setSupermarkets
   } = useData();
 
   const [view, setView] = useState('products');
@@ -63,7 +65,7 @@ export default function CatalogPage() {
     toast({ title: 'Prodotto eliminato.' });
   };
 
-  const handleAddSupermarket = (supermarketData: Omit<Supermarket, 'id'>) => {
+  const handleAddSupermarket = (supermarketData: Omit<Supermarket, 'id'| 'order'>) => {
     addSupermarket(supermarketData);
      toast({ title: 'Negozio aggiunto.' });
   };
@@ -71,6 +73,11 @@ export default function CatalogPage() {
   const handleDeleteSupermarket = (supermarketId: string) => {
     deleteSupermarket(supermarketId);
      toast({ title: 'Negozio eliminato.' });
+  };
+  
+  const handleReorderSupermarkets = (reorderedSupermarkets: Supermarket[]) => {
+    setSupermarkets(reorderedSupermarkets);
+    toast({ title: 'Ordine negozi aggiornato' });
   };
 
   const handleAddCategory = (categoryData: Omit<Category, 'id'>) => {
@@ -98,6 +105,11 @@ export default function CatalogPage() {
   const handleUpdateCategory = (updatedCategory: Category) => {
     updateCategory(updatedCategory);
     toast({ title: 'Categoria aggiornata.' });
+  };
+  
+  const handleReorderCategories = (reorderedCategories: Category[]) => {
+    setCategories(reorderedCategories);
+    toast({ title: 'Ordine categorie aggiornato.' });
   };
 
   return (
@@ -163,6 +175,7 @@ export default function CatalogPage() {
           <SupermarketList
             supermarkets={supermarkets}
             onDeleteSupermarket={handleDeleteSupermarket}
+            onReorder={handleReorderSupermarkets}
           />
         )}
       </div>
@@ -186,6 +199,7 @@ export default function CatalogPage() {
         onAddCategory={handleAddCategory}
         onDeleteCategory={handleDeleteCategory}
         onUpdateCategory={handleUpdateCategory}
+        onReorder={handleReorderCategories}
       />
     </>
   );

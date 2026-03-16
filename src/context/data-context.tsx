@@ -36,16 +36,19 @@ interface DataContextType {
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (product: Product) => void;
   deleteProduct: (productId: string) => void;
-  addSupermarket: (supermarket: Omit<Supermarket, 'id'>) => void;
+  addSupermarket: (supermarket: Omit<Supermarket, 'id' | 'order'>) => void;
   deleteSupermarket: (supermarketId: string) => void;
   addCategory: (category: Omit<Category, 'id'>) => void;
   updateCategory: (category: Category) => void;
   deleteCategory: (categoryId: string) => void;
-  addShoppingList: (list: Omit<ShoppingList, 'id' | 'createdAt'>) => void;
+  addShoppingList: (list: Omit<ShoppingList, 'id' | 'createdAt' | 'order'>) => void;
   updateShoppingList: (list: ShoppingList) => void;
   deleteShoppingList: (listId: string) => void;
   archiveShoppingList: (receipt: Receipt) => void;
   unarchiveReceipt: (receiptId: string) => void;
+  setCategories: (categories: Category[]) => void;
+  setSupermarkets: (supermarkets: Supermarket[]) => void;
+  setShoppingLists: (lists: ShoppingList[]) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -65,9 +68,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Local state for guest users
   const [localProducts, setLocalProducts] = useState<Product[]>(mockProducts);
-  const [localSupermarkets, setLocalSupermarkets] = useState<Supermarket[]>(mockSupermarkets);
+  const [localSupermarkets, setLocalSupermarkets] = useState<Supermarket[]>(mockSupermarkets.sort((a,b) => a.order - b.order));
   const [localCategories, setLocalCategories] = useState<Category[]>(mockCategories.sort((a,b)=>a.order - b.order));
-  const [localShoppingLists, setLocalShoppingLists] = useState<ShoppingList[]>(mockShoppingLists);
+  const [localShoppingLists, setLocalShoppingLists] = useState<ShoppingList[]>(mockShoppingLists.sort((a,b) => a.order - b.order));
   const [localReceipts, setLocalReceipts] = useState<Receipt[]>(mockReceipts);
   
   const [isSyncing, setIsSyncing] = useState(false);
@@ -127,62 +130,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [user, firestore, firestoreProducts, localProducts, isSyncing]);
 
-  const useFirestoreMutation = <T extends { id: string }>(collectionName: string) => {
-    const collectionRef = getCollectionRef(collectionName);
-    
-    const addItem = (itemData: Omit<T, 'id'>) => {
-      if (collectionRef) {
-        const docRef = doc(collectionRef);
-        // addDoc(collectionRef, { ...itemData, id: docRef.id });
-      }
-    };
-    // ... other mutations ...
-    return { addItem };
-  };
-
   // Determine which data to use
   const products = user ? firestoreProducts || [] : localProducts;
-  const supermarkets = user ? firestoreSupermarkets || [] : localSupermarkets;
+  const supermarkets = user ? (firestoreSupermarkets || []).sort((a,b) => a.order - b.order) : localSupermarkets;
   const categories = user ? (firestoreCategories || []).sort((a,b)=>a.order - b.order) : localCategories;
-  const shoppingLists = user ? firestoreShoppingLists || [] : localShoppingLists;
+  const shoppingLists = user ? (firestoreShoppingLists || []).sort((a,b) => a.order - b.order) : localShoppingLists;
   const receipts = user ? firestoreReceipts || [] : localReceipts;
   const loading = user ? (loadingProducts || loadingSupermarkets || loadingCategories || loadingShoppingLists || loadingReceipts) : false;
-
-  // Generic mutation function
-  const createMutation = <T extends { id: string }>(
-    collectionName: string,
-    localSetter: React.Dispatch<React.SetStateAction<T[]>>
-  ) => {
-    const collectionRef = getCollectionRef(collectionName);
-
-    const add = async (data: Omit<T, 'id'>) => {
-      const newId = `id-${Date.now()}`;
-      const newItem = { ...data, id: newId } as T;
-      if (user && collectionRef) {
-        // await setDoc(doc(collectionRef, newId), newItem);
-      } else {
-        localSetter((prev) => [newItem, ...prev]);
-      }
-    };
-
-    const update = async (updatedItem: T) => {
-       if (user && collectionRef) {
-        // await setDoc(doc(collectionRef, updatedItem.id), updatedItem);
-       } else {
-         localSetter(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
-       }
-    };
-    
-    const remove = async (id: string) => {
-        if (user && collectionRef) {
-            // await deleteDoc(doc(collectionRef, id));
-        } else {
-            localSetter(prev => prev.filter(item => item.id !== id));
-        }
-    };
-
-    return { add, update, remove };
-  };
 
     const addProduct = (productData: Omit<Product, 'id'>) => {
         const newProduct = { ...productData, id: `p${Date.now()}` };
@@ -198,8 +152,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         else setLocalProducts((prev) => prev.filter((p) => p.id !== productId));
     };
 
-    const addSupermarket = (supermarketData: Omit<Supermarket, 'id'>) => {
-        const newSupermarket = { ...supermarketData, id: `s${Date.now()}` };
+    const addSupermarket = (supermarketData: Omit<Supermarket, 'id' | 'order'>) => {
+        const newOrder = localSupermarkets.length > 0 ? Math.max(...localSupermarkets.map(s => s.order)) + 1 : 1;
+        const newSupermarket = { ...supermarketData, id: `s${Date.now()}`, order: newOrder };
         if (user) { /* ... */ }
         else setLocalSupermarkets((prev) => [...prev, newSupermarket]);
     };
@@ -248,8 +203,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         else setLocalCategories((prev) => prev.filter((c) => c.id !== categoryId));
     };
 
-    const addShoppingList = (listData: Omit<ShoppingList, 'id' | 'createdAt'>) => {
-        const newList = { ...listData, id: `l${Date.now()}`, createdAt: new Date().toISOString() };
+    const addShoppingList = (listData: Omit<ShoppingList, 'id' | 'createdAt' | 'order'>) => {
+        const newOrder = localShoppingLists.length > 0 ? Math.max(...localShoppingLists.map(l => l.order)) + 1 : 1;
+        const newList = { ...listData, id: `l${Date.now()}`, createdAt: new Date().toISOString(), order: newOrder };
         if (user) {}
         else setLocalShoppingLists(prev => [newList, ...prev]);
     };
@@ -284,6 +240,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const setCategories = (newCategories: Category[]) => {
+        if (user) {}
+        else setLocalCategories(newCategories.sort((a,b) => a.order - b.order));
+    };
+    const setSupermarkets = (newSupermarkets: Supermarket[]) => {
+        if (user) {}
+        else setLocalSupermarkets(newSupermarkets.sort((a,b) => a.order - b.order));
+    };
+    const setShoppingLists = (newLists: ShoppingList[]) => {
+        if (user) {}
+        else setLocalShoppingLists(newLists.sort((a,b) => a.order - b.order));
+    };
+
 
   const value: DataContextType = {
     products,
@@ -305,6 +274,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     deleteShoppingList,
     archiveShoppingList,
     unarchiveReceipt,
+    setCategories,
+    setSupermarkets,
+    setShoppingLists,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

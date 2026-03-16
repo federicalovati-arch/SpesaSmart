@@ -1,9 +1,9 @@
 import type { Product, Supermarket, ShoppingList, Category, Receipt } from './types';
 
 export const mockSupermarkets: Supermarket[] = [
-  { id: 's1', name: 'Eurospin', location: 'Via Roma, 1' },
-  { id: 's2', name: 'Conad', location: 'Corso Italia, 20' },
-  { id: 's3', name: 'Coop', location: 'Piazza Garibaldi, 5' },
+  { id: 's1', name: 'Eurospin', location: 'Via Roma, 1', order: 1 },
+  { id: 's2', name: 'Conad', location: 'Corso Italia, 20', order: 2 },
+  { id: 's3', name: 'Coop', location: 'Piazza Garibaldi, 5', order: 3 },
 ];
 
 export const mockCategories: Category[] = [
@@ -97,9 +97,9 @@ export const mockProducts: Product[] = [
         { id: 'img3', url: 'https://picsum.photos/seed/acciughe3/200/200' },
     ],
     prices: [
-      { supermarketId: 's2', price: 2.41, brand: 'Conad', imageId: 'img1' },
-      { supermarketId: 's3', price: 2.60, brand: 'Gli sp...', imageId: 'img2' },
-      { supermarketId: 's1', price: 1.79, brand: 'Ondina', imageId: 'img3' },
+      { supermarketId: 's2', price: 2.41, brand: 'Conad' },
+      { supermarketId: 's3', price: 2.60, brand: 'Gli sp...' },
+      { supermarketId: 's1', price: 1.79, brand: 'Ondina' },
     ]
   }
 ];
@@ -115,6 +115,7 @@ export const mockShoppingLists: ShoppingList[] = [
       { productId: 'p3', quantity: 1, purchased: false },
       { productId: 'p4', quantity: 3, purchased: false },
     ],
+    order: 1,
   },
   {
     id: 'l2',
@@ -124,6 +125,7 @@ export const mockShoppingLists: ShoppingList[] = [
       { productId: 'p5', quantity: 2, purchased: false },
       { productId: 'p6', quantity: 6, purchased: false },
     ],
+    order: 2,
   },
 ];
 
