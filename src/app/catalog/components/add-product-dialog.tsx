@@ -171,8 +171,8 @@ export function AddProductDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[480px] bg-gray-50 p-0">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className="sm:max-w-[480px] bg-gray-50 p-0 flex flex-col max-h-[95vh] md:max-h-[90vh]">
+        <DialogHeader className="p-6 pb-4 flex-shrink-0">
           <DialogTitle className="text-xl font-bold text-center">
             {productToEdit ? 'Modifica Prodotto' : 'Nuovo Prodotto'}
           </DialogTitle>
@@ -182,86 +182,87 @@ export function AddProductDialog({
           </DialogClose>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="px-6 space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-semibold text-gray-500">NOME PRODOTTO</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Es. Acciughe" {...field} className="bg-white border-primary/50 focus-visible:ring-primary/50" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="brand"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-semibold text-gray-500">MARCA PRINCIPALE</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Es. Granarolo..." {...field} className="bg-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-semibold text-gray-500">CATEGORIA</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-y-hidden">
+            <div className="flex-1 overflow-y-auto">
+              <div className="px-6 space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold text-gray-500">NOME PRODOTTO</FormLabel>
                       <FormControl>
-                        <SelectTrigger className="bg-white">
-                          <SelectValue placeholder="Seleziona una categoria" />
-                        </SelectTrigger>
+                        <Input placeholder="Es. Acciughe" {...field} className="bg-white border-primary/50 focus-visible:ring-primary/50" />
                       </FormControl>
-                      <SelectContent>
-                        {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="bg-white p-6 rounded-t-2xl space-y-4">
-                <h3 className="text-xs font-semibold text-gray-500">PREZZI PER NEGOZIO</h3>
-                <div className="space-y-2">
-                {priceFields.map((field, index) => {
-                    const supermarket = supermarkets.find(s => s.id === field.supermarketId);
-                    if (!supermarket) return null;
-                    const priceImageId = form.watch(`prices.${index}.imageId`);
-                    const priceImage = watchedImages.find(img => img.id === priceImageId);
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="brand"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold text-gray-500">MARCA PRINCIPALE</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Es. Granarolo..." {...field} className="bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold text-gray-500">CATEGORIA</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Seleziona una categoria" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="bg-white p-6 rounded-t-2xl space-y-4 mt-6">
+                  <h3 className="text-xs font-semibold text-gray-500">PREZZI PER NEGOZIO</h3>
+                  <div className="space-y-2">
+                  {priceFields.map((field, index) => {
+                      const supermarket = supermarkets.find(s => s.id === field.supermarketId);
+                      if (!supermarket) return null;
+                      const priceImageId = form.watch(`prices.${index}.imageId`);
+                      const priceImage = watchedImages.find(img => img.id === priceImageId);
 
-                    return (
-                    <div key={field.id} className="flex items-center gap-3 p-2 rounded-xl bg-gray-50">
-                        <Image
-                            src={priceImage?.url || getSupermarketIcon(supermarket.id)}
-                            alt={supermarket.name}
-                            width={40}
-                            height={40}
-                            className="rounded-full object-cover w-10 h-10 bg-white"
-                        />
-                        <div className="flex-1 font-semibold">{supermarket.name}</div>
-                        <FormField
-                            control={form.control}
-                            name={`prices.${index}.price`}
-                            render={({ field: priceField }) => (
-                            <FormItem className="flex items-center gap-1">
-                                <FormControl>
-                                    <Input type="number" step="0.01" {...priceField} className="w-20 text-right font-bold bg-white" placeholder="€ 0.00" />
-                                </FormControl>
-                            </FormItem>
-                            )}
-                        />
+                      return (
+                      <div key={field.id} className="flex items-center gap-3 p-2 rounded-xl bg-gray-50">
+                          <Image
+                              src={priceImage?.url || getSupermarketIcon(supermarket.id)}
+                              alt={supermarket.name}
+                              width={40}
+                              height={40}
+                              className="rounded-full object-cover w-10 h-10 bg-white"
+                          />
+                          <div className="flex-1 font-semibold">{supermarket.name}</div>
+                          <FormField
+                              control={form.control}
+                              name={`prices.${index}.price`}
+                              render={({ field: priceField }) => (
+                              <FormItem className="flex items-center gap-1">
+                                  <FormControl>
+                                      <Input type="number" step="0.01" {...priceField} className="w-20 text-right font-bold bg-white" placeholder="€ 0.00" />
+                                  </FormControl>
+                              </FormItem>
+                              )}
+                          />
                          <FormField
                             control={form.control}
                             name={`prices.${index}.brand`}
@@ -315,8 +316,8 @@ export function AddProductDialog({
                 </div>
             </div>
 
-
-            <DialogFooter className="bg-white p-6 flex-col-reverse gap-2">
+            </div>
+            <DialogFooter className="bg-white p-6 flex-col-reverse gap-2 border-t flex-shrink-0">
               <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90 text-lg">SALVA</Button>
               <Button type="button" variant="ghost" onClick={() => setIsOpen(false)} className="w-full text-lg">
                 ANNULLA
