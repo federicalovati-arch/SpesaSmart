@@ -24,61 +24,43 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --------------------------------------------------------------------
-    // Helper Functions
-    // --------------------------------------------------------------------
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * Verifies that the currently authenticated user's UID matches the provided userId.
-     * This is the cornerstone of the user-ownership model.
-     */
+    // Helper function to check if the user is the owner of the document.
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return request.auth != null && request.auth.uid == userId;
     }
     
-    // --------------------------------------------------------------------
-    // Global Collections (currently unused by logged-in user flow)
-    // These are read-only for any signed-in user. Writes are disabled.
-    // --------------------------------------------------------------------
-
-    match /supermarkets/{supermarketId} {
-      allow get, list: if isSignedIn();
-      allow write: if false;
-    }
-
-    match /products/{productId} {
-      allow get, list: if isSignedIn();
-      allow write: if false;
-    }
-
-    match /productPrices/{productPriceId} {
-      allow get, list: if isSignedIn();
-      allow write: if false;
-    }
-
-    // --------------------------------------------------------------------
-    // User-Specific Data
-    // --------------------------------------------------------------------
-    
-    // Prevent anyone from reading the list of users.
+    // Prevent listing of all users, but allow users to access their own user document.
     match /users/{userId} {
-      allow read, write: if false;
+      allow get, update, delete: if isOwner(userId);
+      allow create: if request.auth.uid == userId;
+      allow list: if false;
     }
 
-    // Secure all primary user data subcollections (products, supermarkets, etc.)
+    // Secure all primary user data subcollections.
     // Only the owner of the data can read or write to it.
-    match /users/{userId}/{collection}/{docId}
-      where collection in ['products', 'supermarkets', 'categories', 'receipts', 'shoppingLists'] {
-        allow read, write: if isOwner(userId);
+    match /users/{userId}/products/{productId} {
+      allow read, write: if isOwner(userId);
     }
-    
-    // Secure the nested shopping list items.
-    match /users/{userId}/shoppingLists/{shoppingListId}/shoppingListItems/{shoppingListItemId} {
+
+    match /users/{userId}/supermarkets/{supermarketId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/categories/{categoryId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/receipts/{receiptId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/shoppingLists/{shoppingListId} {
         allow read, write: if isOwner(userId);
+    
+        // Secure the nested shopping list items.
+        match /shoppingListItems/{shoppingListItemId} {
+            allow read, write: if isOwner(userId);
+        }
     }
   }
 }
