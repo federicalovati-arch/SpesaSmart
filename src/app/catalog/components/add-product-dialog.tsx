@@ -37,7 +37,6 @@ const productSchema = z.object({
       supermarketId: z.string(),
       price: z.coerce.number().optional().default(0),
       brand: z.string().optional(),
-      imageId: z.string().optional(),
     })
   ),
   images: z.array(
@@ -45,6 +44,7 @@ const productSchema = z.object({
       id: z.string(),
       url: z.string(),
       file: z.any().optional(),
+      supermarketId: z.string().optional(),
     })
   ),
 });
@@ -79,7 +79,6 @@ export function AddProductDialog({
             supermarketId: s.id,
             price: 0,
             brand: '',
-            imageId: '',
         })),
     };
     if (productToEdit) {
@@ -88,14 +87,13 @@ export function AddProductDialog({
             name: productToEdit.name,
             brand: productToEdit.brand || '',
             category: productToEdit.category,
-            images: productToEdit.images.map(img => ({...img, file: undefined})),
+            images: productToEdit.images.map(img => ({...img, file: undefined, supermarketId: img.supermarketId || ''})),
             prices: supermarkets.map((s) => {
                 const priceInfo = productToEdit.prices.find(p => p.supermarketId === s.id);
                 return {
                     supermarketId: s.id,
                     price: priceInfo?.price || 0,
                     brand: priceInfo?.brand || '',
-                    imageId: priceInfo?.imageId || '',
                 };
             }),
         }
@@ -128,6 +126,7 @@ export function AddProductDialog({
             id: `new-${Math.random()}`,
             url: e.target?.result as string,
             file: file,
+            supermarketId: '',
           });
         };
         reader.readAsDataURL(file);
@@ -138,22 +137,23 @@ export function AddProductDialog({
   const getSupermarketIcon = (supermarketId: string) => {
     const supermarket = supermarkets.find(s => s.id === supermarketId);
     const name = supermarket?.name.toLowerCase() || '';
-    // This is a simplified version of the icon logic in supermarket-list
     if (name.includes('eurospin')) return 'https://picsum.photos/seed/s1-logo/40/40';
     if (name.includes('conad')) return 'https://picsum.photos/seed/s2-logo/40/40';
     if (name.includes('coop')) return 'https://picsum.photos/seed/s3-logo/40/40';
     return 'https://picsum.photos/seed/s-default/40/40';
   }
+  
+  const watchedImages = form.watch('images');
 
   function onSubmit(values: z.infer<typeof productSchema>) {
     const pricesWithValue = values.prices.filter(p => p.price && p.price > 0);
-    // In a real app, you'd upload images and get back URLs.
-    // For now, we'll just use the data URLs or existing URLs.
-    const finalImages = values.images.map(img => ({ id: img.id.startsWith('new-') ? `img-${Date.now()}` : img.id, url: img.url }));
     
-    // Logic to associate images to supermarkets would go here
-    // based on some UI element we would add.
-    
+    const finalImages = values.images.map(img => ({
+      id: img.id.startsWith('new-') ? `img-${Date.now()}` : img.id,
+      url: img.url,
+      supermarketId: img.supermarketId || undefined,
+    }));
+        
     const productData: Omit<Product, 'id'> = {
       name: values.name,
       brand: values.brand,
@@ -166,8 +166,6 @@ export function AddProductDialog({
     form.reset(defaultValues);
     setIsOpen(false);
   }
-  
-  const watchedImages = form.watch('images');
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -239,13 +237,15 @@ export function AddProductDialog({
                   {priceFields.map((field, index) => {
                       const supermarket = supermarkets.find(s => s.id === field.supermarketId);
                       if (!supermarket) return null;
-                      const priceImageId = form.watch(`prices.${index}.imageId`);
-                      const priceImage = watchedImages.find(img => img.id === priceImageId);
+                      
+                      const imageForSupermarket = watchedImages.find(img => img.supermarketId === supermarket.id);
+                      const generalImage = watchedImages.find(img => !img.supermarketId);
+                      const imageUrlToShow = imageForSupermarket?.url || generalImage?.url || getSupermarketIcon(supermarket.id);
 
                       return (
                       <div key={field.id} className="flex items-center gap-3 p-2 rounded-xl bg-gray-50">
                           <Image
-                              src={priceImage?.url || getSupermarketIcon(supermarket.id)}
+                              src={imageUrlToShow}
                               alt={supermarket.name}
                               width={40}
                               height={40}
@@ -306,11 +306,31 @@ export function AddProductDialog({
                             <button
                                 type="button"
                                 onClick={() => removeImage(index)}
-                                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"
+                                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 z-10"
                             >
                                 <X className="h-4 w-4" />
                             </button>
-                            {/* Here we would add a select to associate image to store price */}
+                             <FormField
+                                control={form.control}
+                                name={`images.${index}.supermarketId`}
+                                render={({ field }) => (
+                                <div className="absolute bottom-1 left-1 right-1 z-0">
+                                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                                        <FormControl>
+                                        <SelectTrigger className="h-7 text-xs bg-black/60 backdrop-blur-sm text-white border-none focus:ring-0 focus:ring-offset-0">
+                                            <SelectValue placeholder="Assegna..." />
+                                        </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="">Immagine Generale</SelectItem>
+                                            {supermarkets.map(s => (
+                                                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                )}
+                            />
                         </div>
                     ))}
                 </div>

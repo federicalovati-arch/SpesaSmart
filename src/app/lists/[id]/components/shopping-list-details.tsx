@@ -17,6 +17,11 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
   ArrowLeft,
   Copy,
   Plus,
@@ -107,10 +112,10 @@ export function ShoppingListDetails({
         let price: number | null = null;
         let supermarket: Supermarket | null = null;
         let brand: string | null = product.brand || null;
-        let imageUrl: string | null = product.images.length > 0 ? product.images[0].url : null;
+        let imageUrl: string | null = null;
         let priceStatus: 'offer' | 'increase' | 'normal' = 'normal';
 
-        const supermarketIdToUse = item.assignedSupermarketId; // For now, we only use optimal
+        const supermarketIdToUse = item.assignedSupermarketId;
         
         let priceInfo;
 
@@ -124,8 +129,15 @@ export function ShoppingListDetails({
             price = priceInfo.price;
             supermarket = allSupermarkets.find(s => s.id === priceInfo.supermarketId) || null;
             if(priceInfo.brand) brand = priceInfo.brand;
-            const imageForPrice = product.images.find(i => i.id === priceInfo.imageId);
-            if (imageForPrice) imageUrl = imageForPrice.url;
+
+            const generalImage = product.images.find(img => !img.supermarketId);
+            const supermarketImage = product.images.find(img => img.supermarketId === priceInfo.supermarketId);
+
+            if (supermarketImage) {
+                imageUrl = supermarketImage.url;
+            } else if (generalImage) {
+                imageUrl = generalImage.url;
+            }
         }
         
         if (item.overridePrice !== null && item.overridePrice !== undefined && price !== null) {
@@ -171,6 +183,16 @@ export function ShoppingListDetails({
       const Icon = getSupermarketIcon(name);
       return <Icon className="h-5 w-5 text-gray-500" />
   }
+  
+  const enrichedItemsForDialog = useMemo(() => {
+    return enrichedItems.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        product: { name: item.product.name },
+        bestPrice: item.price,
+        bestSupermarket: item.supermarket ? { id: item.supermarket.id, name: item.supermarket.name } : null
+    }));
+  }, [enrichedItems]);
 
   return (
     <>
@@ -243,7 +265,14 @@ export function ShoppingListDetails({
                                             className="h-6 w-6 rounded-full mt-1 border-2"
                                         />
                                         {item.imageUrl ? 
-                                            <Image src={item.imageUrl} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14" />
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Image src={item.imageUrl} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14 cursor-pointer" />
+                                                </DialogTrigger>
+                                                <DialogContent className="p-0 max-w-lg bg-transparent border-none shadow-none">
+                                                    <Image src={item.imageUrl} alt={item.product.name} width={500} height={500} className="rounded-lg object-contain w-full h-full" />
+                                                </DialogContent>
+                                            </Dialog>
                                             : <div className="h-14 w-14 rounded-lg bg-gray-100" />
                                         }
                                         <div className="flex-1">
@@ -290,7 +319,7 @@ export function ShoppingListDetails({
         isOpen={isArchiveDialogOpen}
         setIsOpen={setIsArchiveDialogOpen}
         list={list}
-        enrichedItems={[]}
+        enrichedItems={enrichedItemsForDialog}
         optimalTotal={totalCost}
         onArchive={onArchive}
       />

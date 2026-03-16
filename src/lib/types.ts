@@ -15,7 +15,6 @@ export type ProductPrice = {
   supermarketId: string;
   price: number;
   brand?: string; // Store-specific brand
-  imageId?: string; // Link to a specific image in the product's image gallery
 };
 
 export type Product = {
