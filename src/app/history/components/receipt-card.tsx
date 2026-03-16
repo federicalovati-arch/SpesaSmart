@@ -38,9 +38,16 @@ const PaymentDisplay = ({ payments }: { payments?: Payment[] }) => {
     )
   }
 
+  const uniqueMethods = [...new Set(payments.map(p => p.method))];
+
   return (
-     <div className="flex items-center gap-1.5">
-        <Wallet className="h-4 w-4" />
+     <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+            {uniqueMethods.slice(0, 3).map(method => {
+                const Icon = paymentIcons[method];
+                return <Icon key={method} className="h-4 w-4" />
+            })}
+        </div>
         <span>Misto</span>
       </div>
   )

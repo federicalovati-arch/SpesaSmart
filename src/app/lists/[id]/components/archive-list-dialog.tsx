@@ -7,8 +7,6 @@ import { it } from 'date-fns/locale';
 import {
   Calendar as CalendarIcon,
   Archive,
-  Trash2,
-  Plus,
   Wallet,
   Landmark,
   CreditCard,
@@ -32,13 +30,6 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -83,10 +74,8 @@ export function ArchiveListDialog({
   onArchive,
 }: ArchiveListDialogProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [paymentsBySupermarket, setPaymentsBySupermarket] = useState<Record<string, Payment[]>>({});
-  const [newPaymentAmounts, setNewPaymentAmounts] = useState<Record<string, string>>({});
-  const [newPaymentMethods, setNewPaymentMethods] = useState<Record<string, Payment['method']>>({});
-
+  const [paymentInputs, setPaymentInputs] = useState<Record<string, Partial<Record<Payment['method'], string>>>>({});
+  
   const { toast } = useToast();
 
   const supermarketGroups = useMemo(() => {
@@ -102,90 +91,75 @@ export function ArchiveListDialog({
     });
     return groups;
   }, [enrichedItems]);
-
+  
   const isFullyPaid = useMemo(() => {
+    if (optimalTotal === 0) return true;
     return Object.entries(supermarketGroups).every(([id, group]) => {
       if (group.subtotal <= 0) return true;
-      const paid = (paymentsBySupermarket[id] || []).reduce((acc, p) => acc + p.amount, 0);
-      return Math.abs(group.subtotal - paid) < 0.001;
+      const groupPayments = paymentInputs[id] || {};
+      const paid = Object.values(groupPayments).reduce((acc, amountStr) => {
+        const amount = parseFloat(amountStr || '0');
+        return acc + (isNaN(amount) ? 0 : amount);
+      }, 0);
+      return Math.abs(group.subtotal - paid) < 0.01;
     });
-  }, [supermarketGroups, paymentsBySupermarket]);
-
+  }, [supermarketGroups, paymentInputs, optimalTotal]);
+  
   useEffect(() => {
     if (isOpen) {
       setDate(new Date());
-      setPaymentsBySupermarket({});
-      
-      const initialAmounts: Record<string, string> = {};
-      const initialMethods: Record<string, Payment['method']> = {};
-      Object.entries(supermarketGroups).forEach(([id, group]) => {
-          if (group.subtotal > 0) {
-              initialAmounts[id] = group.subtotal.toFixed(2);
-              initialMethods[id] = 'Bancomat';
-          }
-      });
-      setNewPaymentAmounts(initialAmounts);
-      setNewPaymentMethods(initialMethods);
+      setPaymentInputs({});
     }
-  }, [isOpen, supermarketGroups]);
+  }, [isOpen]);
 
-  const handleAddPayment = (supermarketId: string) => {
-    const amountStr = newPaymentAmounts[supermarketId] || '';
-    const method = newPaymentMethods[supermarketId] || 'Bancomat';
-    const amount = parseFloat(amountStr);
-
-    const group = supermarketGroups[supermarketId];
-    const paidForGroup = (paymentsBySupermarket[supermarketId] || []).reduce((acc, p) => acc + p.amount, 0);
-    const remainingForGroup = group.subtotal - paidForGroup;
-
-    if (isNaN(amount) || amount <= 0) {
-      toast({ variant: 'destructive', title: 'Importo non valido', description: 'Inserisci un importo positivo.' });
-      return;
-    }
-    if (amount > remainingForGroup + 0.001) {
-      toast({ variant: 'destructive', title: 'Importo eccessivo', description: `L'importo non può superare il totale rimanente di €${remainingForGroup.toFixed(2)}.` });
+  const handlePaymentInputChange = (supermarketId: string, method: Payment['method'], value: string) => {
+    if (value && !/^\d*\.?\d{0,2}$/.test(value)) {
       return;
     }
 
-    const newPayment: Payment = { method, amount };
-    setPaymentsBySupermarket(prev => ({
-      ...prev,
-      [supermarketId]: [...(prev[supermarketId] || []), newPayment],
-    }));
+    setPaymentInputs(prev => {
+        const newInputs = { ...prev };
+        if (!newInputs[supermarketId]) {
+            newInputs[supermarketId] = {};
+        }
+        
+        const currentInputs = { ...newInputs[supermarketId] };
 
-    const newRemaining = remainingForGroup - amount;
-    setNewPaymentAmounts(prev => ({
-      ...prev,
-      [supermarketId]: newRemaining > 0.001 ? newRemaining.toFixed(2) : '',
-    }));
+        if (value === '' || parseFloat(value) === 0) {
+            delete currentInputs[method];
+        } else {
+            currentInputs[method] = value;
+        }
+
+        newInputs[supermarketId] = currentInputs;
+        return newInputs;
+    });
   };
 
-  const removePayment = (supermarketId: string, index: number) => {
-    const newPayments = [...(paymentsBySupermarket[supermarketId] || [])];
-    const removedPayment = newPayments.splice(index, 1)[0];
-    setPaymentsBySupermarket(prev => ({
-      ...prev,
-      [supermarketId]: newPayments,
-    }));
-    
-    // On remove, set the input to the current remaining amount + removed amount
-    const paidForGroup = newPayments.reduce((acc, p) => acc + p.amount, 0);
-    const remainingForGroup = supermarketGroups[supermarketId].subtotal - paidForGroup;
-    setNewPaymentAmounts(prev => ({
-        ...prev,
-        [supermarketId]: remainingForGroup.toFixed(2)
-    }))
-  };
 
   const handleArchiveConfirm = () => {
     if (!date) return;
-    if (!isFullyPaid) {
-        toast({
-            variant: 'destructive',
-            title: 'Pagamento incompleto',
-            description: `Devi ancora completare il pagamento per uno o più negozi.`,
-        });
-        return;
+    
+    let allPaid = true;
+    for (const [id, group] of Object.entries(supermarketGroups)) {
+      if (group.subtotal > 0) {
+        const groupPayments = paymentInputs[id] || {};
+        const paid = Object.values(groupPayments).reduce((acc, amountStr) => acc + (parseFloat(amountStr || '0') || 0), 0);
+        const remaining = group.subtotal - paid;
+        if (Math.abs(remaining) >= 0.01) {
+            toast({
+                variant: 'destructive',
+                title: 'Pagamento incompleto o errato',
+                description: `Controlla i totali per ${group.name}. Rimanenza: €${remaining.toFixed(2)}`,
+            });
+            allPaid = false;
+            break; 
+        }
+      }
+    }
+
+    if (!allPaid) {
+      return;
     }
 
     const receiptItems: ReceiptItem[] = enrichedItems
@@ -203,7 +177,15 @@ export function ArchiveListDialog({
       })
       .filter((item): item is ReceiptItem => item !== null);
 
-    const allPayments: Payment[] = Object.values(paymentsBySupermarket).flat();
+    const allPayments: Payment[] = [];
+    Object.values(paymentInputs).forEach(groupPayments => {
+        Object.entries(groupPayments).forEach(([method, amountStr]) => {
+            const amount = parseFloat(amountStr || '0');
+            if (amount > 0) {
+                allPayments.push({ method: method as Payment['method'], amount });
+            }
+        });
+    });
 
     const newReceipt: Receipt = {
       id: `receipt-${Date.now()}`,
@@ -232,7 +214,6 @@ export function ArchiveListDialog({
         <div className="flex-1 min-h-0 space-y-4 pr-3 -mr-6">
           <ScrollArea className="h-full pr-6">
             <div className="space-y-6">
-            {/* Total Cost */}
             <div className="text-center bg-primary/10 py-3 rounded-lg">
                 <p className="text-sm text-primary font-bold">TOTALE SPESA</p>
                 <p className="text-4xl font-bold text-primary">
@@ -240,7 +221,6 @@ export function ArchiveListDialog({
                 </p>
             </div>
 
-            {/* Date Picker */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Data della Spesa</label>
               <Popover>
@@ -256,7 +236,7 @@ export function ArchiveListDialog({
                     {date ? format(date, 'PPP', { locale: it }) : <span>Scegli una data</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0" side="bottom" align="start">
                   <Calendar
                     mode="single"
                     selected={date}
@@ -271,14 +251,14 @@ export function ArchiveListDialog({
               </Popover>
             </div>
 
-            {/* Payment Methods */}
             <div className="space-y-4">
                 <label className="text-sm font-medium">Dettaglio Pagamenti</label>
                 {Object.entries(supermarketGroups).filter(([,group])=> group.subtotal > 0).map(([id, group]) => {
-                    const paidForGroup = (paymentsBySupermarket[id] || []).reduce((acc, p) => acc + p.amount, 0);
+                    const groupPayments = paymentInputs[id] || {};
+                    const paidForGroup = Object.values(groupPayments).reduce((acc, amountStr) => acc + (parseFloat(amountStr || '0') || 0), 0);
                     const remainingForGroup = group.subtotal - paidForGroup;
-                    const isGroupPaid = remainingForGroup < 0.001;
-
+                    const isGroupPaid = Math.abs(remainingForGroup) < 0.01;
+                    
                     return (
                         <div key={id} className="p-4 border rounded-xl space-y-3 bg-gray-50/50">
                             <div className="flex justify-between items-center">
@@ -286,62 +266,36 @@ export function ArchiveListDialog({
                                 <span className="font-bold text-lg text-primary">€{group.subtotal.toFixed(2)}</span>
                             </div>
 
-                             {(paymentsBySupermarket[id] || []).map((payment, index) => (
-                                <div key={index} className="flex items-center justify-between p-2 bg-white border rounded-md">
-                                    <div className="flex items-center gap-2">
-                                    {React.createElement(paymentMethods.find(p => p.value === payment.method)?.icon || Wallet, { className: "h-5 w-5 text-gray-600"})}
-                                    <span className="font-semibold">{payment.method}</span>
+                            <div className="space-y-2">
+                                {paymentMethods.map(method => (
+                                    <div key={method.value} className="flex items-center gap-2">
+                                        <method.icon className="h-5 w-5 text-gray-600 w-5" />
+                                        <label htmlFor={`${id}-${method.value}`} className="flex-1 font-semibold">{method.label}</label>
+                                        <Input
+                                            id={`${id}-${method.value}`}
+                                            type="text"
+                                            inputMode="decimal"
+                                            step="0.01"
+                                            placeholder="€ 0.00"
+                                            value={(paymentInputs[id]?.[method.value]) || ''}
+                                            onChange={(e) => handlePaymentInputChange(id, method.value, e.target.value)}
+                                            className="w-28 text-right"
+                                        />
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                    <span className="font-bold text-gray-800">€{payment.amount.toFixed(2)}</span>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removePayment(id, index)}>
-                                        <Trash2 className="h-4 w-4 text-destructive"/>
-                                    </Button>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                             
-                            {!isGroupPaid && (
-                                <div className="p-3 bg-white border rounded-lg space-y-3">
-                                <p className="text-sm font-semibold">Aggiungi Pagamento (Rimanenti: €{remainingForGroup.toFixed(2)})</p>
-                                <div className="flex items-center gap-2">
-                                    <Select 
-                                        value={newPaymentMethods[id]} 
-                                        onValueChange={(v) => setNewPaymentMethods(p => ({ ...p, [id]: v as Payment['method'] }))}
-                                    >
-                                        <SelectTrigger className="flex-1">
-                                            <SelectValue placeholder="Metodo" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {paymentMethods.map(method => (
-                                            <SelectItem key={method.value} value={method.value}>
-                                                <div className="flex items-center gap-2">
-                                                    <method.icon className="h-4 w-4" />
-                                                    {method.label}
-                                                </div>
-                                            </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={newPaymentAmounts[id] || ''}
-                                        onChange={(e) => setNewPaymentAmounts(p => ({...p, [id]: e.target.value }))}
-                                        placeholder="Importo"
-                                        className="w-28"
-                                    />
-                                    <Button size="icon" onClick={() => handleAddPayment(id)}>
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                </div>
-                            )}
-
-                             {isGroupPaid && (
+                            {isGroupPaid ? (
                                 <div className="text-center p-2 bg-green-100 text-green-700 rounded-lg text-sm flex items-center justify-center gap-2">
                                     <Check className="h-4 w-4" />
                                     <p className="font-semibold">Pagato!</p>
+                                </div>
+                            ) : (
+                                <div className={cn(
+                                    "text-right text-sm font-semibold",
+                                    remainingForGroup < 0 ? "text-destructive" : "text-muted-foreground"
+                                )}>
+                                Rimanenti: €{remainingForGroup.toFixed(2)}
                                 </div>
                             )}
                         </div>
