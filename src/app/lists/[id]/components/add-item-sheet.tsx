@@ -71,9 +71,11 @@ export function AddItemSheet({
   }, [allProducts, listItems]);
 
   const filteredProducts = React.useMemo(() => {
-    return productsNotInList.filter((p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return productsNotInList
+      .filter((p) =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [productsNotInList, searchQuery]);
 
   const handleAddProduct = (product: Product) => {

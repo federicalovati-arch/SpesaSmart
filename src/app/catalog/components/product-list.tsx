@@ -53,7 +53,8 @@ export function ProductList({
   const filteredProducts = useMemo(() => {
     return initialProducts
       .filter((p) => selectedCategory === 'Tutte' || p.category === selectedCategory)
-      .filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      .filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [initialProducts, selectedCategory, searchQuery]);
 
   const getCategoryIcon = (iconName: string) => {
