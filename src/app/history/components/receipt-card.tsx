@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 type ReceiptCardProps = {
   receipt: Receipt;
   onRestore: () => void;
+  onClick: () => void;
 };
 
 const paymentIcons: { [key in Payment['method']]: React.ElementType } = {
@@ -45,9 +46,15 @@ const PaymentDisplay = ({ payments }: { payments?: Payment[] }) => {
   )
 }
 
-export function ReceiptCard({ receipt, onRestore }: ReceiptCardProps) {
+export function ReceiptCard({ receipt, onRestore, onClick }: ReceiptCardProps) {
+  
+  const handleRestoreClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card's onClick from firing
+    onRestore();
+  }
+
   return (
-    <Card className="shadow-md rounded-2xl">
+    <Card className="shadow-md rounded-2xl cursor-pointer hover:bg-gray-50 transition-colors" onClick={onClick}>
       <CardContent className="p-4 grid grid-cols-3 items-center gap-4">
         <div className="col-span-2 space-y-2">
           <h3 className="font-bold text-lg truncate">{receipt.listName}</h3>
@@ -81,7 +88,7 @@ export function ReceiptCard({ receipt, onRestore }: ReceiptCardProps) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={onRestore}
+            onClick={handleRestoreClick}
             className="h-10 w-10 bg-gray-100 rounded-full hover:bg-gray-200"
           >
             <RotateCcw className="h-5 w-5 text-gray-600" />
