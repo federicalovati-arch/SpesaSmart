@@ -57,7 +57,8 @@ export function ProductList({
   }, [initialProducts, selectedCategory, searchQuery]);
 
   const getCategoryIcon = (iconName: string) => {
-    const Icon = (iconMap as { [key: string]: LucideIcon | undefined })[iconName.toLowerCase()] || LayoutGrid;
+    const safeIconName = iconName || '';
+    const Icon = (iconMap as { [key: string]: LucideIcon | undefined })[safeIconName.toLowerCase()] || LayoutGrid;
     return <Icon className="mr-2 h-4 w-4" />;
   };
 
