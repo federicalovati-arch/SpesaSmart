@@ -71,8 +71,9 @@ export function SupermarketProductsSheet({
           </SheetClose>
         </SheetHeader>
         
-        <ScrollArea className="flex-1 px-4">
-            <div className="space-y-3 py-4">
+        <div className="flex-1 min-h-0">
+          <ScrollArea className="h-full px-4">
+              <div className="space-y-3 py-4">
                 {productsInSupermarket.length > 0 ? (
                     productsInSupermarket.map(product => (
                         <div key={product.id} className="flex items-center gap-4 p-3 rounded-2xl bg-white shadow-sm">
@@ -99,8 +100,9 @@ export function SupermarketProductsSheet({
                         <p className="text-muted-foreground">Nessun prodotto trovato per questo negozio.</p>
                     </div>
                 )}
-            </div>
-        </ScrollArea>
+              </div>
+          </ScrollArea>
+        </div>
 
       </SheetContent>
     </Sheet>
