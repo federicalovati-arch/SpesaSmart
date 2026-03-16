@@ -81,21 +81,17 @@ export default function ProfilePage() {
     reader.onload = (e) => {
       try {
         const text = e.target?.result;
-        if (typeof text !== 'string') throw new Error('File could not be read.');
+        if (typeof text !== 'string') throw new Error('Impossibile leggere il file.');
         
         const data = JSON.parse(text);
         
-        // Basic validation
-        if (data.products && data.supermarkets && data.categories && data.shoppingLists && data.receipts) {
-          importData(data);
-          toast({ title: 'Importazione Riuscita', description: 'I tuoi dati sono stati ripristinati dal backup.' });
-          // Force a reload or a state update to reflect changes immediately
-           setTimeout(() => window.location.reload(), 1000);
-        } else {
-          throw new Error('Il file JSON non ha la struttura corretta.');
-        }
+        importData(data);
+
+        toast({ title: 'Importazione Riuscita', description: 'I tuoi dati sono stati ripristinati dal backup.' });
+        // Force a reload or a state update to reflect changes immediately
+         setTimeout(() => window.location.reload(), 1000);
       } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Errore Importazione', description: error.message });
+        toast({ variant: 'destructive', title: 'Errore Importazione', description: error.message || 'Il file potrebbe essere corrotto o non avere un formato JSON valido.' });
       } finally {
         // Reset file input
         if(fileInputRef.current) fileInputRef.current.value = '';
@@ -183,9 +179,9 @@ export default function ProfilePage() {
                 </div>
                 <div className="grid grid-cols-4 gap-3">
                     {themes.map(t => (
-                        <button key={t.name} onClick={() => setTheme(t.name)} className="aspect-square rounded-xl transition-all" style={{ backgroundColor: t.color }}>
+                        <button key={t.name} onClick={() => setTheme(t.name)} className="aspect-square rounded-lg transition-all" style={{ backgroundColor: t.color }}>
                             {theme === t.name && (
-                                <div className="flex items-center justify-center h-full w-full bg-black/30 rounded-xl">
+                                <div className="flex items-center justify-center h-full w-full bg-black/30 rounded-lg">
                                     <Check className="h-6 w-6 text-white" />
                                 </div>
                             )}

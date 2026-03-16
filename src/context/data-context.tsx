@@ -53,7 +53,7 @@ interface DataContextType extends AllData {
   setCategories: (categories: Category[]) => void;
   setSupermarkets: (supermarkets: Supermarket[]) => void;
   setShoppingLists: (lists: ShoppingList[]) => void;
-  importData: (data: AllData) => void;
+  importData: (data: Partial<AllData>) => void;
   exportData: () => AllData;
 }
 
@@ -284,11 +284,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const setBatch = async (collectionName: string, items: any[]) => {
-    if (user && firestore) {
+    if (user && firestore && items?.length > 0) {
       const batch = writeBatch(firestore);
       items.forEach(item => {
-        const docRef = doc(firestore, 'users', user.uid, collectionName, item.id);
-        batch.set(docRef, item);
+        if (item.id) { // Ensure item has an id
+          const docRef = doc(firestore, 'users', user.uid, collectionName, item.id);
+          batch.set(docRef, item);
+        }
       });
       await batch.commit();
     }
@@ -307,19 +309,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
       else setLocalShoppingLists(newLists.sort((a,b) => a.order - b.order));
   };
 
-  const importData = (data: AllData) => {
+  const importData = (data: Partial<AllData>) => {
+    const dataToImport: AllData = {
+        products: Array.isArray(data.products) ? data.products : [],
+        supermarkets: Array.isArray(data.supermarkets) ? data.supermarkets : [],
+        categories: Array.isArray(data.categories) ? data.categories : [],
+        shoppingLists: Array.isArray(data.shoppingLists) ? data.shoppingLists : [],
+        receipts: Array.isArray(data.receipts) ? data.receipts : [],
+    };
+
     if (user) {
-      setBatch('products', data.products);
-      setBatch('supermarkets', data.supermarkets);
-      setBatch('categories', data.categories);
-      setBatch('shoppingLists', data.shoppingLists);
-      setBatch('receipts', data.receipts);
+      setBatch('products', dataToImport.products);
+      setBatch('supermarkets', dataToImport.supermarkets);
+      setBatch('categories', dataToImport.categories);
+      setBatch('shoppingLists', dataToImport.shoppingLists);
+      setBatch('receipts', dataToImport.receipts);
     } else {
-      setLocalProducts(data.products || []);
-      setLocalSupermarkets(data.supermarkets || []);
-      setLocalCategories(data.categories || []);
-      setLocalShoppingLists(data.shoppingLists || []);
-      setLocalReceipts(data.receipts || []);
+      setLocalProducts(dataToImport.products);
+      setLocalSupermarkets(dataToImport.supermarkets);
+      setLocalCategories(dataToImport.categories);
+      setLocalShoppingLists(dataToImport.shoppingLists);
+      setLocalReceipts(dataToImport.receipts);
     }
   };
 
