@@ -27,7 +27,6 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import type { Category } from '@/lib/types';
 import {
@@ -259,9 +258,8 @@ export function CategoryManagerDialog({
           </SheetClose>
         </SheetHeader>
 
-        <div className="flex-1 min-h-0">
-          <ScrollArea className="h-full">
-            <div className="p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="p-4">
               <div className="p-4 rounded-xl bg-white shadow-sm space-y-4">
                   <div className="flex gap-4">
                       <div className="flex-1">
@@ -285,16 +283,15 @@ export function CategoryManagerDialog({
                   </div>
                   <div>
                        <label className="text-xs font-semibold text-gray-500 mb-2 block">ICONA</label>
-                       <ScrollArea className="w-full">
+                       <div className="w-full overflow-x-auto">
                           <div className="flex gap-2 pb-2">
                            {availableIcons.map(iconKey => (
-                              <Button key={iconKey} variant="outline" size="icon" className={cn("w-12 h-12 bg-gray-100 border-gray-200", newCategoryIcon === iconKey && "ring-2 ring-primary border-primary")} onClick={() => setNewCategoryIcon(iconKey)}>
+                              <Button key={iconKey} variant="outline" size="icon" className={cn("w-12 h-12 bg-gray-100 border-gray-200 shrink-0", newCategoryIcon === iconKey && "ring-2 ring-primary border-primary")} onClick={() => setNewCategoryIcon(iconKey)}>
                                   {React.createElement(iconMap[iconKey], { className: "h-6 w-6 text-gray-600"})}
                               </Button>
                            ))}
                           </div>
-                           <div className="h-1 w-full" />
-                       </ScrollArea>
+                       </div>
                   </div>
                   <Button onClick={handleAdd} className="w-full h-12 bg-primary hover:bg-primary/90 text-lg">CREA</Button>
               </div>
@@ -325,15 +322,15 @@ export function CategoryManagerDialog({
                                         className="h-8 w-16"
                                     />
                                 </div>
-                                <ScrollArea className="w-full">
+                                <div className="w-full overflow-x-auto">
                                     <div className="flex gap-2 pb-2">
                                     {availableIcons.map(iconKey => (
-                                        <Button key={iconKey} variant="outline" size="icon" className={cn("w-10 h-10 bg-gray-100 border-gray-200", editingIcon === iconKey && "ring-2 ring-primary border-primary")} onClick={() => setEditingIcon(iconKey)}>
+                                        <Button key={iconKey} variant="outline" size="icon" className={cn("w-10 h-10 bg-gray-100 border-gray-200 shrink-0", editingIcon === iconKey && "ring-2 ring-primary border-primary")} onClick={() => setEditingIcon(iconKey)}>
                                             {React.createElement(iconMap[iconKey], { className: "h-5 w-5 text-gray-600"})}
                                         </Button>
                                     ))}
                                     </div>
-                                </ScrollArea>
+                                </div>
                                 <div className="flex justify-end gap-2">
                                     <Button variant="ghost" size="sm" onClick={handleCancelEdit}><X className="h-4 w-4 mr-1" /> Annulla</Button>
                                     <Button size="sm" onClick={handleSaveEdit}><Save className="h-4 w-4 mr-1" /> Salva</Button>
@@ -353,7 +350,6 @@ export function CategoryManagerDialog({
                 </SortableContext>
               </DndContext>
             </div>
-          </ScrollArea>
           </div>
       </SheetContent>
     </Sheet>

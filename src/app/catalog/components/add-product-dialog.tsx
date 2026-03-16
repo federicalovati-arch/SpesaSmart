@@ -33,7 +33,6 @@ import {
 } from '@/components/ui/select';
 import { Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 const productSchema = z.object({
   name: z.string().min(2, 'Il nome del prodotto è obbligatorio.'),
@@ -214,7 +213,7 @@ export function AddProductDialog({
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex-1 flex flex-col min-h-0"
           >
-            <ScrollArea className="flex-1">
+            <div className="flex-1 overflow-y-auto">
               <div className="p-4 space-y-4 bg-gray-50 border-b">
                 <FormField
                   control={form.control}
@@ -431,7 +430,7 @@ export function AddProductDialog({
                   ))}
                 </div>
               </div>
-            </ScrollArea>
+            </div>
             <SheetFooter className="bg-white p-4 border-t flex-col-reverse sm:flex-col-reverse gap-2">
               <Button
                 type="submit"

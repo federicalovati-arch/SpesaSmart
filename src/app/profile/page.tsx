@@ -103,12 +103,12 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex flex-col flex-1 pb-16 md:pb-0 bg-background">
+    <div className="flex flex-col h-full bg-background overflow-y-auto">
       <div className="relative bg-primary text-primary-foreground text-center rounded-b-3xl px-4 pt-8 pb-24">
         <h1 className="text-3xl font-bold">Account</h1>
       </div>
 
-      <div className="p-4 -mt-20 space-y-4 max-w-md mx-auto w-full">
+      <div className="p-4 -mt-20 space-y-4 max-w-md mx-auto w-full pb-20 md:pb-4">
         <Card className="shadow-xl rounded-2xl w-full">
             <CardContent className="p-6 flex flex-col items-center text-center">
                 {loading ? (

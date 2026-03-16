@@ -10,7 +10,6 @@ import {
   SheetTitle,
   SheetClose,
 } from '@/components/ui/sheet';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { supermarketIcons } from '@/lib/icons';
 import { X, Store } from 'lucide-react';
@@ -71,8 +70,7 @@ export function SupermarketProductsSheet({
           </SheetClose>
         </SheetHeader>
         
-        <div className="flex-1 min-h-0">
-          <ScrollArea className="h-full px-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4">
               <div className="space-y-3 py-4">
                 {productsInSupermarket.length > 0 ? (
                     productsInSupermarket.map(product => (
@@ -101,7 +99,6 @@ export function SupermarketProductsSheet({
                     </div>
                 )}
               </div>
-          </ScrollArea>
         </div>
 
       </SheetContent>
