@@ -398,7 +398,16 @@ export function ShoppingListDetails({
                                                 {item.brand && <span className="text-primary font-medium"> • {item.brand}</span>}
                                             </p>
                                         </div>
-                                        <p className="font-bold text-primary text-lg">€{((item.price || 0) * item.quantity).toFixed(2)}</p>
+                                        <button type="button" onClick={() => handleOpenPriceDialog(item)} className={cn("p-1 -m-1 text-right", item.purchased && "line-through")}>
+                                            <p className={cn(
+                                                "font-bold text-lg",
+                                                item.priceStatus === 'offer' && 'text-green-600',
+                                                item.priceStatus === 'increase' && 'text-destructive',
+                                                item.priceStatus === 'normal' && 'text-primary'
+                                            )}>
+                                                €{((item.price || 0) * item.quantity).toFixed(2)}
+                                            </p>
+                                        </button>
                                     </div>
                                 ))}
                             </div>
