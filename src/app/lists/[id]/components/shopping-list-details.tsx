@@ -425,26 +425,33 @@ export function ShoppingListDetails({
                             <div className="flex-1 space-y-0.5 self-stretch flex flex-col">
                                 <p className={cn("font-bold", item.purchased && "line-through")}>{item.product.name}</p>
                                 
-                                <Select
-                                    value={item.assignedSupermarketId || 'automatic'}
-                                    onValueChange={(value) => handleItemChange(item.productId, { assignedSupermarketId: value === 'automatic' ? null : value, overridePrice: null })}
-                                    disabled={item.isQuickAdd}
-                                >
-                                    <SelectTrigger className="h-auto p-1 border-none bg-gray-100 focus:ring-0 focus:ring-offset-0 w-fit text-xs text-muted-foreground font-semibold rounded-md">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="automatic">Miglior Prezzo</SelectItem>
-                                        {item.product.prices.map(p => {
-                                            const supermarket = allSupermarkets.find(s => s.id === p.supermarketId);
-                                            return supermarket ? (
-                                                <SelectItem key={p.supermarketId} value={p.supermarketId}>
-                                                    {supermarket.name} (€{p.price.toFixed(2)})
-                                                </SelectItem>
-                                            ) : null;
-                                        })}
-                                    </SelectContent>
-                                </Select>
+                                {item.isQuickAdd && item.supermarket ? (
+                                    <div className="flex items-center gap-1 h-auto p-1 bg-gray-100 w-fit text-xs text-muted-foreground font-semibold rounded-md">
+                                        <Store className="h-3 w-3" />
+                                        <span>{item.supermarket.name}</span>
+                                    </div>
+                                ) : (
+                                    <Select
+                                        value={item.assignedSupermarketId || 'automatic'}
+                                        onValueChange={(value) => handleItemChange(item.productId, { assignedSupermarketId: value === 'automatic' ? null : value, overridePrice: null })}
+                                        disabled={item.isQuickAdd}
+                                    >
+                                        <SelectTrigger className="h-auto p-1 border-none bg-gray-100 focus:ring-0 focus:ring-offset-0 w-fit text-xs text-muted-foreground font-semibold rounded-md">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="automatic">Miglior Prezzo</SelectItem>
+                                            {item.product.prices.map(p => {
+                                                const supermarket = allSupermarkets.find(s => s.id === p.supermarketId);
+                                                return supermarket ? (
+                                                    <SelectItem key={p.supermarketId} value={p.supermarketId}>
+                                                        {supermarket.name} (€{p.price.toFixed(2)})
+                                                    </SelectItem>
+                                                ) : null;
+                                            })}
+                                        </SelectContent>
+                                    </Select>
+                                )}
 
                                 <p className="text-xs text-gray-500 pt-0.5 mt-auto">{item.brand || item.product.brand || ' '}</p>
                             </div>
