@@ -340,7 +340,7 @@ export function ShoppingListDetails({
         </header>
 
         {/* Body */}
-        <main className="flex-1 overflow-y-auto px-4 pb-40">
+        <main className="flex-1 overflow-y-auto px-4 pb-52">
             
             {view === 'risparmio' && groupedItems && (
                 <div className="space-y-4 pt-2">
@@ -357,7 +357,7 @@ export function ShoppingListDetails({
                                         <Checkbox
                                             checked={item.purchased}
                                             onCheckedChange={(checked) => handleItemChange(item.productId, { purchased: !!checked })}
-                                            className="h-6 w-6 rounded-lg mt-1 border-2"
+                                            className="h-6 w-6 rounded-full mt-1 border-2"
                                         />
                                         {item.imageUrl ? 
                                           <Image src={item.imageUrl} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14" />
@@ -384,11 +384,11 @@ export function ShoppingListDetails({
              {view === 'standard' && (
                  <div className="space-y-2 pt-2">
                     {enrichedItems.map(item => (
-                         <div key={item.productId} className={cn("flex items-start gap-3 p-3 rounded-xl bg-white shadow-sm", item.purchased && "opacity-50")}>
+                         <div key={item.productId} className={cn("flex items-center gap-3 p-3 rounded-xl bg-white shadow-sm", item.purchased && "opacity-50")}>
                             <Checkbox
                                 checked={item.purchased}
                                 onCheckedChange={(checked) => handleItemChange(item.productId, { purchased: !!checked })}
-                                className="h-6 w-6 rounded-lg mt-1 border-2"
+                                className="h-6 w-6 rounded-full mt-1 border-2 border-primary data-[state=checked]:bg-primary"
                             />
                              {item.imageUrl ? 
                                 <Image src={item.imageUrl} alt={item.product.name} width={48} height={48} className="rounded-lg object-cover bg-gray-100 h-12 w-12" />
@@ -397,10 +397,8 @@ export function ShoppingListDetails({
                                   <Box className="h-6 w-6 text-gray-400" />
                                 </div>
                             }
-
-
-                            <div className="flex-1 space-y-0.5">
-                                <p className={cn("font-bold -mb-1", item.purchased && "line-through")}>{item.product.name}</p>
+                            <div className="flex-1 space-y-0.5 self-stretch flex flex-col">
+                                <p className={cn("font-bold", item.purchased && "line-through")}>{item.product.name}</p>
                                 
                                 <Select
                                     value={item.assignedSupermarketId || 'automatic'}
@@ -423,10 +421,10 @@ export function ShoppingListDetails({
                                     </SelectContent>
                                 </Select>
 
-                                <p className="text-xs text-gray-500 pt-0.5">{item.brand || item.product.brand || ' '}</p>
+                                <p className="text-xs text-gray-500 pt-0.5 mt-auto">{item.brand || item.product.brand || ' '}</p>
                             </div>
 
-                            <div className="flex flex-col items-end gap-1">
+                             <div className="flex flex-col items-end justify-between self-stretch -my-1">
                                 <div className="flex items-center gap-2 bg-gray-100 rounded-full">
                                     <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full" onClick={() => handleItemChange(item.productId, { quantity: Math.max(1, item.quantity - 1) })}>
                                         <Minus className="h-4 w-4" />
@@ -436,19 +434,25 @@ export function ShoppingListDetails({
                                         <Plus className="h-4 w-4" />
                                     </Button>
                                 </div>
-                                <button type="button" onClick={() => handleOpenPriceDialog(item)} className="text-right p-1 -m-1">
-                                    <p className={cn(
-                                        "font-bold text-lg",
-                                        item.priceStatus === 'offer' && 'text-green-600',
-                                        item.priceStatus === 'increase' && 'text-destructive',
-                                        item.priceStatus === 'normal' && 'text-primary'
-                                    )}>
-                                        €{((item.price || 0) * item.quantity).toFixed(2)}
-                                    </p>
-                                </button>
-                                
-                                <div className="flex items-center -mr-2 -mt-2">
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70" onClick={() => handleDeleteItem(item.productId)}><Trash2 className="h-4 w-4" /></Button>
+                                <div className="flex flex-col items-end">
+                                    <button type="button" onClick={() => handleOpenPriceDialog(item)} className={cn("p-1 -m-1 text-right", item.purchased && "line-through")}>
+                                        <p className={cn(
+                                            "font-bold text-base",
+                                            item.priceStatus === 'offer' && 'text-green-600',
+                                            item.priceStatus === 'increase' && 'text-destructive',
+                                            item.priceStatus === 'normal' && 'text-primary'
+                                        )}>
+                                            €{((item.price || 0) * item.quantity).toFixed(2)}
+                                        </p>
+                                    </button>
+                                    <div className="flex items-center justify-end -mr-2 -mt-1">
+                                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenPriceDialog(item)}>
+                                            <Pencil className="h-4 w-4 text-gray-500" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/70" onClick={() => handleDeleteItem(item.productId)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -458,16 +462,18 @@ export function ShoppingListDetails({
         </main>
         
         {/* Footer */}
-        <div className="fixed bottom-16 left-0 right-0 p-4 pt-0 bg-transparent md:hidden z-20">
-            <div className="bg-primary/95 backdrop-blur-sm text-primary-foreground p-4 text-center rounded-2xl shadow-lg">
-                <p className="text-xs uppercase font-bold opacity-80">Riepilogo Spesa</p>
-                <p className="text-sm opacity-80">Totale Stimato</p>
-                <p className="text-4xl font-bold tracking-tight">€{totalCost.toFixed(2)}</p>
-            </div>
-            <div className="px-4 -mt-6">
-                <Button className="w-full h-14 text-lg bg-white text-primary rounded-xl shadow-lg hover:bg-gray-100" onClick={() => setIsArchiveDialogOpen(true)}>
-                    <CheckIcon className="mr-2"/> Archivia Spesa
-                </Button>
+        <div className="fixed bottom-16 left-0 right-0 p-4 bg-gradient-to-t from-gray-50 via-gray-50/95 to-transparent md:hidden z-40 pointer-events-none">
+            <div className="max-w-md mx-auto pointer-events-auto">
+                <div className="bg-primary/95 backdrop-blur-sm text-primary-foreground p-4 text-center rounded-2xl shadow-lg">
+                    <p className="text-xs uppercase font-bold opacity-80">Riepilogo Spesa</p>
+                    <p className="text-sm opacity-80">Totale Stimato</p>
+                    <p className="text-4xl font-bold tracking-tight">€{totalCost.toFixed(2)}</p>
+                </div>
+                <div className="px-4 -mt-6">
+                    <Button className="w-full h-14 text-lg bg-white text-primary rounded-xl shadow-lg hover:bg-gray-100" onClick={() => setIsArchiveDialogOpen(true)}>
+                        <CheckIcon className="mr-2"/> Archivia Spesa
+                    </Button>
+                </div>
             </div>
         </div>
       </div>
