@@ -40,6 +40,7 @@ interface DataContextType extends AllData {
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (product: Product) => void;
   deleteProduct: (productId: string) => void;
+  updateProductBasePrice: (productId: string, supermarketId: string, newPrice: number) => void;
   addSupermarket: (supermarket: Omit<Supermarket, 'id' | 'order'>) => void;
   updateSupermarket: (supermarket: Supermarket) => void;
   deleteSupermarket: (supermarketId: string) => void;
@@ -171,6 +172,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (user) { deleteFromFirestore('products', productId); }
       else setLocalProducts((prev) => prev.filter((p) => p.id !== productId));
   };
+  const updateProductBasePrice = (productId: string, supermarketId: string, newPrice: number) => {
+    const productToUpdate = (user ? firestoreProducts : products)?.find(p => p.id === productId);
+    if (productToUpdate && supermarketId) {
+        const priceExists = productToUpdate.prices.some(p => p.supermarketId === supermarketId);
+        let newPrices;
+        if(priceExists) {
+             newPrices = productToUpdate.prices.map(p => 
+                p.supermarketId === supermarketId ? { ...p, price: newPrice } : p
+            );
+        } else {
+            newPrices = [...productToUpdate.prices, { supermarketId, price: newPrice }];
+        }
+       
+        const updatedProduct = { ...productToUpdate, prices: newPrices };
+        updateProduct(updatedProduct);
+    }
+  };
+
 
   const addSupermarket = (supermarketData: Omit<Supermarket, 'id' | 'order'>) => {
       const currentSupermarkets = user ? firestoreSupermarkets || [] : localSupermarkets;
@@ -378,6 +397,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addProduct,
     updateProduct,
     deleteProduct,
+    updateProductBasePrice,
     addSupermarket,
     updateSupermarket,
     deleteSupermarket,

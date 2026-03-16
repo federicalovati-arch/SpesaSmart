@@ -18,16 +18,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
     Select,
     SelectContent,
     SelectItem,
@@ -53,6 +43,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ArchiveListDialog } from './archive-list-dialog';
+import { PriceOverrideDialog } from './price-override-dialog';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -65,11 +56,13 @@ type ListDetailsProps = {
   onArchive: (receipt: Receipt) => void;
   onDuplicateList: (listId: string) => void;
   onAddProductToList: (product: Product, quantity: number) => void;
+  onUpdateProductBasePrice: (productId: string, supermarketId: string, newPrice: number) => void;
 };
 
 type EnrichedListItem = ShoppingListItem & {
   product: Product;
   price: number | null;
+  basePrice: number | null;
   supermarket: Supermarket | null;
   brand: string | null;
   imageUrl: string | null;
@@ -92,6 +85,7 @@ export function ShoppingListDetails({
   onUpdateList,
   onArchive,
   onDuplicateList,
+  onUpdateProductBasePrice,
 }: ListDetailsProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -101,6 +95,10 @@ export function ShoppingListDetails({
   const [isEditingName, setIsEditingName] = useState(false);
   const [listName, setListName] = useState(initialList.name);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  
+  const [isPriceDialogOpen, setIsPriceDialogOpen] = useState(false);
+  const [selectedItemForPrice, setSelectedItemForPrice] = useState<EnrichedListItem | null>(null);
+
 
   useEffect(() => {
     if (isEditingName) {
@@ -150,6 +148,7 @@ export function ShoppingListDetails({
         if (!product) return null;
 
         let price: number | null = null;
+        let basePrice: number | null = null;
         let supermarket: Supermarket | null = null;
         let brand: string | null = product.brand || null;
         let imageUrl: string | null = null;
@@ -167,6 +166,7 @@ export function ShoppingListDetails({
 
         if (priceInfo) {
             price = priceInfo.price;
+            basePrice = priceInfo.price;
             supermarket = allSupermarkets.find(s => s.id === priceInfo.supermarketId) || null;
             if(priceInfo.brand) brand = priceInfo.brand;
 
@@ -177,13 +177,12 @@ export function ShoppingListDetails({
         }
         
         if (item.overridePrice !== null && item.overridePrice !== undefined) {
-            const basePrice = price ?? 0;
-            if (item.overridePrice < basePrice) priceStatus = 'offer';
-            else if (item.overridePrice > basePrice) priceStatus = 'increase';
+            if (basePrice !== null && item.overridePrice < basePrice) priceStatus = 'offer';
+            else if (basePrice !== null && item.overridePrice > basePrice) priceStatus = 'increase';
             price = item.overridePrice;
         }
 
-        return { ...item, product, price, supermarket, brand, imageUrl, priceStatus };
+        return { ...item, product, price, basePrice, supermarket, brand, imageUrl, priceStatus };
       })
       .filter((item): item is EnrichedListItem => item !== null)
       .sort((a, b) => (a.product.name > b.product.name ? 1 : -1));
@@ -231,6 +230,29 @@ export function ShoppingListDetails({
         bestSupermarket: item.supermarket ? { id: item.supermarket.id, name: item.supermarket.name } : null
     }));
   }, [enrichedItems]);
+
+  const handleOpenPriceDialog = (item: EnrichedListItem) => {
+    setSelectedItemForPrice(item);
+    setIsPriceDialogOpen(true);
+  };
+
+  const handleApplyPrice = (newPrice: number) => {
+    if (!selectedItemForPrice) return;
+    handleItemChange(selectedItemForPrice.productId, { overridePrice: newPrice });
+  };
+
+  const handleRemovePriceOverride = () => {
+    if (!selectedItemForPrice) return;
+    handleItemChange(selectedItemForPrice.productId, { overridePrice: null });
+  };
+
+  const handleUpdateCatalogPrice = (newPrice: number) => {
+    if (!selectedItemForPrice || !selectedItemForPrice.supermarket) {
+        toast({ variant: 'destructive', title: 'Impossibile aggiornare', description: 'Nessun supermercato associato a questo prezzo.' });
+        return;
+    };
+    onUpdateProductBasePrice(selectedItemForPrice.productId, selectedItemForPrice.supermarket.id, newPrice);
+  };
 
   return (
     <>
@@ -373,27 +395,18 @@ export function ShoppingListDetails({
                                         <Plus className="h-4 w-4" />
                                     </Button>
                                 </div>
-
-                                <p className="font-bold text-primary text-base mt-1">€{((item.price || 0) * item.quantity).toFixed(2)}</p>
+                                <button type="button" onClick={() => handleOpenPriceDialog(item)} className="text-right p-1 -m-1">
+                                    <p className={cn(
+                                        "font-bold text-lg",
+                                        item.priceStatus === 'offer' && 'text-green-600',
+                                        item.priceStatus === 'increase' && 'text-destructive',
+                                        item.priceStatus === 'normal' && 'text-primary'
+                                    )}>
+                                        €{((item.price || 0) * item.quantity).toFixed(2)}
+                                    </p>
+                                </button>
                                 
-                                <div className="flex items-center -mr-2 -mt-1">
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="h-4 w-4 text-gray-500" /></Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-48 p-3" align="end">
-                                            <div className="grid gap-2">
-                                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Prezzo Manuale (€)</label>
-                                                <Input
-                                                    type="number"
-                                                    step="0.01"
-                                                    defaultValue={item.overridePrice ?? undefined}
-                                                    placeholder={(item.price || 0).toFixed(2)}
-                                                    onBlur={(e) => handleItemChange(item.productId, { overridePrice: e.target.value === '' ? null : e.target.valueAsNumber })}
-                                                />
-                                            </div>
-                                        </PopoverContent>
-                                    </Popover>
+                                <div className="flex items-center -mr-2 -mt-2">
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive/70" onClick={() => handleDeleteItem(item.productId)}><Trash2 className="h-4 w-4" /></Button>
                                 </div>
                             </div>
@@ -425,6 +438,17 @@ export function ShoppingListDetails({
         optimalTotal={totalCost}
         onArchive={onArchive}
       />
+      {selectedItemForPrice && (
+        <PriceOverrideDialog
+            isOpen={isPriceDialogOpen}
+            setIsOpen={setIsPriceDialogOpen}
+            initialPrice={selectedItemForPrice.overridePrice ?? selectedItemForPrice.basePrice ?? 0}
+            canUpdateCatalog={!!selectedItemForPrice.supermarket}
+            onApply={handleApplyPrice}
+            onRemove={handleRemovePriceOverride}
+            onUpdateCatalog={handleUpdateCatalogPrice}
+        />
+      )}
     </>
   );
 }

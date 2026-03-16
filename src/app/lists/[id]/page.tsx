@@ -13,7 +13,7 @@ export default function ListDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const { toast } = useToast();
-  const { shoppingLists, products, supermarkets, categories, updateShoppingList, duplicateShoppingList, archiveShoppingList, addProduct } = useData();
+  const { shoppingLists, products, supermarkets, categories, updateShoppingList, duplicateShoppingList, archiveShoppingList, addProduct, updateProductBasePrice } = useData();
 
   const list = shoppingLists.find((l) => l.id === params.id);
   
@@ -46,7 +46,8 @@ export default function ListDetailPage() {
   }
 
   const handleAddProductToList = (product: Product, quantity: number) => {
-    const itemExists = list?.items.find(i => i.productId === product.id);
+    if (!list) return;
+    const itemExists = list.items.find(i => i.productId === product.id);
 
     let newItems: ShoppingList['items'];
 
@@ -59,6 +60,10 @@ export default function ListDetailPage() {
     updateShoppingList({ ...list, items: newItems });
     toast({ title: `${product.name} aggiunto alla lista!` });
   }
+
+  const handleUpdateProductBasePrice = (productId: string, supermarketId: string, newPrice: number) => {
+    updateProductBasePrice(productId, supermarketId, newPrice);
+  };
 
   if (!list) {
      return (
@@ -86,6 +91,7 @@ export default function ListDetailPage() {
       onArchive={handleArchive}
       onDuplicateList={handleDuplicateList}
       onAddProductToList={handleAddProductToList}
+      onUpdateProductBasePrice={handleUpdateProductBasePrice}
     />
   );
 }
