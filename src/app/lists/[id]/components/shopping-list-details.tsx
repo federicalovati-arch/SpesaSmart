@@ -82,14 +82,14 @@ const getSupermarketIcon = (supermarketName: string): LucideIcon => {
 
 const ListFooter = ({ totalCost, onArchiveClick, disabled }: { totalCost: number; onArchiveClick: () => void; disabled: boolean }) => (
     <div className="max-w-md mx-auto">
-        <div className="bg-primary text-primary-foreground p-4 text-center rounded-2xl shadow-lg">
+        <div className="bg-primary text-primary-foreground p-4 text-center rounded-2xl shadow-lg relative z-10">
             <p className="text-xs uppercase font-bold opacity-80">RIEPILOGO SPESA</p>
             <p className="text-sm opacity-80">Totale Stimato</p>
             <p className="text-4xl font-bold tracking-tight">€{totalCost.toFixed(2)}</p>
         </div>
         <div className="px-4 -mt-6">
-            <Button 
-                className="w-full h-14 text-lg bg-white text-primary rounded-xl shadow-lg hover:bg-gray-100" 
+            <Button
+                className="w-full h-14 text-lg bg-white text-primary rounded-xl shadow-lg hover:bg-gray-100"
                 onClick={onArchiveClick}
                 disabled={disabled}
             >
