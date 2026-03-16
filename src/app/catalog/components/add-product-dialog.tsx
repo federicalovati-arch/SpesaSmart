@@ -31,9 +31,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Store } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
+import { supermarketIcons } from '@/lib/icons';
 
 const productSchema = z.object({
   name: z.string().min(2, 'Il nome del prodotto è obbligatorio.'),
@@ -156,18 +157,6 @@ export function AddProductDialog({
         reader.readAsDataURL(file);
       });
     }
-  };
-
-  const getSupermarketIcon = (supermarketId: string) => {
-    const supermarket = supermarkets.find((s) => s.id === supermarketId);
-    const name = supermarket?.name.toLowerCase() || '';
-    if (name.includes('eurospin'))
-      return 'https://picsum.photos/seed/s1-logo/40/40';
-    if (name.includes('conad'))
-      return 'https://picsum.photos/seed/s2-logo/40/40';
-    if (name.includes('coop'))
-      return 'https://picsum.photos/seed/s3-logo/40/40';
-    return 'https://picsum.photos/seed/s-default/40/40';
   };
 
   const watchedImages = form.watch('images');
@@ -315,7 +304,9 @@ export function AddProductDialog({
                       const imageUrlToShow =
                         hasPrice && productImageUrl
                           ? productImageUrl
-                          : getSupermarketIcon(supermarket.id);
+                          : null;
+                      
+                      const SupermarketIcon = supermarketIcons[supermarket.icon] || Store;
 
                       return (
                         <div
@@ -325,26 +316,24 @@ export function AddProductDialog({
                           <button
                             type="button"
                             onClick={() => {
-                              if (
-                                imageUrlToShow &&
-                                !imageUrlToShow.includes('picsum.photos')
-                              ) {
+                              if (imageUrlToShow) {
                                 setEnlargedImage(imageUrlToShow);
                               }
                             }}
-                            disabled={
-                              !imageUrlToShow ||
-                              imageUrlToShow.includes('picsum.photos')
-                            }
-                            className="disabled:cursor-default"
+                            disabled={!imageUrlToShow}
+                            className="w-10 h-10 rounded-full flex items-center justify-center bg-white disabled:cursor-default shrink-0"
                           >
-                            <Image
-                              src={imageUrlToShow}
-                              alt={supermarket.name}
-                              width={40}
-                              height={40}
-                              className="rounded-full object-cover w-10 h-10 bg-white"
-                            />
+                            {imageUrlToShow ? (
+                               <Image
+                                   src={imageUrlToShow}
+                                   alt={supermarket.name}
+                                   width={40}
+                                   height={40}
+                                   className="rounded-full object-cover w-10 h-10"
+                               />
+                            ) : (
+                               <SupermarketIcon className="w-6 h-6 text-gray-500" />
+                            )}
                           </button>
                           <div className="flex-1 font-semibold">
                             {supermarket.name}
