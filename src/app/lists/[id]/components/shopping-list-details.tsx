@@ -404,7 +404,7 @@ export function ShoppingListDetails({
         </main>
         
         {/* Footer */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 pt-0 bg-transparent md:hidden">
+        <div className="fixed bottom-16 left-0 right-0 p-4 pt-0 bg-transparent md:hidden z-40">
             <div className="bg-primary/95 backdrop-blur-sm text-primary-foreground p-4 text-center rounded-2xl shadow-lg">
                 <p className="text-xs uppercase font-bold opacity-80">Riepilogo Spesa</p>
                 <p className="text-sm opacity-80">Totale Stimato</p>
