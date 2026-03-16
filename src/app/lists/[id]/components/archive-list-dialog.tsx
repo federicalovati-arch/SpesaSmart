@@ -247,7 +247,7 @@ export function ArchiveListDialog({
             {/* Date Picker */}
             <div className="flex flex-col space-y-2">
                 <label className="text-sm font-medium">Data della Spesa</label>
-                <Popover>
+                <Popover modal={false}>
                 <PopoverTrigger asChild>
                     <Button
                     variant={'outline'}
