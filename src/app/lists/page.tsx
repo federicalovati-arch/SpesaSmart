@@ -5,6 +5,8 @@ import { useData } from '@/context/data-context';
 import type { ShoppingList } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { AddListDialog } from './components/add-list-dialog';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 
 export default function ListsPage() {
   const { shoppingLists, addShoppingList, setShoppingLists, deleteShoppingList, duplicateShoppingList } = useData();
@@ -38,14 +40,25 @@ export default function ListsPage() {
   }
 
   return (
-    <div className="flex flex-col p-4 sm:p-6 lg:p-8 flex-1 bg-gray-50">
-      <ShoppingLists 
-        lists={shoppingLists} 
-        onReorder={handleReorderLists}
-        onAddList={handleOpenAddDialog}
-        onDeleteList={handleDelete}
-        onDuplicateList={handleDuplicate}
-      />
+    <div className="flex flex-col p-4 sm:p-6 lg:p-8 h-full bg-gray-50">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          Le Mie Liste
+        </h1>
+        <Button onClick={handleOpenAddDialog} className="h-11 rounded-full text-base font-bold">
+          <Plus className="mr-2 h-4 w-4" />
+          Nuova
+        </Button>
+      </div>
+      <div className="flex-1 overflow-y-auto -mx-4 px-4">
+        <ShoppingLists 
+          lists={shoppingLists} 
+          onReorder={handleReorderLists}
+          onAddList={handleOpenAddDialog}
+          onDeleteList={handleDelete}
+          onDuplicateList={handleDuplicate}
+        />
+      </div>
       <AddListDialog
         isOpen={isAddListDialogOpen}
         setIsOpen={setIsAddListDialogOpen}

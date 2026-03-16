@@ -30,7 +30,7 @@ export default function HistoryPage() {
     );
 
   return (
-    <div className="flex flex-col p-4 sm:p-6 lg:p-8">
+    <div className="flex flex-col p-4 sm:p-6 lg:p-8 h-full">
       <div className="flex items-center gap-4 mb-6">
         <div className="p-3 bg-primary/10 rounded-xl">
           <Receipt className="h-7 w-7 text-primary" />
@@ -47,28 +47,29 @@ export default function HistoryPage() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
-
-      {filteredReceipts.length > 0 ? (
-        <div className="space-y-4">
-          {filteredReceipts.map((receipt) => (
-            <ReceiptCard
-              key={receipt.id}
-              receipt={receipt}
-              onRestore={() => handleRestore(receipt.id)}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16 border-dashed border-2 rounded-lg mt-8">
-          <History className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium">
-            Nessuno scontrino archiviato
-          </h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Completa e archivia una lista per vederla qui.
-          </p>
-        </div>
-      )}
+      <div className="flex-1 overflow-y-auto -mx-4 px-4">
+        {filteredReceipts.length > 0 ? (
+          <div className="space-y-4 pb-16">
+            {filteredReceipts.map((receipt) => (
+              <ReceiptCard
+                key={receipt.id}
+                receipt={receipt}
+                onRestore={() => handleRestore(receipt.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 border-dashed border-2 rounded-lg mt-8">
+            <History className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-4 text-lg font-medium">
+              Nessuno scontrino archiviato
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Completa e archivia una lista per vederla qui.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

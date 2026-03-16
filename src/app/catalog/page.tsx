@@ -141,7 +141,7 @@ export default function CatalogPage() {
 
   return (
     <>
-      <div className="flex flex-col bg-gray-50 p-4 sm:p-6 lg:p-8 flex-1">
+      <div className="flex flex-col bg-gray-50 p-4 sm:p-6 lg:p-8 h-full">
         <div className="pt-6 md:pt-0">
           <h1 className="text-3xl font-bold">Catalogo</h1>
           <p className="text-muted-foreground mt-1">
@@ -190,23 +190,25 @@ export default function CatalogPage() {
           </button>
         </div>
 
-        {view === 'products' ? (
-          <ProductList
-            products={products}
-            supermarkets={supermarkets}
-            allCategories={categories}
-            onEditProductClick={handleOpenEditProductDialog}
-            onDeleteProduct={handleDeleteProduct}
-          />
-        ) : (
-          <SupermarketList
-            supermarkets={supermarkets}
-            onDeleteSupermarket={handleDeleteSupermarket}
-            onReorder={handleReorderSupermarkets}
-            onEditSupermarket={handleOpenEditSupermarketDialog}
-            onShowProducts={handleShowSupermarketProducts}
-          />
-        )}
+        <div className="flex-1 overflow-y-auto -mx-4 px-4">
+          {view === 'products' ? (
+            <ProductList
+              products={products}
+              supermarkets={supermarkets}
+              allCategories={categories}
+              onEditProductClick={handleOpenEditProductDialog}
+              onDeleteProduct={handleDeleteProduct}
+            />
+          ) : (
+            <SupermarketList
+              supermarkets={supermarkets}
+              onDeleteSupermarket={handleDeleteSupermarket}
+              onReorder={handleReorderSupermarkets}
+              onEditSupermarket={handleOpenEditSupermarketDialog}
+              onShowProducts={handleShowSupermarketProducts}
+            />
+          )}
+        </div>
       </div>
       <AddProductDialog
         isOpen={isAddProductDialogOpen}

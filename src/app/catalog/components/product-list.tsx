@@ -78,8 +78,8 @@ export function ProductList({
         />
       </div>
 
-      <div className="flex gap-2 -mx-4 px-4 overflow-x-auto pb-2 -mb-2">
-        {filterCategories.slice(0, 5).map((category) => {
+      <div className="flex gap-2 -mx-4 px-4 overflow-x-auto pb-2">
+        {filterCategories.map((category) => {
           const isActive = selectedCategory === category.name;
           return (
             <Button

@@ -129,16 +129,6 @@ export function ShoppingLists({ lists, onReorder, onAddList, onDeleteList, onDup
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Le Mie Liste
-        </h1>
-        <Button onClick={onAddList} className="h-11 rounded-full text-base font-bold">
-          <Plus className="mr-2 h-4 w-4" />
-          Nuova
-        </Button>
-      </div>
-
       {lists.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={lists.map(l => l.id)} strategy={verticalListSortingStrategy}>
