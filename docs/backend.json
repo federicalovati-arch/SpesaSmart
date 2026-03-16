@@ -121,6 +121,22 @@
         },
         "required": ["productId", "productName", "quantity", "price"]
     },
+    "Payment": {
+      "title": "Payment",
+      "description": "Describes how a receipt was paid.",
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["Contanti", "Bancomat", "Conad Card", "Buoni"]
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount paid with this method."
+        }
+      },
+      "required": ["method", "amount"]
+    },
     "Receipt": {
         "title": "Receipt",
         "description": "Represents an archived shopping list.",
@@ -134,7 +150,11 @@
                 "type": "array",
                 "items": { "$ref": "#/entities/ReceiptItem" }
             },
-            "originalListId": { "type": "string" }
+            "originalListId": { "type": "string" },
+            "payments": {
+              "type": "array",
+              "items": { "$ref": "#/entities/Payment" }
+            }
         },
         "required": ["id", "listName", "archivedAt", "totalCost", "items", "originalListId"]
     }

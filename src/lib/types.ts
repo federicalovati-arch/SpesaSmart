@@ -55,6 +55,11 @@ export type Category = {
   order: number;
 };
 
+export type Payment = {
+  method: 'Contanti' | 'Bancomat' | 'Conad Card' | 'Buoni';
+  amount: number;
+};
+
 export type ReceiptItem = {
   productId: string;
   productName: string;
@@ -71,4 +76,5 @@ export type Receipt = {
   totalCost: number;
   items: ReceiptItem[];
   originalListId: string;
+  payments?: Payment[];
 };

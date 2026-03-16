@@ -1,9 +1,9 @@
 'use client';
 
-import type { Receipt } from '@/lib/types';
+import type { Receipt, Payment } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, RotateCcw } from 'lucide-react';
+import { Calendar, RotateCcw, Wallet, CreditCard, Landmark, Ticket } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,38 @@ type ReceiptCardProps = {
   receipt: Receipt;
   onRestore: () => void;
 };
+
+const paymentIcons: { [key in Payment['method']]: React.ElementType } = {
+  'Contanti': Wallet,
+  'Bancomat': CreditCard,
+  'Conad Card': Landmark,
+  'Buoni': Ticket,
+};
+
+
+const PaymentDisplay = ({ payments }: { payments?: Payment[] }) => {
+  if (!payments || payments.length === 0) {
+    return null;
+  }
+  
+  if (payments.length === 1) {
+    const payment = payments[0];
+    const Icon = paymentIcons[payment.method];
+    return (
+      <div className="flex items-center gap-1.5">
+        <Icon className="h-4 w-4" />
+        <span>{payment.method}</span>
+      </div>
+    )
+  }
+
+  return (
+     <div className="flex items-center gap-1.5">
+        <Wallet className="h-4 w-4" />
+        <span>Misto</span>
+      </div>
+  )
+}
 
 export function ReceiptCard({ receipt, onRestore }: ReceiptCardProps) {
   return (
@@ -28,6 +60,7 @@ export function ReceiptCard({ receipt, onRestore }: ReceiptCardProps) {
                 })}
               </span>
             </div>
+             <PaymentDisplay payments={receipt.payments} />
             <Badge
               variant="secondary"
               className="font-semibold bg-gray-200 text-gray-600 border-none"
