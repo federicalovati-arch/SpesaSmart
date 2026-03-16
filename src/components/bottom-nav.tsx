@@ -3,19 +3,21 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Home,
+  LayoutGrid,
   ShoppingBasket,
   List,
-  History,
+  CaseSensitive,
+  Receipt,
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/', label: 'HOME', icon: Home },
+  { href: '/', label: 'HOME', icon: LayoutGrid },
   { href: '/catalog', label: 'CATALOGO', icon: ShoppingBasket },
   { href: '/lists', label: 'LISTE', icon: List },
-  { href: '/history', label: 'STORICO', icon: History },
+  { href: '/cards', label: 'CARTE', icon: CaseSensitive },
+  { href: '/history', label: 'STORICO', icon: Receipt },
   { href: '/profile', label: 'PROFILO', icon: User },
 ];
 
@@ -24,7 +26,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 z-50 w-full bg-white border-t md:hidden">
-      <div className="grid h-16 grid-cols-5 mx-auto">
+      <div className="grid h-16 grid-cols-6 mx-auto">
         {navItems.map((item) => {
           const isActive =
             item.href === '/'
@@ -36,7 +38,7 @@ export function BottomNav() {
               href={item.href}
               className={cn(
                 'inline-flex flex-col items-center justify-center p-2 text-xs font-medium gap-1',
-                isActive ? 'text-primary' : 'text-gray-500'
+                isActive ? 'text-primary bg-primary/10' : 'text-gray-500'
               )}
             >
               <item.icon className="w-5 h-5" />

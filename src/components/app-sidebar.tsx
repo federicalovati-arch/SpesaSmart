@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   ShoppingCart,
-  Home,
+  LayoutGrid,
   ShoppingBasket,
   List,
   History,
   User,
+  CaseSensitive,
+  Receipt,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -21,10 +23,11 @@ import {
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: Home },
+  { href: '/', label: 'Dashboard', icon: LayoutGrid },
   { href: '/catalog', label: 'Catalogo', icon: ShoppingBasket },
   { href: '/lists', label: 'Liste Spesa', icon: List },
-  { href: '/history', label: 'Storico', icon: History },
+  { href: '/cards', label: 'Carte Fedeltà', icon: CaseSensitive },
+  { href: '/history', label: 'Storico', icon: Receipt },
   { href: '/profile', label: 'Profilo', icon: User },
 ];
 
