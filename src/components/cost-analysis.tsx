@@ -62,6 +62,10 @@ export function CostAnalysis() {
   const [monthA, setMonthA] = useState<string>("Marzo");
   const [monthYearB, setMonthYearB] = useState<string>("2025");
   const [monthB, setMonthB] = useState<string>("Marzo");
+
+  // State for the "Variazioni" tab
+  const [variationMonth, setVariationMonth] = useState<string>('Marzo');
+  const [variationYear, setVariationYear] = useState<string>('2026');
   
   const availableYears = Object.keys(mockYearlyData).sort((a,b) => parseInt(b) - parseInt(a));
   const availableMonths = [
@@ -73,7 +77,7 @@ export function CostAnalysis() {
     "Luglio": "Lug", "Agosto": "Ago", "Settembre": "Set", "Ottobre": "Ott", "Novembre": "Nov", "Dicembre": "Dic"
   };
 
-  const formatYAxis = (tick: number) => `€${tick}`;
+  const formatYAxis = (tick: number) => `€${tick.toLocaleString('it-IT')}`;
   
   const yearlyChartData = [
       { name: yearA, total: mockYearlyData[yearA] || 0 },
@@ -82,14 +86,23 @@ export function CostAnalysis() {
 
   const monthlyComparisonChartData = [
     { 
-      name: `${monthShortNames[monthA]} ${monthYearA}`, 
+      name: `${monthShortNames[monthA]} ${monthYearA.slice(2)}`, 
       total: mockMonthlyComparisonData[monthYearA]?.[monthA] || 0 
     },
     { 
-      name: `${monthShortNames[monthB]} ${monthYearB}`, 
+      name: `${monthShortNames[monthB]} ${monthYearB.slice(2)}`, 
       total: mockMonthlyComparisonData[monthYearB]?.[monthB] || 0
     },
-  ].sort((a, b) => parseInt(b.name.split(' ')[1]) - parseInt(a.name.split(' ')[1]));
+  ].sort((a, b) => {
+    const yearA = parseInt(a.name.split(' ')[1]);
+    const yearB = parseInt(b.name.split(' ')[1]);
+    return yearA - yearB;
+  });
+
+  const variationsData = [
+    { name: 'Aumenti', value: 0.74, color: 'hsl(var(--destructive))' },
+    { name: 'Risparmi', value: 2.79, color: 'hsl(var(--primary))' },
+  ];
 
   return (
     <Card className="shadow-lg rounded-3xl border-none">
@@ -102,7 +115,7 @@ export function CostAnalysis() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Tabs defaultValue="mesi" className="w-full">
+        <Tabs defaultValue="variazioni" className="w-full">
           <TabsList className="grid w-full grid-cols-4 bg-gray-100 rounded-full h-12 p-1.5">
             <TabsTrigger value="andamento" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">ANDAMENTO</TabsTrigger>
             <TabsTrigger value="anni" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">ANNI</TabsTrigger>
@@ -248,15 +261,15 @@ export function CostAnalysis() {
                     <Tooltip
                         cursor={{ fill: 'hsl(var(--primary)/0.1)' }}
                         content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                            return (
-                            <div className="bg-background p-2 rounded-lg shadow-lg border">
-                                <p className="font-bold text-primary">{`€${payload[0].value}`}</p>
-                                <p className="text-xs text-muted-foreground">{`Totale ${payload[0].payload.name}`}</p>
-                            </div>
-                            );
-                        }
-                        return null;
+                          if (active && payload && payload.length) {
+                              return (
+                              <div className="bg-background p-2 rounded-lg shadow-lg border">
+                                  <p className="font-bold text-primary">{`€${payload[0].value?.toLocaleString('it-IT', {minimumFractionDigits: 2})}`}</p>
+                                  <p className="text-xs text-muted-foreground">{`Totale ${payload[0].payload.name}`}</p>
+                              </div>
+                              );
+                          }
+                          return null;
                         }}
                     />
                     <Bar dataKey="total" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} maxBarSize={60} />
@@ -264,7 +277,79 @@ export function CostAnalysis() {
                 </ResponsiveContainer>
             </div>
           </TabsContent>
-          <TabsContent value="variazioni"><p className="text-center text-muted-foreground p-8">Analisi variazioni non ancora disponibile.</p></TabsContent>
+          <TabsContent value="variazioni" className="mt-6 space-y-6">
+            <div className="p-4 bg-gray-100 rounded-2xl flex items-center justify-between">
+              <label className="text-sm font-semibold text-gray-500">MESE:</label>
+              <div className="flex items-center gap-2">
+                <Select value={variationMonth} onValueChange={setVariationMonth}>
+                    <SelectTrigger className="w-[120px] rounded-lg bg-white font-bold border-gray-200">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {availableMonths.map(month => <SelectItem key={`V-${month}`} value={month}>{month}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+                <Select value={variationYear} onValueChange={setVariationYear}>
+                    <SelectTrigger className="w-[120px] rounded-lg bg-white font-bold border-gray-200">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {availableYears.map(year => <SelectItem key={`V-${year}`} value={year}>{year}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={variationsData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }} barCategoryGap="35%">
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{ fill: '#6b7280', fontSize: 14, fontWeight: 'bold' }} />
+                  <YAxis axisLine={false} tickLine={false} tickFormatter={formatYAxis} tick={{ fill: '#6b7280', fontSize: 12 }} domain={[0, 'dataMax + 0.5']} />
+                   <Tooltip
+                    cursor={{ fill: 'hsl(var(--foreground)/0.05)' }}
+                    content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                            const data = payload[0];
+                            return (
+                                <div className="bg-white p-3 rounded-xl shadow-lg border">
+                                    <div className="font-bold mb-2">{data.payload.name}</div>
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: data.payload.color }} />
+                                        <span className="text-muted-foreground">value</span>
+                                        <span className="font-bold ml-auto">{data.value?.toLocaleString('it-IT', { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        return null;
+                    }}
+                  />
+                  <Bar dataKey="value" radius={[8, 8, 0, 0]} maxBarSize={80}>
+                    {variationsData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="space-y-3">
+                <Card className="bg-destructive/10 border-destructive/20 rounded-2xl">
+                    <CardContent className="p-4">
+                        <p className="text-xs font-bold text-destructive">IMPATTO AUMENTI</p>
+                        <p className="text-3xl font-bold text-destructive">€0.74</p>
+                        <p className="text-xs text-destructive/80">COSTO EXTRA RISPETTO AI PREZZI BASE PRECEDENTI</p>
+                    </CardContent>
+                </Card>
+                 <Card className="bg-primary/10 border-primary/20 rounded-2xl">
+                    <CardContent className="p-4">
+                        <p className="text-xs font-bold text-primary">RISPARMIO OFFERTE</p>
+                        <p className="text-3xl font-bold text-primary">€2.79</p>
+                        <p className="text-xs text-primary/80">SCONTO TOTALE OTTENUTO DALLE PROMOZIONI</p>
+                    </CardContent>
+                </Card>
+            </div>
+          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
