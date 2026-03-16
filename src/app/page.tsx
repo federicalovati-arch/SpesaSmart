@@ -45,8 +45,8 @@ export default function DashboardPage() {
             <Skeleton className="h-16 w-full rounded-xl" />
         ) : user ? (
             <Link href="/profile">
-                <div className="flex items-center gap-4 p-3 rounded-2xl bg-white shadow-md">
-                     <Avatar className="h-12 w-12 cursor-pointer">
+                <div className="flex items-center gap-4 p-3 rounded-2xl bg-white shadow-md cursor-pointer transition-colors hover:bg-gray-50">
+                     <Avatar className="h-12 w-12">
                         <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
                         <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                     </Avatar>
@@ -56,7 +56,21 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </Link>
-        ) : null}
+        ) : (
+            <Link href="/profile">
+                 <div className="flex items-center gap-4 p-3 rounded-2xl bg-white shadow-md cursor-pointer transition-colors hover:bg-gray-50">
+                     <Avatar className="h-12 w-12">
+                        <AvatarFallback>
+                            <User className="h-6 w-6" />
+                        </AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <p className="text-lg font-bold">Accedi o Registrati</p>
+                        <p className="text-sm text-muted-foreground">Sincronizza i tuoi dati su più dispositivi.</p>
+                    </div>
+                </div>
+            </Link>
+        )}
 
         <div className="p-6 text-center rounded-3xl bg-primary text-primary-foreground shadow-lg">
             <p className="text-sm font-bold opacity-80">MESE CORRENTE</p>
