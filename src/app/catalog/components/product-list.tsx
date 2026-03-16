@@ -25,6 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { iconMap } from './category-manager-dialog';
+import { cn } from '@/lib/utils';
 
 type ProductListProps = {
   products: Product[];
@@ -45,7 +46,9 @@ export function ProductList({
   const [selectedCategory, setSelectedCategory] = useState('Tutte');
 
   const filterCategories = useMemo(() => {
-    return [{name: 'Tutte', icon: 'layout-grid'}, ...allCategories];
+    const tutteCategory: Category = { name: 'Tutte', icon: 'layout-grid', id: 'all', order: 0 };
+    const sortedCategories = [...allCategories].sort((a,b) => a.order - b.order);
+    return [tutteCategory, ...sortedCategories];
   }, [allCategories]);
 
   const filteredProducts = useMemo(() => {
@@ -55,13 +58,8 @@ export function ProductList({
   }, [initialProducts, selectedCategory, searchQuery]);
 
   const getCategoryIcon = (iconName: string) => {
-    const Icon = (iconMap as { [key: string]: LucideIcon | undefined })[iconName.toLowerCase()];
-    if (iconName === 'layout-grid') return <LayoutGrid className="mr-2 h-4 w-4" />;
-    if (Icon) {
-      return <Icon className="mr-2 h-4 w-4" />;
-    }
-    // Return a transparent icon to maintain alignment
-    return <LayoutGrid className="mr-2 h-4 w-4 opacity-0" />;
+    const Icon = (iconMap as { [key: string]: LucideIcon | undefined })[iconName.toLowerCase()] || LayoutGrid;
+    return <Icon className="mr-2 h-4 w-4" />;
   };
 
   const getSupermarketName = (id: string) => {
@@ -81,43 +79,46 @@ export function ProductList({
       </div>
 
       <div className="flex gap-2 -mx-4 px-4 overflow-x-auto pb-2 -mb-2">
-        {filterCategories.slice(0, 5).map((category) => (
-          <Button
-            key={category.name}
-            variant={selectedCategory === category.name ? 'default' : 'outline'}
-            className={`rounded-full whitespace-nowrap border-gray-300 h-10 ${
-              selectedCategory === category.name
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-white text-foreground'
-            }`}
-            onClick={() => setSelectedCategory(category.name)}
-          >
-            {getCategoryIcon(category.icon)}
-            {category.name}
-          </Button>
-        ))}
+        {filterCategories.slice(0, 5).map((category) => {
+          const isActive = selectedCategory === category.name;
+          return (
+            <Button
+              key={category.name}
+              variant={isActive ? 'default' : 'outline'}
+              className={cn(`rounded-full whitespace-nowrap h-10 border-gray-300`,
+                !isActive && 'bg-white text-foreground'
+              )}
+              onClick={() => setSelectedCategory(category.name)}
+            >
+              {getCategoryIcon(category.icon)}
+              {category.name}
+            </Button>
+          )
+        })}
       </div>
 
       <div className="space-y-4">
         {filteredProducts.map((product) => {
            return (
-              <Card key={product.id} className="overflow-hidden shadow-md rounded-2xl">
-                  <CardContent className="p-2">
+              <Card key={product.id} className="overflow-hidden shadow-md rounded-2xl bg-white">
+                  <CardContent className="p-4">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h3 className="text-base font-bold">{product.name}</h3>
-                          <Badge variant="secondary" className="font-semibold mt-1 bg-gray-200 text-gray-600 border-none text-xs">
-                              {product.category}
-                          </Badge>
+                          <h3 className="text-lg font-bold">{product.name}</h3>
+                          {product.category && (
+                            <Badge variant="secondary" className="font-semibold mt-1 bg-gray-200 text-gray-600 border-none text-xs">
+                                {product.category}
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex items-center gap-0">
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500" onClick={() => onEditProductClick(product)}>
-                                <ImageIcon className="h-4 w-4" />
+                                <ImageIcon className="h-5 w-5" />
                             </Button>
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600">
-                                        <Trash2 className="h-4 w-4" />
+                                        <Trash2 className="h-5 w-5" />
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
@@ -135,13 +136,17 @@ export function ProductList({
                             </AlertDialog>
                         </div>
                       </div>
-                       <div className="mt-2 bg-gray-100/70 p-2 rounded-lg space-y-1">
-                          {product.prices.sort((a,b) => a.price - b.price).map(price => (
+                       <div className="mt-3 bg-gray-100/70 p-3 rounded-lg space-y-2">
+                          {product.prices.length > 0 ? (
+                            product.prices.sort((a,b) => a.price - b.price).map(price => (
                               <div key={price.supermarketId} className="flex justify-between items-center text-sm">
                                   <span className="text-gray-700">{getSupermarketName(price.supermarketId)}</span>
                                   <span className="font-bold text-base">€{price.price.toFixed(2)}</span>
                               </div>
-                          ))}
+                            ))
+                          ) : (
+                            <p className="text-sm text-center text-gray-500">Nessun prezzo inserito</p>
+                          )}
                        </div>
                   </CardContent>
               </Card>

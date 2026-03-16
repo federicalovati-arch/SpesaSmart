@@ -102,81 +102,69 @@ export default function CatalogPage() {
 
   return (
     <>
-      <div className="flex flex-col p-4 sm:p-6 lg:p-8">
-        <div>
-          <div className="pt-6 md:pt-0">
-            <h1 className="text-3xl font-bold">Catalogo</h1>
-            <p className="text-muted-foreground mt-1">
-              Gestisci prodotti, negozi e prezzi.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-2 my-6">
-            <Button
-              variant="outline"
-              className="bg-white shadow rounded-lg h-12 w-full sm:w-auto"
-              onClick={() => setIsCategoryManagerOpen(true)}
-            >
-              <LayoutGrid className="mr-2 h-4 w-4" />
-              CATEGORIE
-            </Button>
-            {view === 'products' ? (
-              <Button
-                className="shadow rounded-lg h-12 w-full sm:flex-1"
-                onClick={handleOpenAddDialog}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                NUOVO PRODOTTO
-              </Button>
-            ) : (
-              <Button
-                className="shadow rounded-lg h-12 w-full sm:flex-1"
-                onClick={() => setIsAddSupermarketDialogOpen(true)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                NUOVO NEGOZIO
-              </Button>
-            )}
-          </div>
-
-          <div className="flex items-center justify-center p-1 rounded-full bg-gray-200/60 w-full max-w-xs mx-auto mb-6">
-            <button
-              onClick={() => setView('products')}
-              className={`flex-1 text-center py-2 px-4 rounded-full text-sm font-semibold transition-all ${
-                view === 'products'
-                  ? 'bg-white shadow text-primary'
-                  : 'bg-transparent text-gray-500'
-              }`}
-            >
-              PRODOTTI
-            </button>
-            <button
-              onClick={() => setView('supermarkets')}
-              className={`flex-1 text-center py-2 px-4 rounded-full text-sm font-semibold transition-all ${
-                view === 'supermarkets'
-                  ? 'bg-white shadow text-primary'
-                  : 'bg-transparent text-gray-500'
-              }`}
-            >
-              NEGOZI
-            </button>
-          </div>
-
-          {view === 'products' ? (
-            <ProductList
-              products={products}
-              supermarkets={supermarkets}
-              allCategories={categories}
-              onEditProductClick={handleOpenEditDialog}
-              onDeleteProduct={handleDeleteProduct}
-            />
-          ) : (
-            <SupermarketList
-              supermarkets={supermarkets}
-              onDeleteSupermarket={handleDeleteSupermarket}
-            />
-          )}
+      <div className="flex flex-col bg-gray-50 p-4 sm:p-6 lg:p-8 flex-1">
+        <div className="pt-6 md:pt-0">
+          <h1 className="text-3xl font-bold">Catalogo</h1>
+          <p className="text-muted-foreground mt-1">
+            Gestisci prodotti, negozi e prezzi.
+          </p>
         </div>
+
+        <div className="flex items-center gap-2 my-6">
+          <Button
+            variant="outline"
+            className="bg-white shadow rounded-lg h-12 w-auto"
+            onClick={() => setIsCategoryManagerOpen(true)}
+          >
+            <LayoutGrid className="mr-2 h-4 w-4" />
+            CATEGORIE
+          </Button>
+            <Button
+              className="shadow rounded-lg h-12 flex-1"
+              onClick={view === 'products' ? handleOpenAddDialog : () => setIsAddSupermarketDialogOpen(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {view === 'products' ? 'NUOVO PRODOTTO' : 'NUOVO NEGOZIO'}
+            </Button>
+        </div>
+
+        <div className="flex items-center justify-center p-1 rounded-full bg-gray-200/60 w-full max-w-xs mx-auto mb-6">
+          <button
+            onClick={() => setView('products')}
+            className={`flex-1 text-center py-2 px-4 rounded-full text-sm font-semibold transition-all ${
+              view === 'products'
+                ? 'bg-white shadow text-primary'
+                : 'bg-transparent text-gray-500'
+            }`}
+          >
+            PRODOTTI
+          </button>
+          <button
+            onClick={() => setView('supermarkets')}
+            className={`flex-1 text-center py-2 px-4 rounded-full text-sm font-semibold transition-all ${
+              view === 'supermarkets'
+                ? 'bg-white shadow text-primary'
+                : 'bg-transparent text-gray-500'
+            }`}
+          >
+            NEGOZI
+          </button>
+        </div>
+
+        {view === 'products' ? (
+          <ProductList
+            products={products}
+            supermarkets={supermarkets}
+            allCategories={categories}
+            onEditProductClick={handleOpenEditDialog}
+            onDeleteProduct={handleDeleteProduct}
+          />
+        ) : (
+          <SupermarketList
+            supermarkets={supermarkets}
+            onDeleteSupermarket={handleDeleteSupermarket}
+          />
+        )}
       </div>
       <AddProductDialog
         isOpen={isAddProductDialogOpen}

@@ -38,15 +38,18 @@ const getSupermarketIcon = (name: string) => {
 export function SupermarketList({ supermarkets, onDeleteSupermarket }: SupermarketListProps) {
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-2 pb-20">
       {supermarkets.map((supermarket) => (
-        <Card key={supermarket.id} className="shadow-sm">
-          <CardContent className="p-4 flex items-center gap-4">
+        <Card key={supermarket.id} className="shadow-sm rounded-2xl bg-white">
+          <CardContent className="p-3 flex items-center gap-4">
             <div className="bg-primary/10 p-3 rounded-xl">
                 {getSupermarketIcon(supermarket.name)}
             </div>
-            <h3 className="font-bold text-lg flex-grow">{supermarket.name}</h3>
-            <div className="flex items-center gap-1">
+            <div className="flex-grow">
+              <h3 className="font-bold text-lg">{supermarket.name}</h3>
+              {supermarket.location && <p className="text-sm text-muted-foreground">{supermarket.location}</p>}
+            </div>
+            <div className="flex items-center gap-0">
                 <Button variant="ghost" size="icon" className="h-9 w-9" disabled>
                     <Edit className="h-5 w-5 text-gray-600" />
                     <span className="sr-only">Modifica</span>
