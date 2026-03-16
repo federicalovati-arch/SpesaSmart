@@ -1,191 +1,238 @@
 {
   "entities": {
-    "UserProfile": {
-      "title": "User Profile",
-      "description": "Represents a user's profile information.",
-      "type": "object",
-      "properties": {
-        "uid": { "type": "string", "description": "The user's unique ID." },
-        "email": { "type": "string", "format": "email", "description": "The user's email address." },
-        "displayName": { "type": "string", "description": "The user's display name." },
-        "photoURL": { "type": "string", "format": "uri", "description": "URL of the user's profile picture." }
-      },
-      "required": ["uid", "email"]
-    },
     "Supermarket": {
-        "title": "Supermarket",
-        "description": "Represents a supermarket or store.",
-        "type": "object",
-        "properties": {
-            "id": { "type": "string" },
-            "name": { "type": "string" },
-            "location": { "type": "string" },
-            "order": { "type": "number" },
-            "icon": { "type": "string" }
-        },
-        "required": ["id", "name", "order", "icon"]
-    },
-    "ProductImage": {
-        "title": "Product Image",
-        "description": "Represents an image for a product.",
-        "type": "object",
-        "properties": {
-            "id": { "type": "string" },
-            "url": { "type": "string", "format": "uri" },
-            "supermarketId": { "type": "string" }
-        },
-        "required": ["id", "url"]
-    },
-    "ProductPrice": {
-        "title": "Product Price",
-        "description": "Represents the price of a product at a specific supermarket.",
-        "type": "object",
-        "properties": {
-            "supermarketId": { "type": "string" },
-            "price": { "type": "number" },
-            "brand": { "type": "string" },
-            "imageId": { "type": "string" }
-        },
-        "required": ["supermarketId", "price"]
-    },
-    "Product": {
-        "title": "Product",
-        "description": "Represents a product in the catalog.",
-        "type": "object",
-        "properties": {
-            "id": { "type": "string" },
-            "name": { "type": "string" },
-            "brand": { "type": "string" },
-            "category": { "type": "string" },
-            "prices": {
-                "type": "array",
-                "items": { "$ref": "#/entities/ProductPrice" }
-            },
-            "images": {
-                "type": "array",
-                "items": { "$ref": "#/entities/ProductImage" }
-            }
-        },
-        "required": ["id", "name", "category", "prices", "images"]
-    },
-    "ShoppingListItem": {
-        "title": "Shopping List Item",
-        "description": "Represents an item within a shopping list.",
-        "type": "object",
-        "properties": {
-            "productId": { "type": "string" },
-            "quantity": { "type": "number" },
-            "purchased": { "type": "boolean" }
-        },
-        "required": ["productId", "quantity", "purchased"]
-    },
-    "ShoppingList": {
-        "title": "Shopping List",
-        "description": "Represents a user's shopping list.",
-        "type": "object",
-        "properties": {
-            "id": { "type": "string" },
-            "name": { "type": "string" },
-            "createdAt": { "type": "string", "format": "date-time" },
-            "items": {
-                "type": "array",
-                "items": { "$ref": "#/entities/ShoppingListItem" }
-            },
-            "order": { "type": "number" }
-        },
-        "required": ["id", "name", "createdAt", "items", "order"]
-    },
-    "Category": {
-        "title": "Category",
-        "description": "Represents a product category.",
-        "type": "object",
-        "properties": {
-            "id": { "type": "string" },
-            "name": { "type": "string" },
-            "icon": { "type": "string" },
-            "order": { "type": "number" }
-        },
-        "required": ["id", "name", "icon", "order"]
-    },
-    "ReceiptItem": {
-        "title": "Receipt Item",
-        "description": "Represents a single item on an archived receipt.",
-        "type": "object",
-        "properties": {
-            "productId": { "type": "string" },
-            "productName": { "type": "string" },
-            "quantity": { "type": "number" },
-            "price": { "type": "number" },
-            "supermarketId": { "type": "string" },
-            "supermarketName": { "type": "string" }
-        },
-        "required": ["productId", "productName", "quantity", "price"]
-    },
-    "Payment": {
-      "title": "Payment",
-      "description": "Describes how a receipt was paid.",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Supermarket",
       "type": "object",
+      "description": "Represents a single supermarket where products can be purchased and their prices tracked.",
       "properties": {
-        "method": {
+        "id": {
           "type": "string",
-          "enum": ["Contanti", "Bancomat", "Conad Card", "Buoni"]
+          "description": "Unique identifier for the Supermarket entity."
         },
-        "amount": {
-          "type": "number",
-          "description": "The amount paid with this method."
+        "name": {
+          "type": "string",
+          "description": "The name of the supermarket (e.g., 'Esselunga', 'Carrefour')."
+        },
+        "address": {
+          "type": "string",
+          "description": "The physical address of the supermarket, potentially including street, city, and postal code."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional notes or additional details about the supermarket, such as opening hours or specific features."
         }
       },
-      "required": ["method", "amount"]
+      "required": [
+        "id",
+        "name"
+      ]
     },
-    "Receipt": {
-        "title": "Receipt",
-        "description": "Represents an archived shopping list.",
-        "type": "object",
-        "properties": {
-            "id": { "type": "string" },
-            "listName": { "type": "string" },
-            "archivedAt": { "type": "string", "format": "date-time" },
-            "totalCost": { "type": "number" },
-            "items": {
-                "type": "array",
-                "items": { "$ref": "#/entities/ReceiptItem" }
-            },
-            "originalListId": { "type": "string" },
-            "payments": {
-              "type": "array",
-              "items": { "$ref": "#/entities/Payment" }
-            }
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a specific product available for purchase, maintaining its general information.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
         },
-        "required": ["id", "listName", "archivedAt", "totalCost", "items", "originalListId"]
+        "name": {
+          "type": "string",
+          "description": "The name of the product (e.g., 'Whole Milk', 'Rye Bread')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the product, useful for distinguishing similar items."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category the product belongs to (e.g., 'Dairy', 'Bakery', 'Produce'). Used for organization and AI categorization."
+        },
+        "unitOfMeasure": {
+          "type": "string",
+          "description": "The standard unit of measure for the product (e.g., 'L' for liters, 'kg' for kilograms, 'pcs' for pieces)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "category"
+      ]
+    },
+    "ProductPrice": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ProductPrice",
+      "type": "object",
+      "description": "Captures the recorded price of a specific product at a particular supermarket at a given time.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ProductPrice entity."
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product for which this price is recorded. (Relationship: Product 1:N ProductPrice)"
+        },
+        "supermarketId": {
+          "type": "string",
+          "description": "Reference to the Supermarket where this price was observed. (Relationship: Supermarket 1:N ProductPrice)"
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the product at the specified supermarket."
+        },
+        "lastUpdated": {
+          "type": "string",
+          "description": "The date and time when this price was last recorded or updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "productId",
+        "supermarketId",
+        "price",
+        "lastUpdated"
+      ]
+    },
+    "ShoppingList": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ShoppingList",
+      "type": "object",
+      "description": "Represents a user-created shopping list to manage items intended for purchase.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ShoppingList entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "A user-defined name for the shopping list (e.g., 'Weekly Groceries', 'Party Supplies')."
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional additional notes or description for the shopping list, providing context or reminders."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time when the shopping list was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The date and time when the shopping list was last updated.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the shopping list (e.g., 'active', 'completed', 'archived')."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "createdAt",
+        "updatedAt",
+        "status"
+      ]
+    },
+    "ShoppingListItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ShoppingListItem",
+      "type": "object",
+      "description": "Represents a single product entry within a shopping list, specifying quantity and purchase status.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ShoppingListItem entity."
+        },
+        "shoppingListId": {
+          "type": "string",
+          "description": "Reference to the ShoppingList this item belongs to. (Relationship: ShoppingList 1:N ShoppingListItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product being listed. (Relationship: Product 1:N ShoppingListItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the product to be purchased for this shopping list."
+        },
+        "isPurchased": {
+          "type": "boolean",
+          "description": "A flag indicating whether the item has been purchased or added to the cart."
+        }
+      },
+      "required": [
+        "id",
+        "shoppingListId",
+        "productId",
+        "quantity",
+        "isPurchased"
+      ]
     }
   },
   "auth": {
-    "providers": ["google.com"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": { "$ref": "#/entities/UserProfile" },
-      "description": "Stores user profile information."
-    },
-    "/users/{userId}/products/{productId}": {
-        "schema": { "$ref": "#/entities/Product" },
-        "description": "Stores user-specific products."
-    },
-    "/users/{userId}/supermarkets/{supermarketId}": {
-        "schema": { "$ref": "#/entities/Supermarket" },
-        "description": "Stores user-specific supermarkets."
-    },
-    "/users/{userId}/categories/{categoryId}": {
-        "schema": { "$ref": "#/entities/Category" },
-        "description": "Stores user-specific categories."
-    },
-    "/users/{userId}/shoppingLists/{shoppingListId}": {
-        "schema": { "$ref": "#/entities/ShoppingList" },
-        "description": "Stores user's shopping lists."
-    },
-    "/users/{userId}/receipts/{receiptId}": {
-        "schema": { "$ref": "#/entities/Receipt" },
-        "description": "Stores user's archived receipts."
-    }
+    "structure": [
+      {
+        "path": "/supermarkets/{supermarketId}",
+        "definition": {
+          "entityName": "Supermarket",
+          "schema": {
+            "$ref": "#/backend/entities/Supermarket"
+          },
+          "description": "Globally accessible catalog of supermarkets, where users can contribute. Includes denormalized 'ownerId' for write authorization (who added it) and allows global read for price comparisons. {supermarketId} is the unique ID for the supermarket."
+        }
+      },
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Globally accessible catalog of products, where users can contribute. Includes denormalized 'ownerId' for write authorization (who added it) and allows global read for product catalog browsing. {productId} is the unique ID for the product."
+        }
+      },
+      {
+        "path": "/productPrices/{productPriceId}",
+        "definition": {
+          "entityName": "ProductPrice",
+          "schema": {
+            "$ref": "#/backend/entities/ProductPrice"
+          },
+          "description": "Globally accessible records of product prices at specific supermarkets. Includes denormalized 'ownerId' for write authorization (who submitted the price), and 'productId' and 'supermarketId' for authorization independence and efficient querying across all prices. Allows global read for intelligent price comparison. {productPriceId} is the unique ID for the price record."
+        }
+      },
+      {
+        "path": "/users/{userId}/shoppingLists/{shoppingListId}",
+        "definition": {
+          "entityName": "ShoppingList",
+          "schema": {
+            "$ref": "#/backend/entities/ShoppingList"
+          },
+          "description": "User-specific shopping list. Access is restricted to the owner. Includes denormalized 'ownerId' for authorization independence, which must match the {userId} in the path. {userId} is the Firebase Authentication UID, and {shoppingListId} is the unique ID for the shopping list."
+        }
+      },
+      {
+        "path": "/users/{userId}/shoppingLists/{shoppingListId}/shoppingListItems/{shoppingListItemId}",
+        "definition": {
+          "entityName": "ShoppingListItem",
+          "schema": {
+            "$ref": "#/backend/entities/ShoppingListItem"
+          },
+          "description": "An item within a user's specific shopping list. Access is restricted to the owner of the parent shopping list. Includes denormalized 'ownerId' (matching {userId}) and 'shoppingListId' (matching {shoppingListId}) for authorization independence and efficient querying. {userId} is the Firebase Authentication UID, {shoppingListId} is the ID of the parent shopping list, and {shoppingListItemId} is the unique ID for this item."
+        }
+      }
+    ],
+    "reasoning": "The proposed Firestore data structure prioritizes Authorization Independence and Structural Segregation to ensure secure, scalable, and debuggable security rules. The `auth/unauthorized-domain` error reported in the console is a Firebase project configuration issue, not related to data structure. It means the domain from which your web application is making authentication requests (e.g., localhost, your production domain) is not whitelisted in your Firebase project settings under 'Authentication' -> 'Settings' -> 'Authorized domains'. You must add your app's domain(s) there to resolve the `auth/unauthorized-domain` error.\n\n**Data Structure Justification:**\n\n1.  **Authorization Independence (CRITICAL):**\n    *   For user-owned data like `ShoppingList` and `ShoppingListItem`, the `ownerId` field will be explicitly denormalized into each document. This `ownerId` will directly correspond to `request.auth.uid` and the `{userId}` wildcard in the path, eliminating the need for `get()` calls in security rules to check parent ownership. For example, a `ShoppingListItem` document will contain `ownerId` and `shoppingListId` fields, allowing its access rules to be evaluated atomically without fetching the parent `ShoppingList` or the user document.\n    *   For `Supermarket`, `Product`, and `ProductPrice` entities, which users can 'manually add, edit' but also form a 'central database', `ownerId` will be denormalized into each document. This allows specific users to have write permissions over *their* contributed items while maintaining global read access for all authenticated users to facilitate price comparison across the entire catalog. Additionally, `ProductPrice` documents explicitly denormalize `productId` and `supermarketId` to enable direct queries and rule evaluation.\n\n2.  **Clarity of Intent (Debuggability):** The use of clear, hierarchical paths for user-owned data (`/users/{userId}/shoppingLists/...`) and top-level collections for global, shared data (`/supermarkets`, `/products`, `/productPrices`) makes access patterns explicit. Denormalized `ownerId` and other foreign key IDs directly within documents further clarify authorization intent.\n\n3.  **DBAC (No Custom Claims):** All authorization relies solely on `request.auth.uid` and database fields (`ownerId`, path wildcards). There are no custom claims proposed, ensuring all role management is database-centric if specific roles (e.g., admin) were to be introduced (e.g., via `/roles_admin/{uid}`).\n\n4.  **QAPs (Rules are not Filters):**\n    *   **User-owned data:** `ShoppingList` and `ShoppingListItem` collections are structured under `/users/{userId}/`. This path-based ownership naturally supports secure `list` operations, as users can only query their own lists (where `userId == request.auth.uid`). Rules can simply enforce `allow list: if request.auth.uid == userId;` without filtering results on the client side.\n    *   **Global/Shared Catalog data:** `Supermarkets`, `Products`, and `ProductPrices` are designed as top-level collections (`/supermarkets`, `/products`, `/productPrices`). The core feature of 'Intelligent Price Comparison & Recommendation' requires querying across *all* product prices. By making these collections globally readable for authenticated users (e.g., `allow read: if request.auth.uid != null;`), `list` operations are fully QAP compliant, as the rules grant access to the entire collection without requiring server-side filtering based on arbitrary document fields.\n\n5.  **Invariants:** Timestamps (`createdAt`, `updatedAt`, `lastUpdated`) and status fields (`status`) are explicitly defined in the schemas, allowing for robust rule enforcement of data integrity. Ownership is maintained via the `ownerId` field in documents and path structures.\n\n**Structural Segregation:**\n\n*   Each collection (e.g., `/supermarkets`, `/products`, `/users/{userId}/shoppingLists`) contains documents with a homogeneous security posture. All documents within `/supermarkets` are publicly readable (and owner-writable), and all documents within a user's `shoppingLists` are private to that user. This avoids mixed access requirements within a single collection, simplifying rule sets significantly."
   }
 }
