@@ -12,24 +12,34 @@ export function useUser() {
 
   useEffect(() => {
     if (!app) {
-        setLoading(false);
-        return;
-    };
-    
-    const auth = getAuth(app);
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (user) => {
-        setUser(user);
-        setLoading(false);
-      },
-      (error) => {
-        console.error('Auth state change error', error);
-        setLoading(false);
-      }
-    );
+      setLoading(false);
+      return;
+    }
 
-    return () => unsubscribe();
+    let unsubscribe: () => void;
+    try {
+      const auth = getAuth(app);
+      unsubscribe = onAuthStateChanged(
+        auth,
+        (user) => {
+          setUser(user);
+          setLoading(false);
+        },
+        (error) => {
+          console.error('Auth state change error', error);
+          setLoading(false);
+        }
+      );
+    } catch (error) {
+      console.error('Firebase Auth initialization error:', error);
+      setLoading(false);
+    }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [app]);
 
   return { user, loading };

@@ -17,10 +17,17 @@ export function AuthGate() {
   const { toast } = useToast();
 
   const handleSignIn = async () => {
-    if (!app) return;
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+    if (!app) {
+        toast({
+            variant: 'destructive',
+            title: 'Configurazione Firebase Mancante',
+            description: "Le credenziali Firebase non sono state configurate. L'app funzionerà in modalità ospite.",
+        });
+        return;
+    }
     try {
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       toast({
         title: 'Accesso effettuato!',
@@ -31,15 +38,15 @@ export function AuthGate() {
       toast({
         variant: 'destructive',
         title: 'Errore di autenticazione',
-        description: error.message,
+        description: 'Verifica la tua configurazione Firebase e la connessione internet.',
       });
     }
   };
 
   const handleSignOut = async () => {
-    if (!app) return;
-    const auth = getAuth(app);
+    if (!app) return; // Should not happen if user is logged in
     try {
+      const auth = getAuth(app);
       await signOut(auth);
       toast({
         title: 'Uscita effettuata',
