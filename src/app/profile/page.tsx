@@ -23,8 +23,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProfilePage() {
-  const { user, loading } = useUser();
-  const { importData, exportData } = useData();
+  const { user, loading: userLoading } = useUser();
+  const { importData, exportData, loading: dataLoading } = useData();
   const { theme, setTheme, themes } = useTheme();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -49,8 +49,10 @@ export default function ProfilePage() {
         setDataUsage(0);
       }
     };
-    estimateSize();
-  }, [exportData, importData]); // Rerun on importData to recalc size
+    if (!dataLoading) {
+      estimateSize();
+    }
+  }, [exportData, dataLoading]);
 
   const handleExport = () => {
     try {
@@ -101,6 +103,8 @@ export default function ProfilePage() {
     };
     reader.readAsText(file);
   };
+  
+  const isLoading = userLoading || dataLoading;
 
   return (
     <div className="flex flex-col h-full bg-background overflow-y-auto">
@@ -111,7 +115,7 @@ export default function ProfilePage() {
       <div className="p-4 -mt-20 space-y-4 max-w-md mx-auto w-full pb-20 md:pb-4">
         <Card className="shadow-xl rounded-2xl w-full">
             <CardContent className="p-6 flex flex-col items-center text-center">
-                {loading ? (
+                {isLoading ? (
                     <div className="flex flex-col items-center text-center h-[112px] justify-center">
                         <Skeleton className="h-20 w-20 rounded-full mb-3" />
                         <Skeleton className="h-5 w-32" />
@@ -144,11 +148,15 @@ export default function ProfilePage() {
                     <Database className="h-5 w-5 text-muted-foreground" />
                     <h2 className="font-bold text-lg">Cache Dati</h2>
                 </div>
-                <div className="flex justify-between items-baseline mb-1">
-                    <span className="text-2xl font-bold text-primary">{dataUsage.toFixed(0)} KB</span>
-                    <span className="text-sm font-semibold text-primary">{Math.min(100, (dataUsage / 8304) * 100).toFixed(0)}%</span>
-                </div>
-                <Progress value={(dataUsage / 8304) * 100} className="h-2" />
+                {isLoading ? <Skeleton className="h-12 w-full" /> :
+                <>
+                  <div className="flex justify-between items-baseline mb-1">
+                      <span className="text-2xl font-bold text-primary">{dataUsage.toFixed(0)} KB</span>
+                      <span className="text-sm font-semibold text-primary">{Math.min(100, (dataUsage / 8304) * 100).toFixed(0)}%</span>
+                  </div>
+                  <Progress value={(dataUsage / 8304) * 100} className="h-2" />
+                </>
+                }
                 <p className="text-xs text-muted-foreground mt-2">
                     Spazio occupato dalla copia locale nel browser per velocizzare l'app. I dati sono al sicuro nel Cloud se hai fatto l'accesso.
                 </p>
@@ -161,11 +169,11 @@ export default function ProfilePage() {
                     <Cloud className="h-5 w-5 text-muted-foreground" />
                     <h2 className="font-bold text-lg">Backup</h2>
                 </div>
-                <Button className="w-full h-12" onClick={handleExport}>
-                    <Download className="mr-2" />
-                    Esporta JSON
+                <Button className="w-full h-12" onClick={handleExport} disabled={isLoading}>
+                    {isLoading ? <Loader2 className="mr-2 animate-spin" /> : <Download className="mr-2" />}
+                    {isLoading ? 'Caricamento...' : 'Esporta JSON'}
                 </Button>
-                <Button className="w-full h-12" variant="outline" onClick={handleImportClick} disabled={isImporting}>
+                <Button className="w-full h-12" variant="outline" onClick={handleImportClick} disabled={isImporting || isLoading}>
                     {isImporting ? <Loader2 className="mr-2 animate-spin" /> : <Upload className="mr-2" />}
                     {isImporting ? 'Importazione...' : 'Importa JSON'}
                 </Button>

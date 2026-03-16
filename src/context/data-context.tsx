@@ -6,6 +6,7 @@ import {
   useState,
   ReactNode,
   useEffect,
+  useCallback,
 } from 'react';
 import {
   mockProducts,
@@ -202,32 +203,35 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const shoppingLists = user ? (firestoreShoppingLists || []).sort((a,b) => a.order - b.order) : localShoppingLists;
   const receipts = user ? firestoreReceipts || [] : localReceipts;
 
-  const writeToFirestore = async (collectionName: string, item: any) => {
+  const writeToFirestore = useCallback(async (collectionName: string, item: any) => {
     if (user && firestore) {
       await setDoc(doc(firestore, 'users', user.uid, collectionName, item.id), item, { merge: true });
     }
-  };
+  }, [user, firestore]);
 
-  const deleteFromFirestore = async (collectionName: string, itemId: string) => {
+  const deleteFromFirestore = useCallback(async (collectionName: string, itemId: string) => {
     if (user && firestore) {
       await deleteDoc(doc(firestore, 'users', user.uid, collectionName, itemId));
     }
-  };
+  }, [user, firestore]);
 
-  const addProduct = (productData: Omit<Product, 'id'>) => {
+  const addProduct = useCallback((productData: Omit<Product, 'id'>) => {
       const newProduct = { ...productData, id: `p${Date.now()}` };
       if (user) { writeToFirestore('products', newProduct); } 
       else setLocalProducts((prev) => [newProduct, ...prev]);
-  };
-  const updateProduct = (updatedProduct: Product) => {
+  }, [user, writeToFirestore]);
+  
+  const updateProduct = useCallback((updatedProduct: Product) => {
       if (user) { writeToFirestore('products', updatedProduct); }
       else setLocalProducts((prev) => prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)));
-  };
-  const deleteProduct = (productId: string) => {
+  }, [user, writeToFirestore]);
+
+  const deleteProduct = useCallback((productId: string) => {
       if (user) { deleteFromFirestore('products', productId); }
       else setLocalProducts((prev) => prev.filter((p) => p.id !== productId));
-  };
-  const updateProductBasePrice = (productId: string, supermarketId: string, newPrice: number) => {
+  }, [user, deleteFromFirestore]);
+
+  const updateProductBasePrice = useCallback((productId: string, supermarketId: string, newPrice: number) => {
     const productToUpdate = (user ? firestoreProducts : products)?.find(p => p.id === productId);
     if (productToUpdate && supermarketId) {
         const priceExists = productToUpdate.prices.some(p => p.supermarketId === supermarketId);
@@ -243,21 +247,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const updatedProduct = { ...productToUpdate, prices: newPrices };
         updateProduct(updatedProduct);
     }
-  };
+  }, [user, products, firestoreProducts, updateProduct]);
 
 
-  const addSupermarket = (supermarketData: Omit<Supermarket, 'id' | 'order'>) => {
+  const addSupermarket = useCallback((supermarketData: Omit<Supermarket, 'id' | 'order'>) => {
       const currentSupermarkets = user ? firestoreSupermarkets || [] : localSupermarkets;
       const newOrder = currentSupermarkets.length > 0 ? Math.max(...currentSupermarkets.map(s => s.order)) + 1 : 1;
       const newSupermarket = { ...supermarketData, id: `s${Date.now()}`, order: newOrder };
       if (user) { writeToFirestore('supermarkets', newSupermarket); }
       else setLocalSupermarkets((prev) => [...prev, newSupermarket]);
-  };
-   const updateSupermarket = (updatedSupermarket: Supermarket) => {
+  }, [user, writeToFirestore, firestoreSupermarkets, localSupermarkets]);
+  
+   const updateSupermarket = useCallback((updatedSupermarket: Supermarket) => {
     if (user) { writeToFirestore('supermarkets', updatedSupermarket); }
     else setLocalSupermarkets(prev => prev.map(s => s.id === updatedSupermarket.id ? updatedSupermarket : s).sort((a,b) => a.order - b.order));
-  };
-  const deleteSupermarket = async (supermarketId: string) => {
+  }, [user, writeToFirestore]);
+  
+  const deleteSupermarket = useCallback(async (supermarketId: string) => {
       if (user && firestore) {
           const batch = writeBatch(firestore);
           const supermarketRef = doc(firestore, 'users', user.uid, 'supermarkets', supermarketId);
@@ -274,14 +280,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
             }))
           );
       }
-  };
+  }, [user, firestore]);
 
-  const addCategory = (categoryData: Omit<Category, 'id'>) => {
+  const addCategory = useCallback((categoryData: Omit<Category, 'id'>) => {
       const newCategory: Category = { ...categoryData, id: `cat${Date.now()}` };
       if (user) { writeToFirestore('categories', newCategory); }
       else setLocalCategories((prev) => [...prev, newCategory].sort((a, b) => a.order - b.order));
-  };
-  const updateCategory = async (updatedCategory: Category) => {
+  }, [user, writeToFirestore]);
+  
+  const updateCategory = useCallback(async (updatedCategory: Category) => {
     if (user && firestore) {
       const oldCategory = categories.find((c) => c.id === updatedCategory.id);
       const batch = writeBatch(firestore);
@@ -306,29 +313,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
           );
         }
     }
-  };
-  const deleteCategory = (categoryId: string) => {
+  }, [user, firestore, categories]);
+  
+  const deleteCategory = useCallback((categoryId: string) => {
       if(user) { deleteFromFirestore('categories', categoryId); }
       else setLocalCategories((prev) => prev.filter((c) => c.id !== categoryId));
-  };
+  }, [user, deleteFromFirestore]);
 
-  const addShoppingList = (listData: Omit<ShoppingList, 'id' | 'createdAt' | 'order'>) => {
+  const addShoppingList = useCallback((listData: Omit<ShoppingList, 'id' | 'createdAt' | 'order'>) => {
       const currentLists = user ? firestoreShoppingLists || [] : localShoppingLists;
       const newOrder = currentLists.length > 0 ? Math.max(...currentLists.map(l => l.order)) + 1 : 1;
       const newList = { ...listData, id: `l${Date.now()}`, createdAt: new Date().toISOString(), order: newOrder };
       if (user) { writeToFirestore('shoppingLists', newList); }
       else setLocalShoppingLists(prev => [newList, ...prev]);
-  };
-  const updateShoppingList = (updatedList: ShoppingList) => {
+  }, [user, writeToFirestore, firestoreShoppingLists, localShoppingLists]);
+  
+  const updateShoppingList = useCallback((updatedList: ShoppingList) => {
       if (user) { writeToFirestore('shoppingLists', updatedList); }
       else setLocalShoppingLists(prev => prev.map(l => l.id === updatedList.id ? updatedList : l));
-  };
-  const deleteShoppingList = (listId: string) => {
+  }, [user, writeToFirestore]);
+  
+  const deleteShoppingList = useCallback((listId: string) => {
       if (user) { deleteFromFirestore('shoppingLists', listId); }
       else setLocalShoppingLists(prev => prev.filter(l => l.id !== listId));
-  };
+  }, [user, deleteFromFirestore]);
 
-  const duplicateShoppingList = (listId: string): string | undefined => {
+  const duplicateShoppingList = useCallback((listId: string): string | undefined => {
     const listToDuplicate = shoppingLists.find(l => l.id === listId);
     if (listToDuplicate) {
       const maxOrder = shoppingLists.length > 0 ? Math.max(...shoppingLists.map(l => l.order)) : 0;
@@ -347,19 +357,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
       return newListId;
     }
     return undefined;
-  };
+  }, [user, shoppingLists, writeToFirestore]);
 
-  const archiveShoppingList = async (receipt: Receipt) => {
+  const archiveShoppingList = useCallback(async (receipt: Receipt) => {
       if (user) {
           await writeToFirestore('receipts', receipt);
           await deleteFromFirestore('shoppingLists', receipt.originalListId);
       } else {
           setLocalReceipts(prev => [receipt, ...prev].sort((a, b) => new Date(b.archivedAt).getTime() - new Date(a.archivedAt).getTime()));
-          deleteShoppingList(receipt.originalListId);
+          setLocalShoppingLists(prev => prev.filter(l => l.id !== receipt.originalListId));
       }
-  };
+  }, [user, writeToFirestore, deleteFromFirestore]);
 
-  const unarchiveReceipt = async (receiptId: string) => {
+  const unarchiveReceipt = useCallback(async (receiptId: string) => {
     const receiptToRestore = (user ? firestoreReceipts : receipts)?.find(
       (r) => r.id === receiptId
     );
@@ -397,14 +407,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setLocalReceipts((prev) => prev.filter((r) => r.id !== receiptId));
       }
     }
-  };
+  }, [user, receipts, firestoreReceipts, localShoppingLists, firestoreShoppingLists, writeToFirestore, deleteFromFirestore]);
 
-  const setBatch = async (collectionName: string, items: any[]) => {
+  const setBatch = useCallback(async (collectionName: string, items: any[]) => {
     if (!user || !firestore) return;
 
     const batch = writeBatch(firestore);
     
-    // 1. Get all existing docs in the collection to delete them
     const collectionRef = collection(firestore, 'users', user.uid, collectionName);
     try {
       const snapshot = await getDocs(collectionRef);
@@ -412,10 +421,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
           batch.delete(doc.ref);
       });
 
-      // 2. Add new items from the imported file
       if (items && Array.isArray(items)) {
           items.forEach(item => {
-              if (item.id) { // Ensure item has an id
+              if (item.id) {
                   const docRef = doc(firestore, 'users', user.uid, collectionName, item.id);
                   batch.set(docRef, item);
               }
@@ -431,22 +439,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
         description: `Impossibile aggiornare la collezione ${collectionName}.`,
       });
     }
-  };
+  }, [user, firestore, toast]);
 
-  const setCategories = (newCategories: Category[]) => {
+  const setCategories = useCallback((newCategories: Category[]) => {
       if (user) { setBatch('categories', newCategories); }
       else setLocalCategories(newCategories.sort((a,b) => a.order - b.order));
-  };
-  const setSupermarkets = (newSupermarkets: Supermarket[]) => {
+  }, [user, setBatch]);
+
+  const setSupermarkets = useCallback((newSupermarkets: Supermarket[]) => {
       if (user) { setBatch('supermarkets', newSupermarkets); }
       else setLocalSupermarkets(newSupermarkets.sort((a,b) => a.order - b.order));
-  };
-  const setShoppingLists = (newLists: ShoppingList[]) => {
+  }, [user, setBatch]);
+
+  const setShoppingLists = useCallback((newLists: ShoppingList[]) => {
       if (user) { setBatch('shoppingLists', newLists); }
       else setLocalShoppingLists(newLists.sort((a,b) => a.order - b.order));
-  };
+  }, [user, setBatch]);
 
-  const importData = async (data: Partial<AllData>) => {
+  const importData = useCallback(async (data: Partial<AllData>) => {
     const dataToImport: AllData = {
         products: Array.isArray(data.products) ? data.products : [],
         supermarkets: Array.isArray(data.supermarkets) ? data.supermarkets : [],
@@ -470,15 +480,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setLocalShoppingLists(dataToImport.shoppingLists.sort((a,b) => a.order - b.order));
       setLocalReceipts(dataToImport.receipts.sort((a, b) => new Date(b.archivedAt).getTime() - new Date(a.archivedAt).getTime()));
     }
-  };
+  }, [user, setBatch]);
 
-  const exportData = (): AllData => ({
+  const exportData = useCallback((): AllData => ({
     products,
     supermarkets,
     categories,
     shoppingLists,
     receipts,
-  });
+  }), [products, supermarkets, categories, shoppingLists, receipts]);
 
   const value: DataContextType = {
     products,
