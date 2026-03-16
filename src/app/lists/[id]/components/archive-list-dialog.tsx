@@ -42,6 +42,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 
 type EnrichedListItemForDialog = {
@@ -82,7 +83,6 @@ export function ArchiveListDialog({
   onArchive,
 }: ArchiveListDialogProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [showCalendar, setShowCalendar] = useState(false);
   const [paymentsBySupermarket, setPaymentsBySupermarket] = useState<Record<string, Payment[]>>({});
   const [newPaymentAmounts, setNewPaymentAmounts] = useState<Record<string, string>>({});
   const [newPaymentMethods, setNewPaymentMethods] = useState<Record<string, Payment['method']>>({});
@@ -115,7 +115,6 @@ export function ArchiveListDialog({
     if (isOpen) {
       setDate(new Date());
       setPaymentsBySupermarket({});
-      setShowCalendar(false);
       
       const initialAmounts: Record<string, string> = {};
       const initialMethods: Record<string, Payment['method']> = {};
@@ -242,38 +241,34 @@ export function ArchiveListDialog({
             </div>
 
             {/* Date Picker */}
-            <div className="flex flex-col space-y-2">
-                <label className="text-sm font-medium">Data della Spesa</label>
-                <Button
-                    type="button"
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Data della Spesa</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
                     variant={'outline'}
-                    onClick={() => setShowCalendar(!showCalendar)}
                     className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !date && 'text-muted-foreground'
+                      'w-full justify-start text-left font-normal',
+                      !date && 'text-muted-foreground'
                     )}
-                    >
+                  >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? (
-                        format(date, 'PPP', { locale: it })
-                    ) : (
-                        <span>Scegli una data</span>
-                    )}
-                </Button>
-                {showCalendar && (
-                    <Calendar
+                    {date ? format(date, 'PPP', { locale: it }) : <span>Scegli una data</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
                     mode="single"
                     selected={date}
                     onSelect={(d) => {
-                        setDate(d);
-                        setShowCalendar(false);
+                        if (d) setDate(d);
                     }}
                     initialFocus
                     locale={it}
                     disabled={{ after: new Date() }}
-                    className="rounded-md border bg-background"
-                    />
-                )}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Payment Methods */}
