@@ -2,10 +2,9 @@
 
 import * as React from 'react';
 import { useState, useEffect, useMemo } from 'react';
-import { format } from 'date-fns';
+import { format, isToday, isYesterday, subDays } from 'date-fns';
 import { it } from 'date-fns/locale';
 import {
-  Calendar as CalendarIcon,
   Archive,
   Wallet,
   Landmark,
@@ -22,7 +21,6 @@ import type {
 } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Sheet,
   SheetContent,
@@ -34,11 +32,6 @@ import {
 } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 
 type EnrichedListItemForDialog = {
   productId: string;
@@ -78,7 +71,6 @@ export function ArchiveListDialog({
   onArchive,
 }: ArchiveListDialogProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [paymentInputs, setPaymentInputs] = useState<
     Record<string, Partial<Record<Payment['method'], string>>>
   >({});
@@ -123,7 +115,6 @@ export function ArchiveListDialog({
     if (isOpen) {
       setDate(new Date());
       setPaymentInputs({});
-      setIsCalendarOpen(false);
     }
   }, [isOpen]);
 
@@ -156,7 +147,14 @@ export function ArchiveListDialog({
   };
 
   const handleArchiveConfirm = () => {
-    if (!date) return;
+    if (!date) {
+      toast({
+        variant: 'destructive',
+        title: 'Data mancante',
+        description: `Seleziona la data della spesa.`,
+      });
+      return;
+    }
 
     let allPaid = true;
     for (const [id, group] of Object.entries(supermarketGroups)) {
@@ -251,37 +249,29 @@ export function ArchiveListDialog({
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Data della Spesa</label>
-              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={'outline'}
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !date && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? (
-                      format(date, 'PPP', { locale: it })
-                    ) : (
-                      <span>Scegli una data</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" side="bottom" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(d) => {
-                      if (d) setDate(d);
-                      setIsCalendarOpen(false);
-                    }}
-                    initialFocus
-                    locale={it}
-                    disabled={{ after: new Date() }}
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant={date && isToday(date) ? 'default' : 'outline'}
+                  onClick={() => setDate(new Date())}
+                  className="h-12 text-base"
+                >
+                  Oggi
+                </Button>
+                <Button
+                  type="button"
+                  variant={date && isYesterday(date) ? 'default' : 'outline'}
+                  onClick={() => setDate(subDays(new Date(), 1))}
+                  className="h-12 text-base"
+                >
+                  Ieri
+                </Button>
+              </div>
+              <p className="text-center text-sm text-muted-foreground pt-2">
+                {date
+                  ? `Spesa del: ${format(date, 'PPP', { locale: it })}`
+                  : 'Seleziona una data'}
+              </p>
             </div>
 
             <div className="space-y-4">
