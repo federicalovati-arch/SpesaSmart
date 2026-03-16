@@ -9,7 +9,6 @@ import {
   List,
   History,
   User,
-  CaseSensitive,
   Receipt,
 } from 'lucide-react';
 import {
@@ -26,7 +25,6 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutGrid },
   { href: '/catalog', label: 'Catalogo', icon: ShoppingBasket },
   { href: '/lists', label: 'Liste Spesa', icon: List },
-  { href: '/cards', label: 'Carte Fedeltà', icon: CaseSensitive },
   { href: '/history', label: 'Storico', icon: Receipt },
   { href: '/profile', label: 'Profilo', icon: User },
 ];

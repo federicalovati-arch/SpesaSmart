@@ -6,7 +6,6 @@ import {
   LayoutGrid,
   ShoppingBasket,
   List,
-  CaseSensitive,
   Receipt,
   User,
 } from 'lucide-react';
@@ -16,7 +15,6 @@ const navItems = [
   { href: '/', label: 'HOME', icon: LayoutGrid },
   { href: '/catalog', label: 'CATALOGO', icon: ShoppingBasket },
   { href: '/lists', label: 'LISTE', icon: List },
-  { href: '/cards', label: 'CARTE', icon: CaseSensitive },
   { href: '/history', label: 'STORICO', icon: Receipt },
   { href: '/profile', label: 'PROFILO', icon: User },
 ];
@@ -26,7 +24,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 z-50 w-full bg-white border-t md:hidden">
-      <div className="grid h-16 grid-cols-6 mx-auto">
+      <div className="grid h-16 grid-cols-5 mx-auto">
         {navItems.map((item) => {
           const isActive =
             item.href === '/'
