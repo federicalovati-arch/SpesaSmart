@@ -208,12 +208,12 @@ export function AddProductDialog({
             <span className="sr-only">Close</span>
           </SheetClose>
         </SheetHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="flex-1 flex flex-col min-h-0"
-          >
-            <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1">
+          <Form {...form}>
+            <form
+              id="add-product-form"
+              onSubmit={form.handleSubmit(onSubmit)}
+            >
               <div className="p-4 space-y-4 bg-gray-50">
                 <FormField
                   control={form.control}
@@ -430,25 +430,26 @@ export function AddProductDialog({
                   ))}
                 </div>
               </div>
-            </ScrollArea>
-            <SheetFooter className="bg-white p-4 border-t flex-col-reverse sm:flex-col-reverse gap-2">
-              <Button
-                type="submit"
-                className="w-full h-12 bg-primary hover:bg-primary/90 text-lg"
-              >
-                SALVA
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setIsOpen(false)}
-                className="w-full"
-              >
-                ANNULLA
-              </Button>
-            </SheetFooter>
-          </form>
-        </Form>
+            </form>
+          </Form>
+        </ScrollArea>
+        <SheetFooter className="bg-white p-4 border-t flex-col-reverse sm:flex-col-reverse gap-2">
+          <Button
+            type="submit"
+            form="add-product-form"
+            className="w-full h-12 bg-primary hover:bg-primary/90 text-lg"
+          >
+            SALVA
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setIsOpen(false)}
+            className="w-full"
+          >
+            ANNULLA
+          </Button>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
