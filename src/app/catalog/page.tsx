@@ -213,7 +213,7 @@ export default function CatalogPage() {
         setIsOpen={setIsAddProductDialogOpen}
         supermarkets={supermarkets}
         onAddProduct={handleAddOrUpdateProduct}
-        categories={categories.map(c => c.name)}
+        categories={[...new Set(categories.map(c => c.name))]}
         productToEdit={productToEdit}
       />
       <AddSupermarketDialog
