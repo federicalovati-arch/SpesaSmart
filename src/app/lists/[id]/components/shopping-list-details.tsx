@@ -398,16 +398,23 @@ export function ShoppingListDetails({
                                                 {item.brand && <span className="text-primary font-medium"> • {item.brand}</span>}
                                             </p>
                                         </div>
-                                        <button type="button" onClick={() => handleOpenPriceDialog(item)} className={cn("p-1 -m-1 text-right", item.purchased && "line-through")}>
-                                            <p className={cn(
-                                                "font-bold text-lg",
-                                                item.priceStatus === 'offer' && 'text-green-600',
-                                                item.priceStatus === 'increase' && 'text-destructive',
-                                                item.priceStatus === 'normal' && 'text-primary'
-                                            )}>
-                                                €{((item.price || 0) * item.quantity).toFixed(2)}
-                                            </p>
-                                        </button>
+                                        <div className="flex flex-col items-end">
+                                            <button type="button" onClick={() => handleOpenPriceDialog(item)} className={cn("p-1 -m-1 text-right", item.purchased && "line-through")}>
+                                                <p className={cn(
+                                                    "font-bold text-lg",
+                                                    item.priceStatus === 'offer' && 'text-green-600',
+                                                    item.priceStatus === 'increase' && 'text-destructive',
+                                                    item.priceStatus === 'normal' && 'text-primary'
+                                                )}>
+                                                    €{((item.price || 0) * item.quantity).toFixed(2)}
+                                                </p>
+                                            </button>
+                                            <div className="-mt-1 -mr-2">
+                                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenPriceDialog(item)}>
+                                                    <Pencil className="h-4 w-4 text-gray-500" />
+                                                </Button>
+                                            </div>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
