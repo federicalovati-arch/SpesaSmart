@@ -32,9 +32,11 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 type EnrichedListItemForDialog = {
   productId: string;
@@ -74,24 +76,33 @@ export function ArchiveListDialog({
   onArchive,
 }: ArchiveListDialogProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [paymentInputs, setPaymentInputs] = useState<Record<string, Partial<Record<Payment['method'], string>>>>({});
-  
+  const [paymentInputs, setPaymentInputs] = useState<
+    Record<string, Partial<Record<Payment['method'], string>>>
+  >({});
+
   const { toast } = useToast();
 
   const supermarketGroups = useMemo(() => {
-    const groups: Record<string, { name: string; subtotal: number; items: EnrichedListItemForDialog[] }> = {};
-    enrichedItems.forEach(item => {
+    const groups: Record<
+      string,
+      { name: string; subtotal: number; items: EnrichedListItemForDialog[] }
+    > = {};
+    enrichedItems.forEach((item) => {
       const supermarketId = item.bestSupermarket?.id || 'unknown';
       const supermarketName = item.bestSupermarket?.name || 'Senza Negozio';
       if (!groups[supermarketId]) {
-        groups[supermarketId] = { name: supermarketName, subtotal: 0, items: [] };
+        groups[supermarketId] = {
+          name: supermarketName,
+          subtotal: 0,
+          items: [],
+        };
       }
       groups[supermarketId].items.push(item);
       groups[supermarketId].subtotal += (item.bestPrice || 0) * item.quantity;
     });
     return groups;
   }, [enrichedItems]);
-  
+
   const isFullyPaid = useMemo(() => {
     if (optimalTotal === 0) return true;
     return Object.entries(supermarketGroups).every(([id, group]) => {
@@ -104,7 +115,7 @@ export function ArchiveListDialog({
       return Math.abs(group.subtotal - paid) < 0.01;
     });
   }, [supermarketGroups, paymentInputs, optimalTotal]);
-  
+
   useEffect(() => {
     if (isOpen) {
       setDate(new Date());
@@ -112,48 +123,56 @@ export function ArchiveListDialog({
     }
   }, [isOpen]);
 
-  const handlePaymentInputChange = (supermarketId: string, method: Payment['method'], value: string) => {
+  const handlePaymentInputChange = (
+    supermarketId: string,
+    method: Payment['method'],
+    value: string
+  ) => {
     if (value && !/^\d*\.?\d{0,2}$/.test(value)) {
       return;
     }
 
-    setPaymentInputs(prev => {
-        const newInputs = { ...prev };
-        if (!newInputs[supermarketId]) {
-            newInputs[supermarketId] = {};
-        }
-        
-        const currentInputs = { ...newInputs[supermarketId] };
+    setPaymentInputs((prev) => {
+      const newInputs = { ...prev };
+      if (!newInputs[supermarketId]) {
+        newInputs[supermarketId] = {};
+      }
 
-        if (value === '' || parseFloat(value) === 0) {
-            delete currentInputs[method];
-        } else {
-            currentInputs[method] = value;
-        }
+      const currentInputs = { ...newInputs[supermarketId] };
 
-        newInputs[supermarketId] = currentInputs;
-        return newInputs;
+      if (value === '' || parseFloat(value) === 0) {
+        delete currentInputs[method];
+      } else {
+        currentInputs[method] = value;
+      }
+
+      newInputs[supermarketId] = currentInputs;
+      return newInputs;
     });
   };
 
-
   const handleArchiveConfirm = () => {
     if (!date) return;
-    
+
     let allPaid = true;
     for (const [id, group] of Object.entries(supermarketGroups)) {
       if (group.subtotal > 0) {
         const groupPayments = paymentInputs[id] || {};
-        const paid = Object.values(groupPayments).reduce((acc, amountStr) => acc + (parseFloat(amountStr || '0') || 0), 0);
+        const paid = Object.values(groupPayments).reduce(
+          (acc, amountStr) => acc + (parseFloat(amountStr || '0') || 0),
+          0
+        );
         const remaining = group.subtotal - paid;
         if (Math.abs(remaining) >= 0.01) {
-            toast({
-                variant: 'destructive',
-                title: 'Pagamento incompleto o errato',
-                description: `Controlla i totali per ${group.name}. Rimanenza: €${remaining.toFixed(2)}`,
-            });
-            allPaid = false;
-            break; 
+          toast({
+            variant: 'destructive',
+            title: 'Pagamento incompleto o errato',
+            description: `Controlla i totali per ${
+              group.name
+            }. Rimanenza: €${remaining.toFixed(2)}`,
+          });
+          allPaid = false;
+          break;
         }
       }
     }
@@ -178,13 +197,16 @@ export function ArchiveListDialog({
       .filter((item): item is ReceiptItem => item !== null);
 
     const allPayments: Payment[] = [];
-    Object.values(paymentInputs).forEach(groupPayments => {
-        Object.entries(groupPayments).forEach(([method, amountStr]) => {
-            const amount = parseFloat(amountStr || '0');
-            if (amount > 0) {
-                allPayments.push({ method: method as Payment['method'], amount });
-            }
-        });
+    Object.values(paymentInputs).forEach((groupPayments) => {
+      Object.entries(groupPayments).forEach(([method, amountStr]) => {
+        const amount = parseFloat(amountStr || '0');
+        if (amount > 0) {
+          allPayments.push({
+            method: method as Payment['method'],
+            amount,
+          });
+        }
+      });
     });
 
     const newReceipt: Receipt = {
@@ -203,110 +225,143 @@ export function ArchiveListDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-md flex flex-col max-h-[90vh]">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="max-w-md flex flex-col max-h-[90vh] p-0">
+        <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle>Archivia Spesa</DialogTitle>
           <DialogDescription>
             Conferma i dettagli della spesa per archiviarla.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0">
-          <ScrollArea className="h-full">
-            <div className="space-y-6 pr-4">
-              <div className="text-center bg-primary/10 py-3 rounded-lg">
-                  <p className="text-sm text-primary font-bold">TOTALE SPESA</p>
-                  <p className="text-4xl font-bold text-primary">
-                  €{optimalTotal.toFixed(2)}
-                  </p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Data della Spesa</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={'outline'}
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !date && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, 'PPP', { locale: it }) : <span>Scegli una data</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" side="bottom" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={(d) => {
-                          if (d) setDate(d);
-                      }}
-                      initialFocus
-                      locale={it}
-                      disabled={{ after: new Date() }}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-4">
-                  <label className="text-sm font-medium">Dettaglio Pagamenti</label>
-                  {Object.entries(supermarketGroups).filter(([,group])=> group.subtotal > 0).map(([id, group]) => {
-                      const groupPayments = paymentInputs[id] || {};
-                      const paidForGroup = Object.values(groupPayments).reduce((acc, amountStr) => acc + (parseFloat(amountStr || '0') || 0), 0);
-                      const remainingForGroup = group.subtotal - paidForGroup;
-                      const isGroupPaid = Math.abs(remainingForGroup) < 0.01;
-                      
-                      return (
-                          <div key={id} className="p-4 border rounded-xl space-y-3 bg-gray-50/50">
-                              <div className="flex justify-between items-center">
-                                  <h4 className="font-bold">{group.name}</h4>
-                                  <span className="font-bold text-lg text-primary">€{group.subtotal.toFixed(2)}</span>
-                              </div>
-
-                              <div className="space-y-2">
-                                  {paymentMethods.map(method => (
-                                      <div key={method.value} className="flex items-center gap-2">
-                                          <method.icon className="h-5 w-5 text-gray-600 w-5" />
-                                          <label htmlFor={`${id}-${method.value}`} className="flex-1 font-semibold">{method.label}</label>
-                                          <Input
-                                              id={`${id}-${method.value}`}
-                                              type="text"
-                                              inputMode="decimal"
-                                              step="0.01"
-                                              placeholder="€ 0.00"
-                                              value={(paymentInputs[id]?.[method.value]) || ''}
-                                              onChange={(e) => handlePaymentInputChange(id, method.value, e.target.value)}
-                                              className="w-28 text-right"
-                                          />
-                                      </div>
-                                  ))}
-                              </div>
-                              
-                              {isGroupPaid ? (
-                                  <div className="text-center p-2 bg-green-100 text-green-700 rounded-lg text-sm flex items-center justify-center gap-2">
-                                      <Check className="h-4 w-4" />
-                                      <p className="font-semibold">Pagato!</p>
-                                  </div>
-                              ) : (
-                                  <div className={cn(
-                                      "text-right text-sm font-semibold",
-                                      remainingForGroup < 0 ? "text-destructive" : "text-muted-foreground"
-                                  )}>
-                                  Rimanenti: €{remainingForGroup.toFixed(2)}
-                                  </div>
-                              )}
-                          </div>
-                      )
-                  })}
-              </div>
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            <div className="text-center bg-primary/10 py-3 rounded-lg">
+              <p className="text-sm text-primary font-bold">TOTALE SPESA</p>
+              <p className="text-4xl font-bold text-primary">
+                €{optimalTotal.toFixed(2)}
+              </p>
             </div>
-          </ScrollArea>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Data della Spesa</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={'outline'}
+                    className={cn(
+                      'w-full justify-start text-left font-normal',
+                      !date && 'text-muted-foreground'
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? (
+                      format(date, 'PPP', { locale: it })
+                    ) : (
+                      <span>Scegli una data</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" side="bottom" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(d) => {
+                      if (d) setDate(d);
+                    }}
+                    initialFocus
+                    locale={it}
+                    disabled={{ after: new Date() }}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-4">
+              <label className="text-sm font-medium">
+                Dettaglio Pagamenti
+              </label>
+              {Object.entries(supermarketGroups)
+                .filter(([, group]) => group.subtotal > 0)
+                .map(([id, group]) => {
+                  const groupPayments = paymentInputs[id] || {};
+                  const paidForGroup = Object.values(groupPayments).reduce(
+                    (acc, amountStr) =>
+                      acc + (parseFloat(amountStr || '0') || 0),
+                    0
+                  );
+                  const remainingForGroup = group.subtotal - paidForGroup;
+                  const isGroupPaid = Math.abs(remainingForGroup) < 0.01;
+
+                  return (
+                    <div
+                      key={id}
+                      className="p-4 border rounded-xl space-y-3 bg-gray-50/50"
+                    >
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-bold">{group.name}</h4>
+                        <span className="font-bold text-lg text-primary">
+                          €{group.subtotal.toFixed(2)}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {paymentMethods.map((method) => (
+                          <div
+                            key={method.value}
+                            className="flex items-center gap-2"
+                          >
+                            <method.icon className="h-5 w-5 text-gray-600 w-5" />
+                            <label
+                              htmlFor={`${id}-${method.value}`}
+                              className="flex-1 font-semibold"
+                            >
+                              {method.label}
+                            </label>
+                            <Input
+                              id={`${id}-${method.value}`}
+                              type="text"
+                              inputMode="decimal"
+                              step="0.01"
+                              placeholder="€ 0.00"
+                              value={paymentInputs[id]?.[method.value] || ''}
+                              onChange={(e) =>
+                                handlePaymentInputChange(
+                                  id,
+                                  method.value,
+                                  e.target.value
+                                )
+                              }
+                              className="w-28 text-right"
+                            />
+                          </div>
+                        ))}
+                      </div>
+
+                      {isGroupPaid ? (
+                        <div className="text-center p-2 bg-green-100 text-green-700 rounded-lg text-sm flex items-center justify-center gap-2">
+                          <Check className="h-4 w-4" />
+                          <p className="font-semibold">Pagato!</p>
+                        </div>
+                      ) : (
+                        <div
+                          className={cn(
+                            'text-right text-sm font-semibold',
+                            remainingForGroup < 0
+                              ? 'text-destructive'
+                              : 'text-muted-foreground'
+                          )}
+                        >
+                          Rimanenti: €{remainingForGroup.toFixed(2)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
         </div>
 
-        <DialogFooter className="flex-shrink-0 pt-4 border-t">
+        <DialogFooter className="p-6 pt-4 border-t bg-background">
           <Button variant="ghost" onClick={() => setIsOpen(false)}>
             Annulla
           </Button>
