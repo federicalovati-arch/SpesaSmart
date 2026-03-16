@@ -101,7 +101,7 @@ export function AddItemSheet({
         side="bottom"
         className="rounded-t-2xl max-h-[85vh] flex flex-col bg-background p-0"
       >
-        <Tabs defaultValue="catalog" className="flex-1 flex flex-col pt-4">
+        <Tabs defaultValue="catalog" className="flex-1 flex flex-col pt-4 min-h-0">
            <div className="relative px-4">
               <TabsList className="grid w-full grid-cols-2 bg-gray-100 rounded-full h-11 p-1">
                   <TabsTrigger value="catalog" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">
@@ -117,7 +117,7 @@ export function AddItemSheet({
               </SheetClose>
             </div>
           
-            <TabsContent value="catalog" className="flex-1 flex flex-col overflow-y-hidden mt-4">
+            <TabsContent value="catalog" className="flex-1 flex flex-col min-h-0 mt-4">
               <div className="px-4 mb-4">
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
