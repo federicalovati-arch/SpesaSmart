@@ -10,7 +10,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export const metadata: Metadata = {
-  title: 'SpesaIntelligente',
+  title: 'Spesa Smart',
   description: 'Gestisci la tua spesa in modo intelligente.',
 };
 

@@ -37,7 +37,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <Link href="/" className="flex items-center gap-2 font-bold text-lg">
           <ShoppingCart className="w-6 h-6 text-primary" />
-          <span>SpesaIntelligente</span>
+          <span>Spesa Smart</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
