@@ -34,6 +34,10 @@ export type ShoppingListItem = {
   purchased: boolean;
   assignedSupermarketId?: string | null; // null or 'automatic' for auto-selection
   overridePrice?: number | null;
+
+  // For quick-add items
+  isQuickAdd?: boolean;
+  quickAddName?: string;
 };
 
 export type ShoppingList = {

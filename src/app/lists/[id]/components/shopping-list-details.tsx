@@ -40,10 +40,12 @@ import {
   Check as CheckIcon,
   ShoppingBasket,
   Minus,
+  Box,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ArchiveListDialog } from './archive-list-dialog';
 import { PriceOverrideDialog } from './price-override-dialog';
+import { AddItemSheet } from './add-item-sheet';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -57,6 +59,7 @@ type ListDetailsProps = {
   onDuplicateList: (listId: string) => void;
   onAddProductToList: (product: Product, quantity: number) => void;
   onUpdateProductBasePrice: (productId: string, supermarketId: string, newPrice: number) => void;
+  onAddQuickProduct: (item: { name: string; price: number; supermarketId: string }) => void;
 };
 
 type EnrichedListItem = ShoppingListItem & {
@@ -85,7 +88,9 @@ export function ShoppingListDetails({
   onUpdateList,
   onArchive,
   onDuplicateList,
+  onAddProductToList,
   onUpdateProductBasePrice,
+  onAddQuickProduct,
 }: ListDetailsProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -97,6 +102,7 @@ export function ShoppingListDetails({
   const nameInputRef = useRef<HTMLInputElement>(null);
   
   const [isPriceDialogOpen, setIsPriceDialogOpen] = useState(false);
+  const [isAddItemSheetOpen, setIsAddItemSheetOpen] = useState(false);
   const [selectedItemForPrice, setSelectedItemForPrice] = useState<EnrichedListItem | null>(null);
 
 
@@ -143,7 +149,28 @@ export function ShoppingListDetails({
 
   const enrichedItems: EnrichedListItem[] = useMemo(() => {
     return list.items
-      .map((item) => {
+      .map((item): EnrichedListItem | null => {
+        if (item.isQuickAdd) {
+            const supermarket = allSupermarkets.find(s => s.id === item.assignedSupermarketId) || null;
+            return {
+                ...item,
+                product: {
+                    id: item.productId,
+                    name: item.quickAddName || 'Prodotto Rapido',
+                    category: 'Vario',
+                    brand: '',
+                    prices: [],
+                    images: [],
+                },
+                price: item.overridePrice || 0,
+                basePrice: item.overridePrice || 0,
+                supermarket: supermarket,
+                brand: 'Aggiunta rapida',
+                imageUrl: null,
+                priceStatus: 'normal'
+            };
+        }
+
         const product = allProducts.find((p) => p.id === item.productId);
         if (!product) return null;
 
@@ -289,7 +316,7 @@ export function ShoppingListDetails({
                 {list.items.length} ARTICOLI • {format(new Date(list.createdAt), 'dd/MM/yyyy', { locale: it })}
             </p>
             <div className="flex items-center gap-2 my-4">
-                <Button className="flex-1 h-11 rounded-lg shadow-sm" disabled><Plus className="mr-2"/> Aggiungi</Button>
+                <Button className="flex-1 h-11 rounded-lg shadow-sm" onClick={() => setIsAddItemSheetOpen(true)}><Plus className="mr-2"/> Aggiungi</Button>
                 <Button className="flex-1 h-11 rounded-lg bg-white text-foreground shadow-sm hover:bg-gray-100" disabled><Sparkles className="mr-2"/> AI Advisor</Button>
                 <Button
                     onClick={() => setView(view === 'risparmio' ? 'standard' : 'risparmio')}
@@ -332,7 +359,13 @@ export function ShoppingListDetails({
                                             onCheckedChange={(checked) => handleItemChange(item.productId, { purchased: !!checked })}
                                             className="h-6 w-6 rounded-lg mt-1 border-2"
                                         />
-                                        <Image src={item.imageUrl || `https://picsum.photos/seed/${item.productId}/80`} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14" />
+                                        {item.imageUrl ? 
+                                          <Image src={item.imageUrl} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14" />
+                                          : 
+                                          <div className="h-14 w-14 rounded-lg bg-gray-100 flex items-center justify-center">
+                                            <Box className="h-8 w-8 text-gray-400" />
+                                          </div>
+                                        }
                                         <div className="flex-1">
                                             <p className={cn("font-bold", item.purchased && "line-through")}>{item.product.name}</p>
                                             <p className="text-sm text-gray-500">
@@ -357,7 +390,14 @@ export function ShoppingListDetails({
                                 onCheckedChange={(checked) => handleItemChange(item.productId, { purchased: !!checked })}
                                 className="h-6 w-6 rounded-lg mt-1 border-2"
                             />
-                            <Image src={item.imageUrl || `https://picsum.photos/seed/${item.productId}/80`} alt={item.product.name} width={48} height={48} className="rounded-lg object-cover bg-gray-100 h-12 w-12" />
+                             {item.imageUrl ? 
+                                <Image src={item.imageUrl} alt={item.product.name} width={48} height={48} className="rounded-lg object-cover bg-gray-100 h-12 w-12" />
+                                :
+                                <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                                  <Box className="h-6 w-6 text-gray-400" />
+                                </div>
+                            }
+
 
                             <div className="flex-1 space-y-0.5">
                                 <p className={cn("font-bold -mb-1", item.purchased && "line-through")}>{item.product.name}</p>
@@ -365,6 +405,7 @@ export function ShoppingListDetails({
                                 <Select
                                     value={item.assignedSupermarketId || 'automatic'}
                                     onValueChange={(value) => handleItemChange(item.productId, { assignedSupermarketId: value === 'automatic' ? null : value, overridePrice: null })}
+                                    disabled={item.isQuickAdd}
                                 >
                                     <SelectTrigger className="h-auto p-1 border-none bg-gray-100 focus:ring-0 focus:ring-offset-0 w-fit text-xs text-muted-foreground font-semibold rounded-md">
                                         <SelectValue />
@@ -417,7 +458,7 @@ export function ShoppingListDetails({
         </main>
         
         {/* Footer */}
-        <div className="fixed bottom-16 left-0 right-0 p-4 pt-0 bg-transparent md:hidden z-40">
+        <div className="fixed bottom-16 left-0 right-0 p-4 pt-0 bg-transparent md:hidden z-20">
             <div className="bg-primary/95 backdrop-blur-sm text-primary-foreground p-4 text-center rounded-2xl shadow-lg">
                 <p className="text-xs uppercase font-bold opacity-80">Riepilogo Spesa</p>
                 <p className="text-sm opacity-80">Totale Stimato</p>
@@ -443,12 +484,21 @@ export function ShoppingListDetails({
             isOpen={isPriceDialogOpen}
             setIsOpen={setIsPriceDialogOpen}
             initialPrice={selectedItemForPrice.overridePrice ?? selectedItemForPrice.basePrice ?? 0}
-            canUpdateCatalog={!!selectedItemForPrice.supermarket}
+            canUpdateCatalog={!!selectedItemForPrice.supermarket && !selectedItemForPrice.isQuickAdd}
             onApply={handleApplyPrice}
             onRemove={handleRemovePriceOverride}
             onUpdateCatalog={handleUpdateCatalogPrice}
         />
       )}
+      <AddItemSheet
+        isOpen={isAddItemSheetOpen}
+        setIsOpen={setIsAddItemSheetOpen}
+        allProducts={allProducts}
+        allSupermarkets={allSupermarkets}
+        listItems={list.items}
+        onAddCatalogProduct={(product) => onAddProductToList(product, 1)}
+        onAddQuickProduct={onAddQuickProduct}
+      />
     </>
   );
 }

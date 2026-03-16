@@ -3,7 +3,7 @@
 import { useRouter, useParams } from 'next/navigation';
 import { useData } from '@/context/data-context';
 import { ShoppingListDetails } from './components/shopping-list-details';
-import type { Receipt, ShoppingList, Product } from '@/lib/types';
+import type { Receipt, ShoppingList, Product, ShoppingListItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,6 +61,21 @@ export default function ListDetailPage() {
     toast({ title: `${product.name} aggiunto alla lista!` });
   }
 
+  const handleQuickAddProduct = (item: { name: string; price: number; supermarketId: string }) => {
+    if (!list) return;
+    const newItem: ShoppingListItem = {
+        productId: `quick-${Date.now()}`,
+        quantity: 1,
+        purchased: false,
+        isQuickAdd: true,
+        quickAddName: item.name,
+        overridePrice: item.price,
+        assignedSupermarketId: item.supermarketId,
+    };
+    updateShoppingList({ ...list, items: [...list.items, newItem] });
+    toast({ title: `${item.name} aggiunto alla lista!` });
+  };
+
   const handleUpdateProductBasePrice = (productId: string, supermarketId: string, newPrice: number) => {
     updateProductBasePrice(productId, supermarketId, newPrice);
   };
@@ -92,6 +107,7 @@ export default function ListDetailPage() {
       onDuplicateList={handleDuplicateList}
       onAddProductToList={handleAddProductToList}
       onUpdateProductBasePrice={handleUpdateProductBasePrice}
+      onAddQuickProduct={handleAddQuickProduct}
     />
   );
 }
