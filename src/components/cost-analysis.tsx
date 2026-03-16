@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   BarChart,
   Bar,
@@ -20,21 +20,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, BarChart2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-const monthlyData = [
-  { name: 'Gen', total: 0 },
-  { name: 'Feb', total: 0 },
-  { name: 'Mar', total: 110 },
-  { name: 'Apr', total: 0 },
-  { name: 'Mag', total: 0 },
-  { name: 'Giu', total: 0 },
-  { name: 'Lug', total: 0 },
-  { name: 'Ago', total: 0 },
-  { name: 'Set', total: 0 },
-  { name: 'Ott', total: 0 },
-  { name: 'Nov', total: 0 },
-  { name: 'Dic', total: 0 },
-];
+import { useData } from '@/context/data-context';
+import { parseISO, getYear, getMonth, format } from 'date-fns';
+import { it } from 'date-fns/locale';
 
 // As the receipts data is very limited, I will create some mock data for yearly analysis.
 const mockYearlyData: {[key: string]: number} = {
@@ -52,7 +40,39 @@ const mockMonthlyComparisonData: {[key: string]: {[key:string]: number}} = {
 };
 
 export function CostAnalysis() {
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(2); // March
+  const { receipts } = useData();
+
+  // State for "Andamento" tab
+  const viewYear = new Date().getFullYear();
+  const currentMonthIndex = new Date().getMonth();
+  const [periodStart, setPeriodStart] = useState(currentMonthIndex < 6 ? 0 : 6);
+
+  const monthlyTotals = useMemo(() => {
+    const data = Array.from({ length: 12 }, (_, i) => ({
+      name: format(new Date(viewYear, i), 'LLL', { locale: it }),
+      total: 0,
+    }));
+
+    receipts.forEach(receipt => {
+      const receiptDate = parseISO(receipt.archivedAt);
+      if (getYear(receiptDate) === viewYear) {
+        const monthIndex = getMonth(receiptDate);
+        data[monthIndex].total += receipt.totalCost;
+      }
+    });
+    return data;
+  }, [receipts, viewYear]);
+  
+  const andamentoChartData = monthlyTotals.slice(periodStart, periodStart + 6);
+  
+  const today = new Date();
+  const currentActualMonth = today.getMonth();
+  const currentActualYear = today.getFullYear();
+  
+  const handlePrevPeriod = () => setPeriodStart(0);
+  const handleNextPeriod = () => setPeriodStart(6);
+  // End of state for "Andamento" tab
+
 
   const [yearA, setYearA] = useState<string>("2026");
   const [yearB, setYearB] = useState<string>("2025");
@@ -115,7 +135,7 @@ export function CostAnalysis() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Tabs defaultValue="variazioni" className="w-full">
+        <Tabs defaultValue="andamento" className="w-full">
           <TabsList className="grid w-full grid-cols-4 bg-gray-100 rounded-full h-12 p-1.5">
             <TabsTrigger value="andamento" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">ANDAMENTO</TabsTrigger>
             <TabsTrigger value="anni" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">ANNI</TabsTrigger>
@@ -124,26 +144,26 @@ export function CostAnalysis() {
           </TabsList>
           <TabsContent value="andamento" className="mt-6 space-y-6">
             <div className="flex items-center justify-between p-2 rounded-full bg-gray-100">
-              <Button variant="ghost" size="icon" className="rounded-full bg-white shadow">
+              <Button variant="ghost" size="icon" className="rounded-full bg-white shadow" onClick={handlePrevPeriod} disabled={periodStart === 0}>
                 <ChevronLeft className="h-5 w-5" />
               </Button>
               <span className="font-semibold text-sm">SPOSTA PERIODO</span>
-              <Button variant="ghost" size="icon" className="rounded-full bg-white shadow">
+              <Button variant="ghost" size="icon" className="rounded-full bg-white shadow" onClick={handleNextPeriod} disabled={periodStart === 6}>
                 <ChevronRight className="h-5 w-5" />
               </Button>
             </div>
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData.slice(0, 8)} margin={{ top: 5, right: 0, left: -20, bottom: 5 }}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{ fill: '#6b7280', fontSize: 12 }} />
-                  <YAxis axisLine={false} tickLine={false} tickFormatter={formatYAxis} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                <BarChart data={andamentoChartData} margin={{ top: 5, right: 0, left: -20, bottom: 5 }}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{ fill: '#6b7280', fontSize: 12, textTransform: 'capitalize' }} />
+                  <YAxis axisLine={false} tickLine={false} tickFormatter={formatYAxis} tick={{ fill: '#6b7280', fontSize: 12 }} domain={[0, 'dataMax + 45']} />
                   <Tooltip
                     cursor={{ fill: 'transparent' }}
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         return (
                           <div className="bg-white p-2 rounded-lg shadow-lg">
-                            <p className="font-bold text-primary">{`€${payload[0].value}`}</p>
+                            <p className="font-bold text-primary">{`€${payload[0].value?.toLocaleString('it-IT', {minimumFractionDigits: 2})}`}</p>
                           </div>
                         );
                       }
@@ -151,8 +171,8 @@ export function CostAnalysis() {
                     }}
                   />
                   <Bar dataKey="total" barSize={25} radius={[10, 10, 10, 10]}>
-                    {monthlyData.slice(0,8).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index === currentMonthIndex ? 'hsl(var(--primary))' : 'hsl(var(--primary)/0.2)'} />
+                    {andamentoChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={(index + periodStart) === currentActualMonth && viewYear === currentActualYear ? 'hsl(var(--primary))' : 'hsl(var(--primary)/0.2)'} />
                     ))}
                   </Bar>
                 </BarChart>
