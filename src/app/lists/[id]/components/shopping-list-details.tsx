@@ -105,6 +105,9 @@ export function ShoppingListDetails({
   const [isAddItemSheetOpen, setIsAddItemSheetOpen] = useState(false);
   const [selectedItemForPrice, setSelectedItemForPrice] = useState<EnrichedListItem | null>(null);
 
+  useEffect(() => {
+    setList(initialList);
+  }, [initialList]);
 
   useEffect(() => {
     if (isEditingName) {
@@ -340,7 +343,7 @@ export function ShoppingListDetails({
         </header>
 
         {/* Body */}
-        <main className="flex-1 overflow-y-auto px-4 pb-52">
+        <main className="flex-1 overflow-y-auto px-4 pb-64">
             
             {view === 'risparmio' && groupedItems && (
                 <div className="space-y-4 pt-2">
@@ -462,15 +465,19 @@ export function ShoppingListDetails({
         </main>
         
         {/* Footer */}
-        <div className="fixed bottom-16 left-0 right-0 p-4 bg-gradient-to-t from-gray-50 via-gray-50/95 to-transparent md:hidden z-40 pointer-events-none">
-            <div className="max-w-md mx-auto pointer-events-auto">
-                <div className="bg-primary/95 backdrop-blur-sm text-primary-foreground p-4 text-center rounded-2xl shadow-lg">
-                    <p className="text-xs uppercase font-bold opacity-80">Riepilogo Spesa</p>
+        <div className="fixed bottom-16 left-0 right-0 p-4 bg-gray-50/90 backdrop-blur-sm md:hidden z-30 border-t">
+            <div className="max-w-md mx-auto">
+                <div className="bg-primary text-primary-foreground p-4 text-center rounded-2xl shadow-lg">
+                    <p className="text-xs uppercase font-bold opacity-80">RIEPILOGO SPESA</p>
                     <p className="text-sm opacity-80">Totale Stimato</p>
                     <p className="text-4xl font-bold tracking-tight">€{totalCost.toFixed(2)}</p>
                 </div>
                 <div className="px-4 -mt-6">
-                    <Button className="w-full h-14 text-lg bg-white text-primary rounded-xl shadow-lg hover:bg-gray-100" onClick={() => setIsArchiveDialogOpen(true)}>
+                    <Button 
+                        className="w-full h-14 text-lg bg-white text-primary rounded-xl shadow-lg hover:bg-gray-100" 
+                        onClick={() => setIsArchiveDialogOpen(true)}
+                        disabled={list.items.length === 0}
+                    >
                         <CheckIcon className="mr-2"/> Archivia Spesa
                     </Button>
                 </div>

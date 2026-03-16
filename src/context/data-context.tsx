@@ -21,6 +21,7 @@ import type {
   Category,
   ShoppingList,
   Receipt,
+  ShoppingListItem,
 } from '@/lib/types';
 import { useUser, useFirestore, useCollection } from '@/firebase';
 import { collection, doc, writeBatch, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
@@ -343,28 +344,43 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const unarchiveReceipt = async (receiptId: string) => {
-      const receiptToRestore = (user ? firestoreReceipts : receipts)?.find(r => r.id === receiptId);
-      if (receiptToRestore) {
-        // This is simplified, assumes the list structure is stored in the receipt or can be recreated
-        const restoredList: ShoppingList = {
-            id: receiptToRestore.originalListId,
-            name: receiptToRestore.listName,
-            createdAt: new Date().toISOString(),
-            order: 0,
-            items: receiptToRestore.items.map(item => ({
-                productId: item.productId,
-                quantity: item.quantity,
-                purchased: false,
-            }))
-        };
-        if (user) {
-            await writeToFirestore('shoppingLists', restoredList);
-            await deleteFromFirestore('receipts', receiptId);
-        } else {
-            setLocalShoppingLists(prev => [restoredList, ...prev]);
-            setLocalReceipts(prev => prev.filter(r => r.id !== receiptId));
-        }
+    const receiptToRestore = (user ? firestoreReceipts : receipts)?.find(
+      (r) => r.id === receiptId
+    );
+    if (receiptToRestore) {
+      const currentLists = user ? firestoreShoppingLists || [] : localShoppingLists;
+      const maxOrder =
+        currentLists.length > 0
+          ? Math.max(...currentLists.map((l) => l.order))
+          : 0;
+
+      const restoredList: ShoppingList = {
+        id: receiptToRestore.originalListId,
+        name: receiptToRestore.listName,
+        createdAt: new Date().toISOString(),
+        order: maxOrder + 1,
+        items: receiptToRestore.items.map((item) => {
+          const isQuickAdd = item.productId.startsWith('quick-');
+          const shoppingListItem: ShoppingListItem = {
+            productId: item.productId,
+            quantity: item.quantity,
+            purchased: false,
+            assignedSupermarketId: isQuickAdd ? item.supermarketId : null,
+            overridePrice: isQuickAdd ? item.price : null,
+            isQuickAdd: isQuickAdd,
+            quickAddName: isQuickAdd ? item.productName : undefined,
+          };
+          return shoppingListItem;
+        }),
+      };
+      if (user) {
+        await writeToFirestore('shoppingLists', restoredList);
+        await deleteFromFirestore('receipts', receiptId);
+      } else {
+        setLocalShoppingLists((prev) => [...prev, restoredList]);
+        setLocalReceipts((prev) => prev.filter((r) => r.id !== receiptId));
       }
+    }
   };
 
   const setBatch = async (collectionName: string, items: any[]) => {
