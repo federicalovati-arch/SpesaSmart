@@ -52,6 +52,7 @@ type EnrichedListItemForDialog = {
   quantity: number;
   product: { name: string };
   bestPrice: number | null;
+  basePrice: number | null;
   bestSupermarket: { id: string; name: string } | null;
 };
 
@@ -161,6 +162,7 @@ export function ArchiveListDialog({
           productName: item.product.name,
           quantity: item.quantity,
           price: item.bestPrice,
+          basePrice: item.basePrice,
           supermarketId: item.bestSupermarket?.id,
           supermarketName: item.bestSupermarket?.name,
         };

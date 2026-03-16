@@ -65,6 +65,7 @@ export type ReceiptItem = {
   productName: string;
   quantity: number;
   price: number;
+  basePrice?: number | null; // The original catalog price, if available
   supermarketId?: string;
   supermarketName?: string;
 };

@@ -276,6 +276,7 @@ export function ShoppingListDetails({
         quantity: item.quantity,
         product: { name: item.product.name },
         bestPrice: item.price,
+        basePrice: item.basePrice,
         bestSupermarket: item.supermarket ? { id: item.supermarket.id, name: item.supermarket.name } : null
     }));
   }, [enrichedItems]);

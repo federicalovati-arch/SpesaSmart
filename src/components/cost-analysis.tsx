@@ -24,21 +24,6 @@ import { useData } from '@/context/data-context';
 import { parseISO, getYear, getMonth, format } from 'date-fns';
 import { it } from 'date-fns/locale';
 
-// As the receipts data is very limited, I will create some mock data for yearly analysis.
-const mockYearlyData: {[key: string]: number} = {
-  '2026': 380,
-  '2025': 285,
-  '2024': 450,
-  '2023': 320,
-}
-
-// New mock data for monthly comparison
-const mockMonthlyComparisonData: {[key: string]: {[key:string]: number}} = {
-    '2026': { 'Marzo': 170 },
-    '2025': { 'Marzo': 0 },
-    '2024': { 'Marzo': 110 }
-};
-
 export function CostAnalysis() {
   const { receipts } = useData();
 
@@ -71,57 +56,136 @@ export function CostAnalysis() {
   
   const handlePrevPeriod = () => setPeriodStart(0);
   const handleNextPeriod = () => setPeriodStart(6);
-  // End of state for "Andamento" tab
-
-
-  const [yearA, setYearA] = useState<string>("2026");
-  const [yearB, setYearB] = useState<string>("2025");
-
-  // State for the "Mesi" tab
-  const [monthYearA, setMonthYearA] = useState<string>("2026");
-  const [monthA, setMonthA] = useState<string>("Marzo");
-  const [monthYearB, setMonthYearB] = useState<string>("2025");
-  const [monthB, setMonthB] = useState<string>("Marzo");
-
-  // State for the "Variazioni" tab
-  const [variationMonth, setVariationMonth] = useState<string>('Marzo');
-  const [variationYear, setVariationYear] = useState<string>('2026');
   
-  const availableYears = Object.keys(mockYearlyData).sort((a,b) => parseInt(b) - parseInt(a));
+  const allYearsFromReceipts = useMemo(() => {
+      const years = new Set(receipts.map(r => getYear(parseISO(r.archivedAt)).toString()));
+      if (years.size === 0) {
+        return [new Date().getFullYear().toString()];
+      }
+      return Array.from(years).sort((a, b) => parseInt(b) - parseInt(a));
+  }, [receipts]);
+
+  const [yearA, setYearA] = useState<string>(allYearsFromReceipts[0]);
+  const [yearB, setYearB] = useState<string>(allYearsFromReceipts[1] || (parseInt(allYearsFromReceipts[0]) - 1).toString());
+
   const availableMonths = [
     "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", 
     "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"
   ];
+
+  const [monthYearA, setMonthYearA] = useState<string>(allYearsFromReceipts[0]);
+  const [monthA, setMonthA] = useState<string>(availableMonths[new Date().getMonth()]);
+  const [monthYearB, setMonthYearB] = useState<string>(allYearsFromReceipts[1] || (parseInt(allYearsFromReceipts[0]) - 1).toString());
+  const [monthB, setMonthB] = useState<string>(availableMonths[new Date().getMonth()]);
+
+  const [variationMonth, setVariationMonth] = useState<string>(availableMonths[new Date().getMonth()]);
+  const [variationYear, setVariationYear] = useState<string>(allYearsFromReceipts[0]);
+
+  useEffect(() => {
+    setYearA(allYearsFromReceipts[0]);
+    setYearB(allYearsFromReceipts[1] || (parseInt(allYearsFromReceipts[0]) - 1).toString());
+    setMonthYearA(allYearsFromReceipts[0]);
+    setMonthYearB(allYearsFromReceipts[1] || (parseInt(allYearsFromReceipts[0]) - 1).toString());
+    setVariationYear(allYearsFromReceipts[0]);
+  }, [allYearsFromReceipts]);
+  
   const monthShortNames: { [key: string]: string } = {
     "Gennaio": "Gen", "Febbraio": "Feb", "Marzo": "Mar", "Aprile": "Apr", "Maggio": "Mag", "Giugno": "Giu",
     "Luglio": "Lug", "Agosto": "Ago", "Settembre": "Set", "Ottobre": "Ott", "Novembre": "Nov", "Dicembre": "Dic"
   };
+  const monthIndices: { [key: string]: number } = {
+      Gennaio: 0, Febbraio: 1, Marzo: 2, Aprile: 3, Maggio: 4, Giugno: 5,
+      Luglio: 6, Agosto: 7, Settembre: 8, Ottobre: 9, Novembre: 10, Dicembre: 11
+  };
 
   const formatYAxis = (tick: number) => `€${tick.toLocaleString('it-IT')}`;
   
-  const yearlyChartData = [
-      { name: yearA, total: mockYearlyData[yearA] || 0 },
-      { name: yearB, total: mockYearlyData[yearB] || 0 }
-  ].sort((a,b) => parseInt(a.name) - parseInt(b.name));
+  const yearlyChartData = useMemo(() => {
+      const totalA = receipts
+          .filter(r => getYear(parseISO(r.archivedAt)) === parseInt(yearA))
+          .reduce((sum, r) => sum + r.totalCost, 0);
+      const totalB = receipts
+          .filter(r => getYear(parseISO(r.archivedAt)) === parseInt(yearB))
+          .reduce((sum, r) => sum + r.totalCost, 0);
+          
+      return [
+          { name: yearA, total: totalA },
+          { name: yearB, total: totalB }
+      ].sort((a,b) => parseInt(a.name) - parseInt(b.name));
+  }, [receipts, yearA, yearB]);
 
-  const monthlyComparisonChartData = [
-    { 
-      name: `${monthShortNames[monthA]} ${monthYearA.slice(2)}`, 
-      total: mockMonthlyComparisonData[monthYearA]?.[monthA] || 0 
-    },
-    { 
-      name: `${monthShortNames[monthB]} ${monthYearB.slice(2)}`, 
-      total: mockMonthlyComparisonData[monthYearB]?.[monthB] || 0
-    },
-  ].sort((a, b) => {
-    const yearA = parseInt(a.name.split(' ')[1]);
-    const yearB = parseInt(b.name.split(' ')[1]);
-    return yearA - yearB;
-  });
+  const monthlyComparisonChartData = useMemo(() => {
+    const monthIndexA = monthIndices[monthA];
+    const monthIndexB = monthIndices[monthB];
+
+    const totalA = receipts
+        .filter(r => {
+            const d = parseISO(r.archivedAt);
+            return getYear(d) === parseInt(monthYearA) && getMonth(d) === monthIndexA;
+        })
+        .reduce((sum, r) => sum + r.totalCost, 0);
+    
+    const totalB = receipts
+        .filter(r => {
+            const d = parseISO(r.archivedAt);
+            return getYear(d) === parseInt(monthYearB) && getMonth(d) === monthIndexB;
+        })
+        .reduce((sum, r) => sum + r.totalCost, 0);
+        
+    const data = [
+      { 
+        name: `${monthShortNames[monthA]} ${monthYearA.slice(2)}`, 
+        total: totalA 
+      },
+      { 
+        name: `${monthShortNames[monthB]} ${monthYearB.slice(2)}`, 
+        total: totalB
+      },
+    ];
+    
+    return data.sort((a, b) => {
+        const yearA_ = parseInt(a.name.split(' ')[1]) + 2000;
+        const yearB_ = parseInt(b.name.split(' ')[1]) + 2000;
+        if (yearA_ !== yearB_) return yearA_ - yearB_;
+
+        const monthNameA_ = Object.keys(monthShortNames).find(key => monthShortNames[key] === a.name.split(' ')[0]) || '';
+        const monthNameB_ = Object.keys(monthShortNames).find(key => monthShortNames[key] === b.name.split(' ')[0]) || '';
+        return monthIndices[monthNameA_] - monthIndices[monthNameB_];
+    });
+
+  }, [receipts, monthA, monthYearA, monthB, monthB, monthIndices, monthShortNames]);
+  
+  const { totalIncreases, totalSavings } = useMemo(() => {
+    const monthIndex = monthIndices[variationMonth];
+    const year = parseInt(variationYear);
+    
+    let increases = 0;
+    let savings = 0;
+    
+    receipts
+      .filter(r => {
+        const d = parseISO(r.archivedAt);
+        return getYear(d) === year && getMonth(d) === monthIndex;
+      })
+      .forEach(r => {
+        r.items.forEach(item => {
+          if (item.basePrice !== null && item.basePrice !== undefined && item.basePrice > 0) {
+            const diff = item.price - item.basePrice;
+            if (diff > 0) {
+              increases += diff * item.quantity;
+            } else if (diff < 0) {
+              savings += Math.abs(diff) * item.quantity;
+            }
+          }
+        });
+      });
+      
+    return { totalIncreases: increases, totalSavings: savings };
+  }, [receipts, variationMonth, variationYear, monthIndices]);
 
   const variationsData = [
-    { name: 'Aumenti', value: 0.74, color: 'hsl(var(--destructive))' },
-    { name: 'Risparmi', value: 2.79, color: 'hsl(var(--primary))' },
+    { name: 'Aumenti', value: totalIncreases, color: 'hsl(var(--destructive))' },
+    { name: 'Risparmi', value: totalSavings, color: 'hsl(var(--primary))' },
   ];
 
   return (
@@ -188,7 +252,7 @@ export function CostAnalysis() {
                         <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                        {availableYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                        {allYearsFromReceipts.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
@@ -199,7 +263,7 @@ export function CostAnalysis() {
                         <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                        {availableYears.filter(y => y !== yearA).map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                        {allYearsFromReceipts.filter(y => y !== yearA).map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
@@ -215,7 +279,7 @@ export function CostAnalysis() {
                       if (active && payload && payload.length) {
                         return (
                           <div className="bg-background p-2 rounded-lg shadow-lg border">
-                            <p className="font-bold text-primary">{`€${payload[0].value}`}</p>
+                            <p className="font-bold text-primary">{`€${payload[0].value?.toLocaleString('it-IT', {minimumFractionDigits: 2})}`}</p>
                             <p className="text-xs text-muted-foreground">{`Totale ${payload[0].payload.name}`}</p>
                           </div>
                         );
@@ -238,7 +302,7 @@ export function CostAnalysis() {
                             <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                            {availableYears.map(year => <SelectItem key={`A-${year}`} value={year}>{year}</SelectItem>)}
+                            {allYearsFromReceipts.map(year => <SelectItem key={`A-${year}`} value={year}>{year}</SelectItem>)}
                             </SelectContent>
                         </Select>
                         <Select value={monthA} onValueChange={setMonthA}>
@@ -259,7 +323,7 @@ export function CostAnalysis() {
                             <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                            {availableYears.map(year => <SelectItem key={`B-${year}`} value={year}>{year}</SelectItem>)}
+                            {allYearsFromReceipts.map(year => <SelectItem key={`B-${year}`} value={year}>{year}</SelectItem>)}
                             </SelectContent>
                         </Select>
                         <Select value={monthB} onValueChange={setMonthB}>
@@ -314,7 +378,7 @@ export function CostAnalysis() {
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        {availableYears.map(year => <SelectItem key={`V-${year}`} value={year}>{year}</SelectItem>)}
+                        {allYearsFromReceipts.map(year => <SelectItem key={`V-${year}`} value={year}>{year}</SelectItem>)}
                     </SelectContent>
                 </Select>
               </div>
@@ -336,7 +400,7 @@ export function CostAnalysis() {
                                     <div className="flex items-center gap-2 text-sm">
                                         <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: data.payload.color }} />
                                         <span className="text-muted-foreground">value</span>
-                                        <span className="font-bold ml-auto">{data.value?.toLocaleString('it-IT', { minimumFractionDigits: 2 })}</span>
+                                        <span className="font-bold ml-auto">€{data.value?.toLocaleString('it-IT', { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 </div>
                             );
@@ -357,14 +421,14 @@ export function CostAnalysis() {
                 <Card className="bg-destructive/10 border-destructive/20 rounded-2xl">
                     <CardContent className="p-4">
                         <p className="text-xs font-bold text-destructive">IMPATTO AUMENTI</p>
-                        <p className="text-3xl font-bold text-destructive">€0.74</p>
+                        <p className="text-3xl font-bold text-destructive">€{totalIncreases.toFixed(2)}</p>
                         <p className="text-xs text-destructive/80">COSTO EXTRA RISPETTO AI PREZZI BASE PRECEDENTI</p>
                     </CardContent>
                 </Card>
                  <Card className="bg-primary/10 border-primary/20 rounded-2xl">
                     <CardContent className="p-4">
                         <p className="text-xs font-bold text-primary">RISPARMIO OFFERTE</p>
-                        <p className="text-3xl font-bold text-primary">€2.79</p>
+                        <p className="text-3xl font-bold text-primary">€{totalSavings.toFixed(2)}</p>
                         <p className="text-xs text-primary/80">SCONTO TOTALE OTTENUTO DALLE PROMOZIONI</p>
                     </CardContent>
                 </Card>
