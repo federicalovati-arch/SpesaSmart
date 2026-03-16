@@ -259,97 +259,99 @@ export function CategoryManagerDialog({
           </SheetClose>
         </SheetHeader>
 
-        <div className="p-4">
-            <div className="p-4 rounded-xl bg-white shadow-sm space-y-4">
-                <div className="flex gap-4">
-                    <div className="flex-1">
-                        <label className="text-xs font-semibold text-gray-500">NOME</label>
-                        <Input
-                            placeholder="Nome..."
-                            value={newCategoryName}
-                            onChange={(e) => setNewCategoryName(e.target.value)}
-                            className="bg-gray-100 border-gray-200"
-                        />
-                    </div>
-                    <div className="w-20">
-                        <label className="text-xs font-semibold text-gray-500">ORDINE</label>
-                        <Input
-                            type="number"
-                            value={newCategoryOrder}
-                            onChange={(e) => setNewCategoryOrder(Number(e.target.value))}
-                             className="bg-gray-100 border-gray-200"
-                        />
-                    </div>
-                </div>
-                <div>
-                     <label className="text-xs font-semibold text-gray-500 mb-2 block">ICONA</label>
-                     <ScrollArea className="w-full">
-                        <div className="flex gap-2 pb-2">
-                         {availableIcons.map(iconKey => (
-                            <Button key={iconKey} variant="outline" size="icon" className={cn("w-12 h-12 bg-gray-100 border-gray-200", newCategoryIcon === iconKey && "ring-2 ring-primary border-primary")} onClick={() => setNewCategoryIcon(iconKey)}>
-                                {React.createElement(iconMap[iconKey], { className: "h-6 w-6 text-gray-600"})}
-                            </Button>
-                         ))}
-                        </div>
-                         <div className="h-1 w-full" />
-                     </ScrollArea>
-                </div>
-                <Button onClick={handleAdd} className="w-full h-12 bg-primary hover:bg-primary/90 text-lg">CREA</Button>
-            </div>
-        </div>
-
-        <h3 className="text-sm font-semibold text-muted-foreground px-4 mt-2 mb-2">
-          TUTTE LE CATEGORIE
-        </h3>
-        <ScrollArea className="flex-1 px-4">
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2 pb-4">
-                {categories.map((category) => (
-                  <div key={category.id}>
-                    {editingCategory === category.id ? (
-                        // Editing state
-                         <div className="flex flex-col gap-2 p-3 rounded-xl bg-white shadow-md border border-primary">
-                            <div className="flex gap-2">
-                                <Input
-                                    value={editingName}
-                                    onChange={(e) => setEditingName(e.target.value)}
-                                    className="h-8 flex-1"
-                                />
-                                <Input
-                                    type="number"
-                                    value={editingOrder}
-                                    onChange={(e) => setEditingOrder(Number(e.target.value))}
-                                    className="h-8 w-16"
-                                />
-                            </div>
-                            <ScrollArea className="w-full">
-                                <div className="flex gap-2 pb-2">
-                                {availableIcons.map(iconKey => (
-                                    <Button key={iconKey} variant="outline" size="icon" className={cn("w-10 h-10 bg-gray-100 border-gray-200", editingIcon === iconKey && "ring-2 ring-primary border-primary")} onClick={() => setEditingIcon(iconKey)}>
-                                        {React.createElement(iconMap[iconKey], { className: "h-5 w-5 text-gray-600"})}
-                                    </Button>
-                                ))}
-                                </div>
-                            </ScrollArea>
-                            <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" onClick={handleCancelEdit}><X className="h-4 w-4 mr-1" /> Annulla</Button>
-                                <Button size="sm" onClick={handleSaveEdit}><Save className="h-4 w-4 mr-1" /> Salva</Button>
-                            </div>
-                         </div>
-                    ) : (
-                        // Display state
-                        <SortableCategoryItem 
-                          category={category}
-                          onStartEdit={handleStartEdit}
-                          onDeleteCategory={onDeleteCategory}
-                        />
-                    )}
+        <ScrollArea className="flex-1">
+          <div className="p-4">
+              <div className="p-4 rounded-xl bg-white shadow-sm space-y-4">
+                  <div className="flex gap-4">
+                      <div className="flex-1">
+                          <label className="text-xs font-semibold text-gray-500">NOME</label>
+                          <Input
+                              placeholder="Nome..."
+                              value={newCategoryName}
+                              onChange={(e) => setNewCategoryName(e.target.value)}
+                              className="bg-gray-100 border-gray-200"
+                          />
+                      </div>
+                      <div className="w-20">
+                          <label className="text-xs font-semibold text-gray-500">ORDINE</label>
+                          <Input
+                              type="number"
+                              value={newCategoryOrder}
+                              onChange={(e) => setNewCategoryOrder(Number(e.target.value))}
+                               className="bg-gray-100 border-gray-200"
+                          />
+                      </div>
                   </div>
-                ))}
+                  <div>
+                       <label className="text-xs font-semibold text-gray-500 mb-2 block">ICONA</label>
+                       <ScrollArea className="w-full">
+                          <div className="flex gap-2 pb-2">
+                           {availableIcons.map(iconKey => (
+                              <Button key={iconKey} variant="outline" size="icon" className={cn("w-12 h-12 bg-gray-100 border-gray-200", newCategoryIcon === iconKey && "ring-2 ring-primary border-primary")} onClick={() => setNewCategoryIcon(iconKey)}>
+                                  {React.createElement(iconMap[iconKey], { className: "h-6 w-6 text-gray-600"})}
+                              </Button>
+                           ))}
+                          </div>
+                           <div className="h-1 w-full" />
+                       </ScrollArea>
+                  </div>
+                  <Button onClick={handleAdd} className="w-full h-12 bg-primary hover:bg-primary/90 text-lg">CREA</Button>
               </div>
-            </SortableContext>
-          </DndContext>
+          </div>
+
+          <h3 className="text-sm font-semibold text-muted-foreground px-4 mt-2 mb-2">
+            TUTTE LE CATEGORIE
+          </h3>
+          <div className="px-4">
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2 pb-4">
+                  {categories.map((category) => (
+                    <div key={category.id}>
+                      {editingCategory === category.id ? (
+                          // Editing state
+                           <div className="flex flex-col gap-2 p-3 rounded-xl bg-white shadow-md border border-primary">
+                              <div className="flex gap-2">
+                                  <Input
+                                      value={editingName}
+                                      onChange={(e) => setEditingName(e.target.value)}
+                                      className="h-8 flex-1"
+                                  />
+                                  <Input
+                                      type="number"
+                                      value={editingOrder}
+                                      onChange={(e) => setEditingOrder(Number(e.target.value))}
+                                      className="h-8 w-16"
+                                  />
+                              </div>
+                              <ScrollArea className="w-full">
+                                  <div className="flex gap-2 pb-2">
+                                  {availableIcons.map(iconKey => (
+                                      <Button key={iconKey} variant="outline" size="icon" className={cn("w-10 h-10 bg-gray-100 border-gray-200", editingIcon === iconKey && "ring-2 ring-primary border-primary")} onClick={() => setEditingIcon(iconKey)}>
+                                          {React.createElement(iconMap[iconKey], { className: "h-5 w-5 text-gray-600"})}
+                                      </Button>
+                                  ))}
+                                  </div>
+                              </ScrollArea>
+                              <div className="flex justify-end gap-2">
+                                  <Button variant="ghost" size="sm" onClick={handleCancelEdit}><X className="h-4 w-4 mr-1" /> Annulla</Button>
+                                  <Button size="sm" onClick={handleSaveEdit}><Save className="h-4 w-4 mr-1" /> Salva</Button>
+                              </div>
+                           </div>
+                      ) : (
+                          // Display state
+                          <SortableCategoryItem 
+                            category={category}
+                            onStartEdit={handleStartEdit}
+                            onDeleteCategory={onDeleteCategory}
+                          />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </div>
         </ScrollArea>
       </SheetContent>
     </Sheet>

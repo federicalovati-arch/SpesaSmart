@@ -211,7 +211,7 @@ export function AddProductDialog({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex-1 flex flex-col overflow-y-hidden"
+            className="flex-1 flex flex-col min-h-0"
           >
             <ScrollArea className="flex-1">
               <div className="p-4 space-y-4 bg-gray-50">
