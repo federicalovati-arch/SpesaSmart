@@ -12,6 +12,7 @@ import {
   CreditCard,
   Ticket,
   Check,
+  X,
 } from 'lucide-react';
 import type {
   ShoppingList,
@@ -23,13 +24,14 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetDescription,
+  SheetClose,
+} from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -76,6 +78,7 @@ export function ArchiveListDialog({
   onArchive,
 }: ArchiveListDialogProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [paymentInputs, setPaymentInputs] = useState<
     Record<string, Partial<Record<Payment['method'], string>>>
   >({});
@@ -120,6 +123,7 @@ export function ArchiveListDialog({
     if (isOpen) {
       setDate(new Date());
       setPaymentInputs({});
+      setIsCalendarOpen(false);
     }
   }, [isOpen]);
 
@@ -224,14 +228,17 @@ export function ArchiveListDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-md flex flex-col max-h-[90vh] p-0">
-        <DialogHeader className="p-6 pb-4 border-b">
-          <DialogTitle>Archivia Spesa</DialogTitle>
-          <DialogDescription>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] flex flex-col p-0">
+        <SheetHeader className="p-6 pb-4 border-b text-center">
+          <SheetTitle>Archivia Spesa</SheetTitle>
+          <SheetDescription>
             Conferma i dettagli della spesa per archiviarla.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+          <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+            <X className="h-5 w-5" />
+          </SheetClose>
+        </SheetHeader>
 
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-6 space-y-6">
@@ -244,7 +251,7 @@ export function ArchiveListDialog({
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Data della Spesa</label>
-              <Popover>
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant={'outline'}
@@ -267,6 +274,7 @@ export function ArchiveListDialog({
                     selected={date}
                     onSelect={(d) => {
                       if (d) setDate(d);
+                      setIsCalendarOpen(false);
                     }}
                     initialFocus
                     locale={it}
@@ -361,7 +369,7 @@ export function ArchiveListDialog({
           </div>
         </div>
 
-        <DialogFooter className="p-6 pt-4 border-t bg-background">
+        <SheetFooter className="p-6 pt-4 border-t bg-background">
           <Button variant="ghost" onClick={() => setIsOpen(false)}>
             Annulla
           </Button>
@@ -372,8 +380,8 @@ export function ArchiveListDialog({
             <Archive className="mr-2 h-4 w-4" />
             Conferma e Archivia
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
