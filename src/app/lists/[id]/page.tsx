@@ -107,7 +107,7 @@ export default function ListDetailPage() {
       onDuplicateList={handleDuplicateList}
       onAddProductToList={handleAddProductToList}
       onUpdateProductBasePrice={handleUpdateProductBasePrice}
-      onAddQuickProduct={handleAddQuickProduct}
+      onAddQuickProduct={handleQuickAddProduct}
     />
   );
 }
