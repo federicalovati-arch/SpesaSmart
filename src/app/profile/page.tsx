@@ -18,6 +18,7 @@ import {
   Download,
   Upload,
   LogOut,
+  Check,
 } from 'lucide-react';
 
 export default function ProfilePage() {
