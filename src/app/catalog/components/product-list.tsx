@@ -7,7 +7,6 @@ import {
   Search,
   LayoutGrid,
   Trash2,
-  Image as ImageIcon,
   LucideIcon,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -100,7 +99,7 @@ export function ProductList({
       <div className="space-y-4">
         {filteredProducts.map((product) => {
            return (
-              <Card key={product.id} className="overflow-hidden shadow-md rounded-2xl bg-white">
+              <Card key={product.id} onClick={() => onEditProductClick(product)} className="overflow-hidden shadow-md rounded-2xl bg-white cursor-pointer hover:bg-gray-50 transition-colors">
                   <CardContent className="p-4">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -112,12 +111,9 @@ export function ProductList({
                           )}
                         </div>
                         <div className="flex items-center gap-0">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500" onClick={() => onEditProductClick(product)}>
-                                <ImageIcon className="h-5 w-5" />
-                            </Button>
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={(e) => e.stopPropagation()}>
                                         <Trash2 className="h-5 w-5" />
                                     </Button>
                                 </AlertDialogTrigger>
@@ -130,7 +126,7 @@ export function ProductList({
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Annulla</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => onDeleteProduct(product.id)}>Elimina</AlertDialogAction>
+                                        <AlertDialogAction onClick={(e) => { e.stopPropagation(); onDeleteProduct(product.id);}}>Elimina</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
