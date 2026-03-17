@@ -26,10 +26,7 @@ export function BottomNav() {
     <nav className="fixed bottom-0 left-0 z-50 w-full bg-white border-t md:hidden">
       <div className="grid h-16 grid-cols-5 mx-auto">
         {navItems.map((item) => {
-          const isActive =
-            item.href === '/'
-              ? pathname === item.href
-              : item.href !== '/' && pathname.startsWith(item.href);
+          const isActive = (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href));
           return (
             <Link
               key={item.label}

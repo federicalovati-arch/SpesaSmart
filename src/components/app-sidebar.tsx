@@ -41,24 +41,23 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={
-                  item.href === '/'
-                    ? pathname === item.href
-                    : pathname.startsWith(item.href)
-                }
-                className="w-full justify-start"
-              >
-                <Link href={item.href}>
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {navItems.map((item) => {
+            const isActive = (item.href === '/' && pathname === '/') || (item.href !== '/' && pathname.startsWith(item.href));
+            return (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive}
+                  className="w-full justify-start"
+                >
+                  <Link href={item.href}>
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarContent>
     </Sidebar>
