@@ -30,7 +30,6 @@ import {
   Lollipop,
   Nut,
   Popcorn,
-  Potato,
   Sandwich,
   Shrimp,
   Soup,
@@ -44,13 +43,6 @@ export const supermarketIcons: { [key: string]: LucideIcon } = {
   clover: Clover,
   carrot: Carrot,
 };
-
-export const availableSupermarketIcons = [
-  'store',
-  'zap',
-  'clover',
-  'carrot',
-];
 
 export const categoryIconMap: { [key: string]: LucideIcon } = {
   apple: Apple,
@@ -80,7 +72,6 @@ export const categoryIconMap: { [key: string]: LucideIcon } = {
   lollipop: Lollipop,
   nut: Nut,
   popcorn: Popcorn,
-  potato: Potato,
   sandwich: Sandwich,
   shrimp: Shrimp,
   soup: Soup,
