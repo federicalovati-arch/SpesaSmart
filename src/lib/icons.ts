@@ -43,6 +43,8 @@ export const supermarketIcons: { [key: string]: LucideIcon } = {
   carrot: Carrot,
 };
 
+export const availableSupermarketIcons = Object.keys(supermarketIcons);
+
 export const categoryIconMap: { [key: string]: LucideIcon } = {
   apple: Apple,
   beef: Beef,
