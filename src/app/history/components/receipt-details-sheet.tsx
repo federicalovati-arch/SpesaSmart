@@ -21,6 +21,7 @@ import {
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 type ReceiptDetailsSheetProps = {
   isOpen: boolean;
@@ -185,15 +186,35 @@ export function ReceiptDetailsSheet({
                                     <Badge className="ml-auto bg-gray-200 text-gray-700 font-bold hover:bg-gray-200">€{group.subtotal.toFixed(2)}</Badge>
                                 </div>
                                 <div className="space-y-2">
-                                    {group.items.map(item => (
+                                    {group.items.map(item => {
+                                      const priceDiff = (item.basePrice && item.basePrice > 0) ? item.price - item.basePrice : 0;
+                                      const priceStatus: 'offer' | 'increase' | 'normal' =
+                                          priceDiff < 0 ? 'offer' : priceDiff > 0 ? 'increase' : 'normal';
+
+                                      return (
                                         <div key={item.productId} className="flex items-center gap-4 p-3 rounded-2xl bg-white shadow-sm">
                                             <div className="flex-1">
                                                 <p className="font-bold">{item.productName}</p>
-                                                <p className="text-sm text-gray-500">{item.quantity} x €{item.price.toFixed(2)}</p>
+                                                <p className="text-sm text-gray-500">
+                                                  {item.quantity} x €{item.price.toFixed(2)}
+                                                  {priceStatus !== 'normal' && item.basePrice && (
+                                                    <span className="line-through ml-2 text-gray-400">
+                                                      €{item.basePrice.toFixed(2)}
+                                                    </span>
+                                                  )}
+                                                </p>
                                             </div>
-                                            <p className="font-bold text-lg text-primary">€{(item.price * item.quantity).toFixed(2)}</p>
+                                            <p className={cn(
+                                                "font-bold text-lg",
+                                                priceStatus === 'offer' && 'text-green-600',
+                                                priceStatus === 'increase' && 'text-destructive',
+                                                priceStatus === 'normal' && 'text-primary'
+                                            )}>
+                                              €{(item.price * item.quantity).toFixed(2)}
+                                            </p>
                                         </div>
-                                    ))}
+                                      );
+                                    })}
                                 </div>
                             </div>
                         ))}
