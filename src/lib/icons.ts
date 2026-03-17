@@ -36,21 +36,6 @@ import {
   Wheat,
 } from 'lucide-react';
 
-export const supermarketIcons: { [key: string]: LucideIcon } = {
-  store: Store,
-  zap: Zap,
-  clover: Clover,
-  carrot: Carrot,
-  'shopping-basket': ShoppingBasket,
-  wine: Wine,
-  fish: Fish,
-  beef: Beef,
-  apple: Apple,
-  sparkles: Sparkles,
-};
-
-export const availableSupermarketIcons = Object.keys(supermarketIcons);
-
 export const categoryIconMap: { [key: string]: LucideIcon } = {
   apple: Apple,
   beef: Beef,
@@ -86,3 +71,12 @@ export const categoryIconMap: { [key: string]: LucideIcon } = {
 };
 
 export const availableCategoryIcons = Object.keys(categoryIconMap);
+
+export const supermarketIcons: { [key: string]: LucideIcon } = {
+  ...categoryIconMap,
+  store: Store,
+  zap: Zap,
+  clover: Clover,
+};
+
+export const availableSupermarketIcons = Object.keys(supermarketIcons);
