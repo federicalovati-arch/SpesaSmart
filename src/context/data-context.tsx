@@ -218,10 +218,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Determine which data to use
   const products = user ? firestoreProducts || [] : localProducts;
-  const supermarkets = user ? (firestoreSupermarkets || []).sort((a,b) => a.order - b.order) : localSupermarkets;
-  const categories = user ? (firestoreCategories || []).sort((a,b)=>a.order - b.order) : localCategories;
-  const shoppingLists = user ? (firestoreShoppingLists || []).sort((a,b) => a.order - b.order) : localShoppingLists;
-  const receipts = user ? firestoreReceipts || [] : localReceipts;
+  const supermarkets = user ? (firestoreSupermarkets || []).sort((a,b) => a.order - b.order) : [...localSupermarkets].sort((a,b) => a.order - b.order);
+  const categories = user ? (firestoreCategories || []).sort((a,b)=>a.order - b.order) : [...localCategories].sort((a,b)=>a.order - b.order);
+  const shoppingLists = user ? (firestoreShoppingLists || []).sort((a,b) => a.order - b.order) : [...localShoppingLists].sort((a,b) => a.order - b.order);
+  const receipts = user ? firestoreReceipts || [] : [...localReceipts].sort((a, b) => new Date(b.archivedAt).getTime() - new Date(a.archivedAt).getTime());
 
   const writeToFirestore = useCallback(async (collectionName: string, item: any) => {
     if (user && firestore) {
@@ -345,7 +345,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const maxOrder = currentLists.length > 0 ? Math.max(...currentLists.map(l => l.order)) : 0;
       const newList = { ...listData, id: `l${Date.now()}`, createdAt: new Date().toISOString(), order: maxOrder + 1 };
       if (user) { writeToFirestore('shoppingLists', newList); }
-      else setLocalShoppingLists(prev => [newList, ...prev]);
+      else setLocalShoppingLists(prev => [...prev, newList]);
   }, [user, writeToFirestore, firestoreShoppingLists, localShoppingLists]);
   
   const updateShoppingList = useCallback((updatedList: ShoppingList) => {
@@ -372,7 +372,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       };
       if (user) { writeToFirestore('shoppingLists', newList); }
       else {
-        setLocalShoppingLists(prev => [newList, ...prev]);
+        setLocalShoppingLists(prev => [...prev, newList]);
       }
       return newListId;
     }
@@ -411,7 +411,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             productId: item.productId,
             quantity: item.quantity,
             purchased: false,
-            assignedSupermarketId: isQuickAdd ? item.supermarketId : null,
+            assignedSupermarketId: item.supermarketId || null,
             overridePrice: isQuickAdd ? item.price : null,
             isQuickAdd: isQuickAdd,
             quickAddName: isQuickAdd ? item.productName : undefined,
