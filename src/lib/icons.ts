@@ -41,6 +41,12 @@ export const supermarketIcons: { [key: string]: LucideIcon } = {
   zap: Zap,
   clover: Clover,
   carrot: Carrot,
+  'shopping-basket': ShoppingBasket,
+  wine: Wine,
+  fish: Fish,
+  beef: Beef,
+  apple: Apple,
+  sparkles: Sparkles,
 };
 
 export const availableSupermarketIcons = Object.keys(supermarketIcons);
