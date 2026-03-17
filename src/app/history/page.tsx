@@ -6,13 +6,13 @@ import { ReceiptCard } from './components/receipt-card';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Receipt, Search, History } from 'lucide-react';
-import type { Receipt as ReceiptType } from '@/lib/types';
+import type { Receipt as ReceiptType, Supermarket } from '@/lib/types';
 import dynamic from 'next/dynamic';
 
 const ReceiptDetailsSheet = dynamic(() => import('./components/receipt-details-sheet').then(mod => mod.ReceiptDetailsSheet), { ssr: false });
 
 export default function HistoryPage() {
-  const { receipts, unarchiveReceipt } = useData();
+  const { receipts, unarchiveReceipt, supermarkets } = useData();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedReceipt, setSelectedReceipt] = useState<ReceiptType | null>(null);
@@ -88,6 +88,7 @@ export default function HistoryPage() {
         isOpen={isDetailsSheetOpen}
         setIsOpen={setIsDetailsSheetOpen}
         receipt={selectedReceipt}
+        allSupermarkets={supermarkets}
       />
     </>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import type { Receipt, Payment } from '@/lib/types';
+import type { Receipt, Payment, Supermarket } from '@/lib/types';
 import {
   Sheet,
   SheetContent,
@@ -26,6 +26,7 @@ type ReceiptDetailsSheetProps = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   receipt: Receipt | null;
+  allSupermarkets: Supermarket[];
 };
 
 const paymentIcons: { [key in Payment['method']]: React.ElementType } = {
@@ -39,14 +40,19 @@ export function ReceiptDetailsSheet({
   isOpen,
   setIsOpen,
   receipt,
+  allSupermarkets,
 }: ReceiptDetailsSheetProps) {
   if (!receipt) return null;
   
+  const getSupermarketNameById = React.useCallback((id: string) => {
+    return allSupermarkets.find(s => s.id === id)?.name || 'Sconosciuto';
+  }, [allSupermarkets]);
+
   const supermarketGroups = React.useMemo(() => {
     const groups: Record<string, { name: string; subtotal: number; items: Receipt['items'] }> = {};
     receipt.items.forEach(item => {
       const supermarketId = item.supermarketId || 'unknown';
-      const supermarketName = item.supermarketName || 'Senza Negozio';
+      const supermarketName = item.supermarketName || (item.supermarketId ? getSupermarketNameById(item.supermarketId) : 'Senza Negozio');
       if (!groups[supermarketId]) {
         groups[supermarketId] = { name: supermarketName, subtotal: 0, items: [] };
       }
@@ -54,7 +60,7 @@ export function ReceiptDetailsSheet({
       groups[supermarketId].subtotal += item.price * item.quantity;
     });
     return Object.values(groups).sort((a,b) => b.subtotal - a.subtotal);
-  }, [receipt.items]);
+  }, [receipt.items, getSupermarketNameById]);
   
   const paymentGroups = React.useMemo(() => {
     if (!receipt.payments || receipt.payments.length === 0) return [];
@@ -63,18 +69,29 @@ export function ReceiptDetailsSheet({
     const isOldReceipt = receipt.payments.some(p => p.supermarketId === undefined);
 
     if (isOldReceipt) {
-        // Get all unique supermarkets from the items purchased
-        const uniqueSupermarketNames = [...new Set(receipt.items.map(item => item.supermarketName).filter(Boolean))];
+        // For old receipts, we try to infer the supermarket from the ITEMS.
+        const supermarketNamesFromItems = new Set<string>();
+        receipt.items.forEach(item => {
+            if (item.supermarketId) {
+                const name = getSupermarketNameById(item.supermarketId);
+                if (name !== 'Sconosciuto') {
+                    supermarketNamesFromItems.add(name);
+                }
+            } else if (item.supermarketName) {
+                supermarketNamesFromItems.add(item.supermarketName);
+            }
+        });
         
-        // If all items were bought from a single supermarket, attribute all payments to it.
+        const uniqueSupermarketNames = Array.from(supermarketNamesFromItems);
+
         if (uniqueSupermarketNames.length === 1) {
-             const supermarketName = uniqueSupermarketNames[0] || 'Sconosciuto';
+             const supermarketName = uniqueSupermarketNames[0];
              return [{
                  name: supermarketName,
                  payments: receipt.payments
              }];
         } else {
-            // Multiple supermarkets or unknown. Group all payments under a generic title.
+            // Fallback for multiple or unknown supermarkets in old receipts
             return [{
                 name: 'Pagamenti Effettuati',
                 payments: receipt.payments
@@ -86,14 +103,14 @@ export function ReceiptDetailsSheet({
     const groups: Record<string, { name: string; payments: Payment[] }> = {};
     receipt.payments.forEach(payment => {
       const supermarketId = payment.supermarketId || 'unknown';
-      const supermarketName = payment.supermarketName || 'Sconosciuto';
+      const supermarketName = payment.supermarketName || getSupermarketNameById(supermarketId);
       if (!groups[supermarketId]) {
         groups[supermarketId] = { name: supermarketName, payments: [] };
       }
       groups[supermarketId].payments.push(payment);
     });
     return Object.values(groups);
-  }, [receipt.items, receipt.payments]);
+  }, [receipt.items, receipt.payments, getSupermarketNameById]);
 
 
   return (
