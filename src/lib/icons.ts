@@ -49,6 +49,8 @@ import {
   ShowerHead,
   Bath,
   WashingMachine,
+  Snowflake,
+  Milk,
 } from 'lucide-react';
 
 export const categoryIconMap: { [key: string]: LucideIcon } = {
@@ -98,6 +100,8 @@ export const categoryIconMap: { [key: string]: LucideIcon } = {
   'shower-head': ShowerHead,
   bath: Bath,
   'washing-machine': WashingMachine,
+  snowflake: Snowflake,
+  milk: Milk,
 };
 
 export const availableCategoryIcons = Object.keys(categoryIconMap);
