@@ -41,6 +41,15 @@ import {
   Waves,
   Trees,
   Cloud,
+  SprayCan,
+  Soap,
+  Wind,
+  Trash2,
+  Brush,
+  Home,
+  ShowerHead,
+  Bath,
+  WashingMachine,
 } from 'lucide-react';
 
 export const categoryIconMap: { [key: string]: LucideIcon } = {
@@ -82,6 +91,15 @@ export const categoryIconMap: { [key: string]: LucideIcon } = {
   waves: Waves,
   trees: Trees,
   cloud: Cloud,
+  'spray-can': SprayCan,
+  soap: Soap,
+  wind: Wind,
+  'trash-2': Trash2,
+  brush: Brush,
+  home: Home,
+  'shower-head': ShowerHead,
+  bath: Bath,
+  'washing-machine': WashingMachine,
 };
 
 export const availableCategoryIcons = Object.keys(categoryIconMap);
