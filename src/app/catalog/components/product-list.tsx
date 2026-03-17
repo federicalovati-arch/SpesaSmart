@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { iconMap } from './category-manager-dialog';
+import { categoryIconMap as iconMap } from '@/lib/icons';
 import { cn } from '@/lib/utils';
 
 type ProductListProps = {

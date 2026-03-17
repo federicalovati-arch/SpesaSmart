@@ -30,26 +30,12 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import type { Category } from '@/lib/types';
 import {
-  Apple,
-  Beef,
-  CakeSlice,
-  Carrot,
-  Coffee,
-  Cookie,
-  Egg,
-  Fish,
-  GlassWater,
-  Archive,
-  Package,
-  Pizza,
   GripVertical,
   Edit,
   Trash2,
   X,
   Save,
   LucideIcon,
-  ShoppingBasket,
-  Wine,
   Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -64,36 +50,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-
-export const iconMap: { [key: string]: LucideIcon } = {
-  apple: Apple,
-  beef: Beef,
-  'cake-slice': CakeSlice,
-  carrot: Carrot,
-  coffee: Coffee,
-  cookie: Cookie,
-  egg: Egg,
-  fish: Fish,
-  'glass-water': GlassWater,
-  archive: Archive,
-  package: Package,
-  pizza: Pizza,
-  'shopping-basket': ShoppingBasket,
-  wine: Wine,
-  sparkles: Sparkles,
-};
-
-const availableIcons = Object.keys(iconMap);
-
-type CategoryManagerDialogProps = {
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
-  categories: Category[];
-  onAddCategory: (category: Omit<Category, 'id'>) => void;
-  onDeleteCategory: (categoryId: string) => void;
-  onUpdateCategory: (category: Category) => void;
-  onReorder: (categories: Category[]) => void;
-};
+import { categoryIconMap as iconMap, availableCategoryIcons as availableIcons } from '@/lib/icons';
 
 function SortableCategoryItem({ category, onStartEdit, onDeleteCategory }: { category: Category, onStartEdit: (category: Category) => void, onDeleteCategory: (categoryId: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: category.id });
