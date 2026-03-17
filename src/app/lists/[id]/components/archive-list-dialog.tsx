@@ -199,13 +199,16 @@ export function ArchiveListDialog({
       .filter((item): item is ReceiptItem => item !== null);
 
     const allPayments: Payment[] = [];
-    Object.values(paymentInputs).forEach((groupPayments) => {
+    Object.entries(paymentInputs).forEach(([supermarketId, groupPayments]) => {
+      const supermarketName = supermarketGroups[supermarketId]?.name || 'Sconosciuto';
       Object.entries(groupPayments).forEach(([method, amountStr]) => {
         const amount = parseFloat(amountStr || '0');
         if (amount > 0) {
           allPayments.push({
             method: method as Payment['method'],
             amount,
+            supermarketId,
+            supermarketName,
           });
         }
       });
@@ -261,7 +264,6 @@ export function ArchiveListDialog({
                 value={date ? format(date, 'yyyy-MM-dd') : ''}
                 onChange={(e) => {
                   if (e.target.value) {
-                    // Use parse from date-fns to avoid timezone issues
                     const parsedDate = parse(
                       e.target.value,
                       'yyyy-MM-dd',

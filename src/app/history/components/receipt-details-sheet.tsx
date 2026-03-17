@@ -56,6 +56,20 @@ export function ReceiptDetailsSheet({
     });
     return Object.values(groups).sort((a,b) => b.subtotal - a.subtotal);
   }, [receipt.items]);
+  
+  const paymentGroups = React.useMemo(() => {
+    if (!receipt.payments || receipt.payments.length === 0) return [];
+    const groups: Record<string, { name: string; payments: Payment[] }> = {};
+    receipt.payments.forEach(payment => {
+      const supermarketId = payment.supermarketId || 'unknown';
+      const supermarketName = payment.supermarketName || 'Sconosciuto';
+      if (!groups[supermarketId]) {
+        groups[supermarketId] = { name: supermarketName, payments: [] };
+      }
+      groups[supermarketId].payments.push(payment);
+    });
+    return Object.values(groups);
+  }, [receipt.payments]);
 
 
   return (
@@ -91,22 +105,30 @@ export function ReceiptDetailsSheet({
                     </p>
                 </div>
 
-                {receipt.payments && receipt.payments.length > 0 && (
+                {paymentGroups.length > 0 && (
                      <div>
                         <h3 className="text-sm font-semibold text-muted-foreground mb-2">PAGAMENTI</h3>
-                        <div className="space-y-2">
-                        {receipt.payments.map((payment, index) => {
-                            const Icon = paymentIcons[payment.method];
-                            return (
-                            <div key={index} className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm">
-                                <div className="flex items-center gap-3">
-                                    <Icon className="h-5 w-5 text-gray-600" />
-                                    <span className="font-semibold">{payment.method}</span>
+                        <div className="space-y-3">
+                        {paymentGroups.map(group => (
+                            <div key={group.name} className="p-4 bg-white rounded-xl shadow-sm space-y-2">
+                                <div className="flex items-center gap-2">
+                                   <Store className="h-5 w-5 text-gray-500" />
+                                    <h4 className="font-bold">{group.name}</h4>
                                 </div>
-                                <span className="font-bold text-gray-800">€{payment.amount.toFixed(2)}</span>
+                                {group.payments.map((payment, index) => {
+                                    const Icon = paymentIcons[payment.method];
+                                    return (
+                                        <div key={index} className="flex items-center justify-between pl-1">
+                                            <div className="flex items-center gap-3">
+                                                <Icon className="h-5 w-5 text-gray-600" />
+                                                <span className="font-semibold">{payment.method}</span>
+                                            </div>
+                                            <span className="font-bold text-gray-800">€{payment.amount.toFixed(2)}</span>
+                                        </div>
+                                    )
+                                })}
                             </div>
-                            )
-                        })}
+                        ))}
                         </div>
                     </div>
                 )}

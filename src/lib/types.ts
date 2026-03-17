@@ -58,6 +58,8 @@ export type Category = {
 export type Payment = {
   method: 'Contanti' | 'Bancomat' | 'Conad Card' | 'Buoni';
   amount: number;
+  supermarketId: string;
+  supermarketName: string;
 };
 
 export type ReceiptItem = {
