@@ -225,7 +225,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const writeToFirestore = useCallback(async (collectionName: string, item: any) => {
     if (user && firestore) {
-      await setDoc(doc(firestore, 'users', user.uid, collectionName, item.id), item, { merge: true });
+      const cleanedItem = JSON.parse(JSON.stringify(item));
+      await setDoc(doc(firestore, 'users', user.uid, collectionName, item.id), cleanedItem, { merge: true });
     }
   }, [user, firestore]);
 
@@ -388,15 +389,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [user, writeToFirestore, deleteFromFirestore]);
 
   const unarchiveReceipt = useCallback(async (receiptId: string) => {
-    const receiptToRestore = (user ? firestoreReceipts : receipts)?.find(
-      (r) => r.id === receiptId
-    );
+    const currentShoppingLists = user ? firestoreShoppingLists || [] : shoppingLists;
+    const currentReceipts = user ? firestoreReceipts || [] : receipts;
+    const receiptToRestore = currentReceipts.find((r) => r.id === receiptId);
+  
     if (receiptToRestore) {
-      const maxOrder =
-        shoppingLists.length > 0
-          ? Math.max(...shoppingLists.map((l) => l.order))
-          : 0;
-
+      const sortedLists = [...currentShoppingLists].sort((a, b) => a.order - b.order);
+      const maxOrder = sortedLists.length > 0 ? sortedLists[sortedLists.length - 1].order : 0;
+  
       const restoredList: ShoppingList = {
         id: receiptToRestore.originalListId,
         name: receiptToRestore.listName,
@@ -410,8 +410,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
             purchased: false,
             assignedSupermarketId: item.supermarketId || null,
             overridePrice: isQuickAdd ? item.price : null,
-            isQuickAdd: isQuickAdd,
-            quickAddName: isQuickAdd ? item.productName : undefined,
+            isQuickAdd,
+            ...(isQuickAdd && { quickAddName: item.productName }),
           };
           return shoppingListItem;
         }),
@@ -424,7 +424,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setLocalReceipts((prev) => prev.filter((r) => r.id !== receiptId));
       }
     }
-  }, [user, receipts, firestoreReceipts, shoppingLists, writeToFirestore, deleteFromFirestore]);
+  }, [user, receipts, firestoreReceipts, shoppingLists, firestoreShoppingLists, writeToFirestore, deleteFromFirestore]);
 
   const setBatch = useCallback(async (collectionName: string, items: any[]) => {
     if (!user || !firestore) return;
