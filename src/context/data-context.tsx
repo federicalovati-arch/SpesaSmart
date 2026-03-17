@@ -271,12 +271,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
 
   const addSupermarket = useCallback((supermarketData: Omit<Supermarket, 'id' | 'order'>) => {
-      const currentSupermarkets = user ? firestoreSupermarkets || [] : localSupermarkets;
-      const newOrder = currentSupermarkets.length > 0 ? Math.max(...currentSupermarkets.map(s => s.order)) + 1 : 1;
+      const newOrder = supermarkets.length > 0 ? Math.max(...supermarkets.map(s => s.order)) + 1 : 1;
       const newSupermarket = { ...supermarketData, id: `s${Date.now()}`, order: newOrder };
       if (user) { writeToFirestore('supermarkets', newSupermarket); }
       else setLocalSupermarkets((prev) => [...prev, newSupermarket]);
-  }, [user, writeToFirestore, firestoreSupermarkets, localSupermarkets]);
+  }, [user, writeToFirestore, supermarkets]);
   
    const updateSupermarket = useCallback((updatedSupermarket: Supermarket) => {
     if (user) { writeToFirestore('supermarkets', updatedSupermarket); }
@@ -341,12 +340,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [user, deleteFromFirestore]);
 
   const addShoppingList = useCallback((listData: Omit<ShoppingList, 'id' | 'createdAt' | 'order'>) => {
-      const currentLists = user ? firestoreShoppingLists || [] : localShoppingLists;
-      const maxOrder = currentLists.length > 0 ? Math.max(...currentLists.map(l => l.order)) : 0;
+      const maxOrder = shoppingLists.length > 0 ? Math.max(...shoppingLists.map(l => l.order)) : 0;
       const newList = { ...listData, id: `l${Date.now()}`, createdAt: new Date().toISOString(), order: maxOrder + 1 };
       if (user) { writeToFirestore('shoppingLists', newList); }
       else setLocalShoppingLists(prev => [...prev, newList]);
-  }, [user, writeToFirestore, firestoreShoppingLists, localShoppingLists]);
+  }, [user, writeToFirestore, shoppingLists]);
   
   const updateShoppingList = useCallback((updatedList: ShoppingList) => {
       if (user) { writeToFirestore('shoppingLists', updatedList); }
@@ -394,10 +392,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       (r) => r.id === receiptId
     );
     if (receiptToRestore) {
-      const currentLists = user ? firestoreShoppingLists || [] : localShoppingLists;
       const maxOrder =
-        currentLists.length > 0
-          ? Math.max(...currentLists.map((l) => l.order))
+        shoppingLists.length > 0
+          ? Math.max(...shoppingLists.map((l) => l.order))
           : 0;
 
       const restoredList: ShoppingList = {
@@ -427,7 +424,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setLocalReceipts((prev) => prev.filter((r) => r.id !== receiptId));
       }
     }
-  }, [user, receipts, firestoreReceipts, localShoppingLists, firestoreShoppingLists, writeToFirestore, deleteFromFirestore]);
+  }, [user, receipts, firestoreReceipts, shoppingLists, writeToFirestore, deleteFromFirestore]);
 
   const setBatch = useCallback(async (collectionName: string, items: any[]) => {
     if (!user || !firestore) return;
@@ -455,7 +452,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       console.error(`Error during batch operation for ${collectionName}:`, error);
       toast({
         variant: 'destructive',
-        title: `Errore durante l'importazione`,
+        title: `Errore during l'importazione`,
         description: `Impossibile aggiornare la collezione ${collectionName}.`,
       });
     }
