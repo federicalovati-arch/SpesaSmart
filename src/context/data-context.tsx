@@ -389,11 +389,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [user, writeToFirestore, deleteFromFirestore]);
 
   const unarchiveReceipt = useCallback(async (receiptId: string) => {
-    const currentShoppingLists = user ? firestoreShoppingLists || [] : shoppingLists;
     const currentReceipts = user ? firestoreReceipts || [] : receipts;
     const receiptToRestore = currentReceipts.find((r) => r.id === receiptId);
   
     if (receiptToRestore) {
+      const currentShoppingLists = user ? firestoreShoppingLists || [] : shoppingLists;
       const sortedLists = [...currentShoppingLists].sort((a, b) => a.order - b.order);
       const maxOrder = sortedLists.length > 0 ? sortedLists[sortedLists.length - 1].order : 0;
   
@@ -404,12 +404,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
         order: maxOrder + 1,
         items: receiptToRestore.items.map((item) => {
           const isQuickAdd = item.productId.startsWith('quick-');
+          
+          let overridePrice: number | null = null;
+
+          if (isQuickAdd) {
+            // For quick-add items, the price is always an override.
+            overridePrice = item.price;
+          } else if (item.basePrice != null && item.price !== item.basePrice) {
+            // For regular items, if the paid price was different from the base catalog price,
+            // we preserve it as an override to keep the history of discounts/increases.
+            overridePrice = item.price;
+          }
+          
           const shoppingListItem: ShoppingListItem = {
             productId: item.productId,
             quantity: item.quantity,
             purchased: false,
             assignedSupermarketId: item.supermarketId || null,
-            overridePrice: isQuickAdd ? item.price : null,
+            overridePrice: overridePrice,
             isQuickAdd,
             ...(isQuickAdd && { quickAddName: item.productName }),
           };
@@ -420,7 +432,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         await writeToFirestore('shoppingLists', restoredList);
         await deleteFromFirestore('receipts', receiptId);
       } else {
-        setLocalShoppingLists((prev) => [...prev, restoredList]);
+        setLocalShoppingLists((prev) => [...prev, restoredList].sort((a,b) => a.order - b.order));
         setLocalReceipts((prev) => prev.filter((r) => r.id !== receiptId));
       }
     }
