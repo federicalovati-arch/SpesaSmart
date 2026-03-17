@@ -51,6 +51,8 @@ import {
   WashingMachine,
   Snowflake,
   Milk,
+  UtensilsCrossed,
+  Hammer,
 } from 'lucide-react';
 
 export const categoryIconMap: { [key: string]: LucideIcon } = {
@@ -102,6 +104,8 @@ export const categoryIconMap: { [key: string]: LucideIcon } = {
   'washing-machine': WashingMachine,
   snowflake: Snowflake,
   milk: Milk,
+  'utensils-crossed': UtensilsCrossed,
+  hammer: Hammer,
 };
 
 export const availableCategoryIcons = Object.keys(categoryIconMap);
