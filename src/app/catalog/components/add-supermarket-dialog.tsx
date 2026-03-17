@@ -26,7 +26,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Check, X } from 'lucide-react';
 
@@ -97,7 +96,7 @@ export function AddSupermarketDialog({
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex-1 flex flex-col min-h-0"
           >
-            <ScrollArea className="flex-1">
+            <div className="flex-1 overflow-y-auto">
               <div className="p-4 space-y-4">
                 <FormField
                   control={form.control}
@@ -164,7 +163,7 @@ export function AddSupermarketDialog({
                   )}
                 />
               </div>
-            </ScrollArea>
+            </div>
 
             <SheetFooter className="p-4 border-t mt-auto bg-background">
               <Button
