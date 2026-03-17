@@ -8,7 +8,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetClose,
-  SheetDescription,
 } from '@/components/ui/sheet';
 import {
   X,
@@ -107,13 +106,13 @@ export function ReceiptDetailsSheet({
           <SheetTitle className="font-bold text-xl">
             {receipt.listName}
           </SheetTitle>
-           <SheetDescription className="flex items-center gap-4 text-sm">
+           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                     <Calendar className="h-4 w-4" />
                     <span>{format(new Date(receipt.archivedAt), 'd MMMM yyyy', { locale: it })}</span>
                 </div>
                 <span>{receipt.items.length} articoli</span>
-           </SheetDescription>
+           </div>
           <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground ml-auto">
             <X className="h-5 w-5" />
             <span className="sr-only">Close</span>
