@@ -34,6 +34,13 @@ import {
   Soup,
   Sprout,
   Wheat,
+  Leaf,
+  Flower,
+  Sun,
+  Mountain,
+  Waves,
+  Trees,
+  Cloud,
 } from 'lucide-react';
 
 export const categoryIconMap: { [key: string]: LucideIcon } = {
@@ -68,6 +75,13 @@ export const categoryIconMap: { [key: string]: LucideIcon } = {
   soup: Soup,
   sprout: Sprout,
   wheat: Wheat,
+  leaf: Leaf,
+  flower: Flower,
+  sun: Sun,
+  mountain: Mountain,
+  waves: Waves,
+  trees: Trees,
+  cloud: Cloud,
 };
 
 export const availableCategoryIcons = Object.keys(categoryIconMap);
