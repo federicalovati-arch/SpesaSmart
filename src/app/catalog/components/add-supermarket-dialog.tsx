@@ -26,7 +26,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Check, X } from 'lucide-react';
 
@@ -132,8 +132,8 @@ export function AddSupermarketDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Icona</FormLabel>
-                      <ScrollArea className="w-full rounded-lg">
-                        <div className="flex w-max space-x-2 p-1 pb-4">
+                      <div className="w-full overflow-x-auto rounded-lg pb-2">
+                        <div className="flex w-max space-x-2 p-1">
                           {availableSupermarketIcons.map((iconKey) => {
                             const Icon = supermarketIcons[iconKey];
                             return (
@@ -159,8 +159,7 @@ export function AddSupermarketDialog({
                             );
                           })}
                         </div>
-                        <ScrollBar orientation="horizontal" />
-                      </ScrollArea>
+                      </div>
                     </FormItem>
                   )}
                 />
