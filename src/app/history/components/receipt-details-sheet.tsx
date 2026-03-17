@@ -59,6 +59,31 @@ export function ReceiptDetailsSheet({
   
   const paymentGroups = React.useMemo(() => {
     if (!receipt.payments || receipt.payments.length === 0) return [];
+    
+    // Check if it's an old receipt (payments lack supermarketId)
+    const isOldReceipt = receipt.payments.some(p => p.supermarketId === undefined);
+
+    if (isOldReceipt) {
+        // Get all unique supermarkets from the items purchased
+        const uniqueSupermarketNames = [...new Set(receipt.items.map(item => item.supermarketName).filter(Boolean))];
+        
+        // If all items were bought from a single supermarket, attribute all payments to it.
+        if (uniqueSupermarketNames.length === 1) {
+             const supermarketName = uniqueSupermarketNames[0] || 'Sconosciuto';
+             return [{
+                 name: supermarketName,
+                 payments: receipt.payments
+             }];
+        } else {
+            // Multiple supermarkets or unknown. Group all payments under a generic title.
+            return [{
+                name: 'Pagamenti Effettuati',
+                payments: receipt.payments
+            }];
+        }
+    }
+
+    // New receipt logic (payments have supermarketId)
     const groups: Record<string, { name: string; payments: Payment[] }> = {};
     receipt.payments.forEach(payment => {
       const supermarketId = payment.supermarketId || 'unknown';
@@ -69,7 +94,7 @@ export function ReceiptDetailsSheet({
       groups[supermarketId].payments.push(payment);
     });
     return Object.values(groups);
-  }, [receipt.payments]);
+  }, [receipt.items, receipt.payments]);
 
 
   return (
