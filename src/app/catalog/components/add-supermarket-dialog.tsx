@@ -132,8 +132,8 @@ export function AddSupermarketDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Icona</FormLabel>
-                      <ScrollArea className="w-full whitespace-nowrap rounded-lg">
-                        <div className="flex w-max gap-2 p-1">
+                      <ScrollArea className="w-full rounded-lg">
+                        <div className="flex w-max space-x-2 p-1 pb-4">
                           {availableSupermarketIcons.map((iconKey) => {
                             const Icon = supermarketIcons[iconKey];
                             return (
