@@ -42,7 +42,7 @@ export default function ListsPage() {
   }
 
   return (
-    <div className="flex flex-col p-4 sm:p-6 lg:p-8 h-full bg-gray-50">
+    <div className="flex flex-col p-4 sm:p-6 lg:p-8 h-full bg-background">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Le Mie Liste

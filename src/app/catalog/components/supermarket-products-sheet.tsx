@@ -52,7 +52,7 @@ export function SupermarketProductsSheet({
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl max-h-[90vh] flex flex-col bg-gray-50 p-0"
+        className="rounded-t-2xl max-h-[90vh] flex flex-col bg-background p-0"
       >
         <SheetHeader className="p-4 pb-2 text-left flex-row items-center gap-3">
           <div className="p-3 bg-primary/10 rounded-xl">

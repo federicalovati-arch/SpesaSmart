@@ -143,7 +143,7 @@ export default function CatalogPage() {
 
   return (
     <>
-      <div className="flex flex-col bg-gray-50 p-4 sm:p-6 lg:p-8 h-full">
+      <div className="flex flex-col bg-background p-4 sm:p-6 lg:p-8 h-full">
         <div className="pt-6 md:pt-0">
           <h1 className="text-3xl font-bold">Catalogo</h1>
           <p className="text-muted-foreground mt-1">

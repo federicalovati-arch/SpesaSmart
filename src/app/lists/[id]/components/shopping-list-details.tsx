@@ -318,9 +318,9 @@ export function ShoppingListDetails({
 
   return (
     <>
-      <div className="flex flex-col bg-gray-50 h-full">
+      <div className="flex flex-col bg-background h-full">
         {/* Header */}
-        <header className="p-4 bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+        <header className="p-4 bg-background sticky top-0 z-10 border-b border-border">
             <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" onClick={() => router.back()}>
                     <ArrowLeft className="h-6 w-6" />
@@ -542,7 +542,7 @@ export function ShoppingListDetails({
         </main>
         
         {/* Desktop Footer */}
-        <footer className="hidden md:block p-4 bg-gray-50 border-t">
+        <footer className="hidden md:block p-4 bg-background border-t">
           <ListFooter 
             totalCost={totalCost}
             onArchiveClick={() => setIsArchiveDialogOpen(true)}
@@ -552,7 +552,7 @@ export function ShoppingListDetails({
       </div>
       
       {/* Mobile Footer */}
-      <footer className="fixed bottom-16 left-0 right-0 p-4 bg-gray-50/90 backdrop-blur-sm md:hidden z-30 border-t">
+      <footer className="fixed bottom-16 left-0 right-0 p-4 bg-background/90 backdrop-blur-sm md:hidden z-30 border-t">
         <ListFooter 
           totalCost={totalCost}
           onArchiveClick={() => setIsArchiveDialogOpen(true)}
