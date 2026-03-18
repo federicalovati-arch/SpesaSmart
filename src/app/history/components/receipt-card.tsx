@@ -59,6 +59,8 @@ export function ReceiptCard({ receipt, onRestore, onClick }: ReceiptCardProps) {
     e.stopPropagation(); // Prevent card's onClick from firing
     onRestore();
   }
+  
+  const totalQuantity = receipt.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <Card className="shadow-md rounded-2xl cursor-pointer hover:bg-gray-50 transition-colors" onClick={onClick}>
@@ -79,7 +81,7 @@ export function ReceiptCard({ receipt, onRestore, onClick }: ReceiptCardProps) {
               variant="secondary"
               className="font-semibold bg-gray-200 text-gray-600 border-none"
             >
-              {receipt.items.length} Articoli
+              {totalQuantity} Articoli
             </Badge>
           </div>
         </div>

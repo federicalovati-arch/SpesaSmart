@@ -113,6 +113,7 @@ export function ReceiptDetailsSheet({
     return Object.values(groups);
   }, [receipt.items, receipt.payments, getSupermarketNameById]);
 
+  const totalQuantity = receipt.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -129,7 +130,7 @@ export function ReceiptDetailsSheet({
                     <Calendar className="h-4 w-4" />
                     <span>{format(new Date(receipt.archivedAt), 'd MMMM yyyy', { locale: it })}</span>
                 </div>
-                <span>{receipt.items.length} articoli</span>
+                <span>{totalQuantity} articoli</span>
            </div>
           <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground ml-auto">
             <X className="h-5 w-5" />

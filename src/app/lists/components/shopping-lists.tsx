@@ -60,6 +60,7 @@ function SortableListItem({ list, onDuplicate, onDelete }: {
   const itemsCount = list.items.length;
   const purchasedCount = list.items.filter(i => i.purchased).length;
   const isCompleted = itemsCount > 0 && purchasedCount === itemsCount;
+  const totalQuantity = list.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <Card ref={setNodeRef} style={style} className="bg-white shadow-md rounded-2xl">
@@ -75,7 +76,7 @@ function SortableListItem({ list, onDuplicate, onDelete }: {
             <p className="font-bold">{list.name}</p>
             <div className="flex items-center gap-2">
               {isCompleted && <Badge className="bg-green-100 text-green-700 text-xs px-1.5 py-0">OK</Badge>}
-              <p className="text-sm text-muted-foreground">{list.items.length} articoli</p>
+              <p className="text-sm text-muted-foreground">{totalQuantity} articoli</p>
             </div>
           </div>
           <ArrowRight className="h-5 w-5 text-gray-500" />

@@ -267,8 +267,15 @@ export function ShoppingListDetails({
     return enrichedItems.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
   }, [enrichedItems]);
   
-  const purchasedCount = useMemo(() => list.items.filter(i => i.purchased).length, [list.items]);
-  const progress = list.items.length > 0 ? (purchasedCount / list.items.length) * 100 : 0;
+  const totalQuantity = useMemo(() => list.items.reduce((sum, item) => sum + item.quantity, 0), [list.items]);
+  const purchasedQuantity = useMemo(
+    () =>
+      list.items
+        .filter((i) => i.purchased)
+        .reduce((sum, item) => sum + item.quantity, 0),
+    [list.items]
+  );
+  const progress = totalQuantity > 0 ? (purchasedQuantity / totalQuantity) * 100 : 0;
   
   const SupermarketIcon = ({name}: {name: string}) => {
       const Icon = getSupermarketIcon(name);
@@ -341,7 +348,7 @@ export function ShoppingListDetails({
                 </Button>
             </div>
              <p className="text-sm text-muted-foreground ml-16 -mt-2">
-                {list.items.length} ARTICOLI • {format(new Date(list.createdAt), 'dd/MM/yyyy', { locale: it })}
+                {totalQuantity} ARTICOLI • {format(new Date(list.createdAt), 'dd/MM/yyyy', { locale: it })}
             </p>
             <div className="flex items-center gap-2 my-4">
                 <Button className="flex-1 h-11 rounded-lg shadow-sm" onClick={() => setIsAddItemSheetOpen(true)}><Plus className="mr-2"/> Aggiungi</Button>
