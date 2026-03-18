@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/select';
 import { Upload, X, Store } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogClose, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supermarketIcons } from '@/lib/icons';
 
 const productSchema = z.object({
@@ -207,7 +207,7 @@ export function AddProductDialog({
               className="flex-1 flex flex-col min-h-0"
             >
               <div className="flex-1 overflow-y-auto">
-                <div className="p-4 space-y-4 bg-gray-50 border-b">
+                <div className="p-4 space-y-4 border-b bg-background">
                   <FormField
                     control={form.control}
                     name="name"
@@ -311,7 +311,7 @@ export function AddProductDialog({
                       return (
                         <div
                           key={field.id}
-                          className="flex items-center gap-3 p-2 rounded-xl bg-gray-50"
+                          className="flex items-center gap-3 p-2 rounded-xl bg-background"
                         >
                           <button
                             type="button"
@@ -483,6 +483,10 @@ export function AddProductDialog({
           onOpenChange={() => setEnlargedImage(null)}
         >
           <DialogContent className="p-0 bg-transparent border-none shadow-none w-auto max-w-[90vw] lg:max-w-2xl">
+            <DialogHeader>
+                <DialogTitle className="sr-only">Immagine Prodotto Ingrandita</DialogTitle>
+                <DialogDescription className="sr-only">Visualizzazione ingrandita dell'immagine del prodotto.</DialogDescription>
+            </DialogHeader>
             <Image
               src={enlargedImage}
               alt="Enlarged product image"

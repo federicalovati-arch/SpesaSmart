@@ -47,7 +47,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogClose, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const ArchiveListDialog = dynamic(() => import('./archive-list-dialog').then(mod => mod.ArchiveListDialog), { ssr: false });
 const PriceOverrideDialog = dynamic(() => import('./price-override-dialog').then(mod => mod.PriceOverrideDialog), { ssr: false });
@@ -405,9 +405,9 @@ export function ShoppingListDetails({
                                             className="shrink-0"
                                         >
                                             {item.imageUrl ? (
-                                                <Image src={item.imageUrl} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 h-14 w-14" />
+                                                <Image src={item.imageUrl} alt={item.product.name} width={56} height={56} className="rounded-lg object-cover bg-background h-14 w-14" />
                                             ) : (
-                                                <div className="h-14 w-14 rounded-lg bg-gray-100 flex items-center justify-center">
+                                                <div className="h-14 w-14 rounded-lg bg-background flex items-center justify-center">
                                                     <Box className="h-8 w-8 text-gray-400" />
                                                 </div>
                                             )}
@@ -463,9 +463,9 @@ export function ShoppingListDetails({
                                 className="shrink-0"
                             >
                                 {item.imageUrl ? (
-                                    <Image src={item.imageUrl} alt={item.product.name} width={48} height={48} className="rounded-lg object-cover bg-gray-100 h-12 w-12" />
+                                    <Image src={item.imageUrl} alt={item.product.name} width={48} height={48} className="rounded-lg object-cover bg-background h-12 w-12" />
                                 ) : (
-                                    <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                                    <div className="h-12 w-12 rounded-lg bg-background flex items-center justify-center">
                                     <Box className="h-6 w-6 text-gray-400" />
                                     </div>
                                 )}
@@ -593,6 +593,10 @@ export function ShoppingListDetails({
           onOpenChange={() => setEnlargedImage(null)}
         >
           <DialogContent className="p-0 bg-transparent border-none shadow-none w-auto max-w-[90vw] lg:max-w-2xl">
+            <DialogHeader>
+                <DialogTitle className="sr-only">Immagine Prodotto Ingrandita</DialogTitle>
+                <DialogDescription className="sr-only">Visualizzazione ingrandita dell'immagine del prodotto.</DialogDescription>
+            </DialogHeader>
             <Image
               src={enlargedImage}
               alt="Enlarged product image"
