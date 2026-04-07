@@ -73,11 +73,17 @@ export function SupermarketProductsSheet({
         <div className="flex-1 min-h-0 overflow-y-auto px-4">
               <div className="space-y-3 py-4">
                 {productsInSupermarket.length > 0 ? (
-                    productsInSupermarket.map(product => (
+                    productsInSupermarket.map(product => {
+                      const supermarketSpecificImage = supermarket ? product.images.find(img => img.supermarketId === supermarket.id) : undefined;
+                      const generalImage = product.images.find(img => !img.supermarketId);
+                      const fallbackImage = product.images.length > 0 ? product.images[0] : undefined;
+                      const imageUrl = supermarketSpecificImage?.url || generalImage?.url || fallbackImage?.url;
+
+                      return (
                         <div key={product.id} className="flex items-center gap-4 p-3 rounded-2xl bg-white shadow-sm">
-                            {product.images?.[0]?.url ? (
+                            {imageUrl ? (
                                 <Image 
-                                    src={product.images[0].url} 
+                                    src={imageUrl} 
                                     alt={product.name}
                                     width={56}
                                     height={56}
@@ -92,7 +98,8 @@ export function SupermarketProductsSheet({
                             </div>
                             <p className="font-bold text-lg text-primary">€{product.displayPrice.toFixed(2)}</p>
                         </div>
-                    ))
+                      )
+                    })
                 ) : (
                     <div className="text-center py-10">
                         <p className="text-muted-foreground">Nessun prodotto trovato per questo negozio.</p>
