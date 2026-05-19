@@ -17,6 +17,7 @@ import {
   Landmark,
   Ticket,
   Store,
+  Tag,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -35,6 +36,7 @@ const paymentIcons: { [key in Payment['method']]: React.ElementType } = {
   'Bancomat': CreditCard,
   'Conad Card': Landmark,
   'Buoni': Ticket,
+  'Sconto': Tag,
 };
 
 export function ReceiptDetailsSheet({
@@ -142,7 +144,7 @@ export function ReceiptDetailsSheet({
             <div className="py-4 space-y-6">
 
                 <div className="text-center bg-primary/10 py-3 rounded-lg">
-                    <p className="text-sm text-primary font-bold">TOTALE SPESO</p>
+                    <p className="text-sm text-primary font-bold">SPESA NETTA</p>
                     <p className="text-4xl font-bold text-primary">
                     €{receipt.totalCost.toFixed(2)}
                     </p>
@@ -150,7 +152,7 @@ export function ReceiptDetailsSheet({
 
                 {paymentGroups.length > 0 && (
                      <div>
-                        <h3 className="text-sm font-semibold text-muted-foreground mb-2">PAGAMENTI</h3>
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-2">DETTAGLIO PAGAMENTI</h3>
                         <div className="space-y-3">
                         {paymentGroups.map(group => (
                             <div key={group.name} className="p-4 bg-white rounded-xl shadow-sm space-y-2">
@@ -160,13 +162,16 @@ export function ReceiptDetailsSheet({
                                 </div>
                                 {group.payments.map((payment, index) => {
                                     const Icon = paymentIcons[payment.method];
+                                    const isDiscount = payment.method === 'Sconto';
                                     return (
                                         <div key={index} className="flex items-center justify-between pl-1">
                                             <div className="flex items-center gap-3">
-                                                <Icon className="h-5 w-5 text-gray-600" />
-                                                <span className="font-semibold">{payment.method}</span>
+                                                <Icon className={cn("h-5 w-5", isDiscount ? "text-primary" : "text-gray-600")} />
+                                                <span className={cn("font-semibold", isDiscount && "text-primary")}>{payment.method === 'Sconto' ? 'Sconto/Coupon' : payment.method}</span>
                                             </div>
-                                            <span className="font-bold text-gray-800">€{payment.amount.toFixed(2)}</span>
+                                            <span className={cn("font-bold", isDiscount ? "text-green-600" : "text-gray-800")}>
+                                                {isDiscount ? '-' : ''}€{payment.amount.toFixed(2)}
+                                            </span>
                                         </div>
                                     )
                                 })}

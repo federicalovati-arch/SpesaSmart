@@ -54,6 +54,7 @@ import {
   UtensilsCrossed,
   Hammer,
   CookingPot,
+  Tag,
 } from 'lucide-react';
 
 export const categoryIconMap: { [key: string]: LucideIcon } = {
@@ -108,6 +109,7 @@ export const categoryIconMap: { [key: string]: LucideIcon } = {
   'utensils-crossed': UtensilsCrossed,
   hammer: Hammer,
   'cooking-pot': CookingPot,
+  tag: Tag,
 };
 
 export const availableCategoryIcons = Object.keys(categoryIconMap);

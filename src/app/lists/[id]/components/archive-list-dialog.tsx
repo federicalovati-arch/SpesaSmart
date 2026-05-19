@@ -12,6 +12,7 @@ import {
   Ticket,
   Check,
   X,
+  Tag,
 } from 'lucide-react';
 import type {
   ShoppingList,
@@ -60,6 +61,7 @@ const paymentMethods: {
   { value: 'Bancomat', label: 'Bancomat', icon: CreditCard },
   { value: 'Conad Card', label: 'Conad Card', icon: Landmark },
   { value: 'Buoni', label: 'Buoni', icon: Ticket },
+  { value: 'Sconto', label: 'Sconto/Coupon', icon: Tag },
 ];
 
 export function ArchiveListDialog({
@@ -199,13 +201,19 @@ export function ArchiveListDialog({
       .filter((item): item is ReceiptItem => item !== null);
 
     const allPayments: Payment[] = [];
+    let totalDiscount = 0;
+
     Object.entries(paymentInputs).forEach(([supermarketId, groupPayments]) => {
       const supermarketName = supermarketGroups[supermarketId]?.name || 'Sconosciuto';
       Object.entries(groupPayments).forEach(([method, amountStr]) => {
         const amount = parseFloat(amountStr || '0');
         if (amount > 0) {
+          const methodType = method as Payment['method'];
+          if (methodType === 'Sconto') {
+            totalDiscount += amount;
+          }
           allPayments.push({
-            method: method as Payment['method'],
+            method: methodType,
             amount,
             supermarketId,
             supermarketName,
@@ -219,7 +227,7 @@ export function ArchiveListDialog({
       originalListId: list.id,
       listName: list.name,
       archivedAt: date.toISOString(),
-      totalCost: optimalTotal,
+      totalCost: optimalTotal - totalDiscount,
       items: receiptItems,
       payments: allPayments,
     };
@@ -247,7 +255,7 @@ export function ArchiveListDialog({
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-6 space-y-6">
             <div className="text-center bg-primary/10 py-3 rounded-lg">
-              <p className="text-sm text-primary font-bold">TOTALE SPESA</p>
+              <p className="text-sm text-primary font-bold">TOTALE LISTA</p>
               <p className="text-4xl font-bold text-primary">
                 €{optimalTotal.toFixed(2)}
               </p>
@@ -311,10 +319,10 @@ export function ArchiveListDialog({
                             key={method.value}
                             className="flex items-center gap-2"
                           >
-                            <method.icon className="h-5 w-5 text-gray-600 w-5" />
+                            <method.icon className={cn("h-5 w-5 w-5", method.value === 'Sconto' ? "text-primary" : "text-gray-600")} />
                             <label
                               htmlFor={`${id}-${method.value}`}
-                              className="flex-1 font-semibold"
+                              className={cn("flex-1 font-semibold", method.value === 'Sconto' && "text-primary")}
                             >
                               {method.label}
                             </label>
@@ -332,7 +340,7 @@ export function ArchiveListDialog({
                                   e.target.value
                                 )
                               }
-                              className="w-28 text-right"
+                              className={cn("w-28 text-right", method.value === 'Sconto' && "border-primary/50 bg-primary/5 font-bold")}
                             />
                           </div>
                         ))}

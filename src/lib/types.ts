@@ -56,7 +56,7 @@ export type Category = {
 };
 
 export type Payment = {
-  method: 'Contanti' | 'Bancomat' | 'Conad Card' | 'Buoni';
+  method: 'Contanti' | 'Bancomat' | 'Conad Card' | 'Buoni' | 'Sconto';
   amount: number;
   supermarketId: string;
   supermarketName: string;

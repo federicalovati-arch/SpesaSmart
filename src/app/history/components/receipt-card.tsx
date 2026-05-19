@@ -3,7 +3,7 @@
 import type { Receipt, Payment } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, RotateCcw, Wallet, CreditCard, Landmark, Ticket } from 'lucide-react';
+import { Calendar, RotateCcw, Wallet, CreditCard, Landmark, Ticket, Tag } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ const paymentIcons: { [key in Payment['method']]: React.ElementType } = {
   'Bancomat': CreditCard,
   'Conad Card': Landmark,
   'Buoni': Ticket,
+  'Sconto': Tag,
 };
 
 
@@ -38,7 +39,8 @@ const PaymentDisplay = ({ payments }: { payments?: Payment[] }) => {
     )
   }
 
-  const uniqueMethods = [...new Set(payments.map(p => p.method))];
+  const uniqueMethods = [...new Set(payments.map(p => p.method))].filter(m => m !== 'Sconto');
+  const hasDiscount = payments.some(p => p.method === 'Sconto');
 
   return (
      <div className="flex items-center gap-2">
@@ -47,8 +49,9 @@ const PaymentDisplay = ({ payments }: { payments?: Payment[] }) => {
                 const Icon = paymentIcons[method];
                 return <Icon key={method} className="h-4 w-4" />
             })}
+            {hasDiscount && <Tag className="h-4 w-4 text-primary" />}
         </div>
-        <span>Misto</span>
+        <span>{uniqueMethods.length > 1 ? 'Misto' : (uniqueMethods[0] || 'Sconto')}</span>
       </div>
   )
 }
@@ -88,7 +91,7 @@ export function ReceiptCard({ receipt, onRestore, onClick }: ReceiptCardProps) {
 
         <div className="flex items-center justify-end gap-2">
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">TOTALE PAGATO</p>
+            <p className="text-xs text-muted-foreground uppercase">Spesa Netta</p>
             <p className="text-2xl font-bold text-primary">
               €{receipt.totalCost.toFixed(2)}
             </p>
