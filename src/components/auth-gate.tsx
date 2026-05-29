@@ -8,11 +8,12 @@ import {
   signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { useUser, useFirebaseApp } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { LogIn, LogOut, Mail, ArrowLeft, UserPlus, Loader2, AlertCircle } from 'lucide-react';
+import { LogIn, LogOut, Mail, ArrowLeft, UserPlus, Loader2, AlertCircle, KeyRound } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -109,7 +110,7 @@ export function AuthGate() {
           } else if (error.code === 'auth/wrong-password') {
             message = 'Password errata. Riprova o recupera la password se necessario.';
           } else if (error.code === 'auth/invalid-credential') {
-            message = 'Credenziali non valide. Se è il tuo primo accesso, devi prima creare un account cliccando su "Registrati qui".';
+            message = 'Credenziali non valide. Se sei già registrato, controlla la password. Altrimenti clicca su "Registrati qui" sotto.';
           } else if (error.code === 'auth/unauthorized-domain') {
             message = 'Questo dominio non è autorizzato. Aggiungilo nella console Firebase sotto Authentication > Settings.';
           } else if (error.code === 'auth/operation-not-allowed') {
@@ -125,6 +126,35 @@ export function AuthGate() {
           });
         });
     }
+  };
+
+  const handleForgotPassword = () => {
+    if (!app || !email) {
+      toast({
+        variant: 'destructive',
+        title: 'Email mancante',
+        description: 'Inserisci la tua email per ricevere il link di ripristino.',
+      });
+      return;
+    }
+    const auth = getAuth(app);
+    setIsAuthLoading(true);
+    sendPasswordResetEmail(auth, email)
+      .then(() => {
+        setIsAuthLoading(false);
+        toast({
+          title: 'Email inviata!',
+          description: 'Controlla la tua posta (anche lo spam) per il link di ripristino.',
+        });
+      })
+      .catch((error: any) => {
+        setIsAuthLoading(false);
+        toast({
+          variant: 'destructive',
+          title: 'Errore',
+          description: 'Impossibile inviare l\'email di ripristino. Verifica l\'indirizzo.',
+        });
+      });
   };
 
   const handleSignOut = async () => {
@@ -200,6 +230,21 @@ export function AuthGate() {
             />
           </div>
           <div className="flex flex-col gap-2">
+            {!isRegistering && (
+              <div className="flex justify-end">
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="text-xs text-muted-foreground h-auto p-0"
+                  onClick={handleForgotPassword}
+                  disabled={isAuthLoading}
+                >
+                  <KeyRound className="h-3 w-3 mr-1" />
+                  Password dimenticata?
+                </Button>
+              </div>
+            )}
+
             <Button onClick={handleEmailAuth} className="w-full h-12 font-bold text-lg" disabled={isAuthLoading || !email || !password}>
               {isAuthLoading ? (
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -248,7 +293,7 @@ export function AuthGate() {
         Usa Email e Password
       </Button>
       <p className="text-[10px] text-center text-muted-foreground mt-2 px-4">
-        L'accesso via email è consigliato per l'app Android. Se è la prima volta, clicca su "Usa Email" e poi su "Registrati qui".
+        L'accesso via email è consigliato per l'app Android. Se l'account esiste già ma non ricordi la password, inserisci l'email e clicca su "Password dimenticata".
       </p>
     </div>
   );
