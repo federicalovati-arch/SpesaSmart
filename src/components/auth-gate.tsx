@@ -6,11 +6,13 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
 } from 'firebase/auth';
-import { useUser, useFirebaseApp, initiateEmailSignIn, initiateEmailSignUp } from '@/firebase';
+import { useUser, useFirebaseApp } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { LogIn, LogOut, Mail, ArrowLeft, UserPlus } from 'lucide-react';
+import { LogIn, LogOut, Mail, ArrowLeft, UserPlus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -23,6 +25,7 @@ export function AuthGate() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
     if (!app) {
@@ -52,15 +55,50 @@ export function AuthGate() {
   };
 
   const handleEmailAuth = () => {
-    if (!app) return;
+    if (!app || !email || !password) return;
     const auth = getAuth(app);
+    setIsAuthLoading(true);
     
     if (isRegistering) {
-      initiateEmailSignUp(auth, email, password);
-      toast({ title: 'Registrazione in corso...', description: 'Verrai collegato automaticamente.' });
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          toast({ title: 'Account creato!', description: 'Benvenuto/a!' });
+          setIsAuthLoading(false);
+        })
+        .catch((error: any) => {
+          setIsAuthLoading(false);
+          let message = 'Si è verificato un errore durante la registrazione.';
+          if (error.code === 'auth/email-already-in-use') {
+            message = 'Questa email è già registrata. Prova ad accedere invece di registrarti.';
+          } else if (error.code === 'auth/invalid-email') {
+            message = 'L\'indirizzo email non è valido.';
+          } else if (error.code === 'auth/weak-password') {
+            message = 'La password deve avere almeno 6 caratteri.';
+          }
+          toast({
+            variant: 'destructive',
+            title: 'Errore Registrazione',
+            description: message,
+          });
+        });
     } else {
-      initiateEmailSignIn(auth, email, password);
-      toast({ title: 'Accesso in corso...', description: 'Verifica delle credenziali.' });
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          toast({ title: 'Accesso effettuato!', description: 'Bentornato/a!' });
+          setIsAuthLoading(false);
+        })
+        .catch((error: any) => {
+          setIsAuthLoading(false);
+          let message = 'Email o password non corretti.';
+          if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+            message = 'Email o password non corretti.';
+          }
+          toast({
+            variant: 'destructive',
+            title: 'Errore Accesso',
+            description: message,
+          });
+        });
     }
   };
 
@@ -106,6 +144,7 @@ export function AuthGate() {
               value={email} 
               onChange={(e) => setEmail(e.target.value)}
               className="bg-white"
+              disabled={isAuthLoading}
             />
             <Input 
               type="password" 
@@ -113,22 +152,30 @@ export function AuthGate() {
               value={password} 
               onChange={(e) => setPassword(e.target.value)}
               className="bg-white"
+              disabled={isAuthLoading}
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Button onClick={handleEmailAuth} className="w-full h-12 font-bold">
-              {isRegistering ? <UserPlus className="mr-2 h-4 w-4"/> : <LogIn className="mr-2 h-4 w-4" />}
-              {isRegistering ? 'REGISTRATI' : 'ACCEDI'}
+            <Button onClick={handleEmailAuth} className="w-full h-12 font-bold" disabled={isAuthLoading || !email || !password}>
+              {isAuthLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : isRegistering ? (
+                <UserPlus className="mr-2 h-4 w-4"/>
+              ) : (
+                <LogIn className="mr-2 h-4 w-4" />
+              )}
+              {isAuthLoading ? 'ELABORAZIONE...' : isRegistering ? 'REGISTRATI' : 'ACCEDI'}
             </Button>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setIsRegistering(!isRegistering)}
               className="text-primary font-semibold"
+              disabled={isAuthLoading}
             >
               {isRegistering ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati'}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowEmailForm(false)} className="mt-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowEmailForm(false)} className="mt-2" disabled={isAuthLoading}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Torna alle opzioni
             </Button>
           </div>
@@ -140,7 +187,6 @@ export function AuthGate() {
   return (
     <div className="flex flex-col gap-3 w-full max-w-xs">
       <Button onClick={handleGoogleSignIn} className="h-12 bg-white text-black hover:bg-gray-100 border border-gray-200 font-bold shadow-sm">
-        <img src="https://www.gstatic.com/firebase/anonymous-scan.png" alt="G" className="w-4 h-4 mr-2 hidden" /> 
         Continua con Google
       </Button>
       <Button onClick={() => setShowEmailForm(true)} variant="outline" className="h-12 border-primary text-primary hover:bg-primary/5 font-bold">
