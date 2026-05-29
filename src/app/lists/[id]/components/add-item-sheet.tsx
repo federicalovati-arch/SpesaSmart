@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -8,6 +9,9 @@ import {
   Sheet,
   SheetContent,
   SheetClose,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -118,6 +122,10 @@ export function AddItemSheet({
         side="bottom"
         className="rounded-t-2xl max-h-[85vh] flex flex-col bg-background p-0"
       >
+        <SheetHeader className="sr-only">
+          <SheetTitle>Aggiungi Articolo</SheetTitle>
+          <SheetDescription>Aggiungi un articolo alla tua lista della spesa dal catalogo o tramite inserimento rapido.</SheetDescription>
+        </SheetHeader>
         <Tabs defaultValue="catalog" className="flex-1 flex flex-col pt-4 min-h-0">
            <div className="relative px-4">
               <TabsList className="grid w-full grid-cols-2 bg-gray-100 rounded-full h-11 p-1">
