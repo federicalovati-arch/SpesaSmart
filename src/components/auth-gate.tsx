@@ -12,9 +12,10 @@ import {
 import { useUser, useFirebaseApp } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { LogIn, LogOut, Mail, ArrowLeft, UserPlus, Loader2 } from 'lucide-react';
+import { LogIn, LogOut, Mail, ArrowLeft, UserPlus, Loader2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export function AuthGate() {
   const app = useFirebaseApp();
@@ -26,6 +27,7 @@ export function AuthGate() {
   const [password, setPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const handleGoogleSignIn = async () => {
     if (!app) {
@@ -36,6 +38,7 @@ export function AuthGate() {
         });
         return;
     }
+    setAuthError(null);
     try {
       const auth = getAuth(app);
       const provider = new GoogleAuthProvider();
@@ -46,10 +49,15 @@ export function AuthGate() {
       });
     } catch (error: any) {
       console.error('Authentication error:', error);
+      let message = 'L\'accesso Google potrebbe essere bloccato su questa piattaforma.';
+      if (error.code === 'auth/unauthorized-domain') {
+        message = 'Dominio non autorizzato. Aggiungi questo dominio nella console Firebase.';
+      }
+      setAuthError(message);
       toast({
         variant: 'destructive',
         title: 'Errore di autenticazione',
-        description: 'L\'accesso Google potrebbe essere bloccato su questa piattaforma. Prova con l\'email.',
+        description: message,
       });
     }
   };
@@ -58,6 +66,7 @@ export function AuthGate() {
     if (!app || !email || !password) return;
     const auth = getAuth(app);
     setIsAuthLoading(true);
+    setAuthError(null);
     
     if (isRegistering) {
       createUserWithEmailAndPassword(auth, email, password)
@@ -74,7 +83,12 @@ export function AuthGate() {
             message = 'L\'indirizzo email non è valido.';
           } else if (error.code === 'auth/weak-password') {
             message = 'La password deve avere almeno 6 caratteri.';
+          } else if (error.code === 'auth/operation-not-allowed') {
+            message = 'Il metodo Email/Password non è abilitato nella console Firebase.';
+          } else {
+            message = error.message;
           }
+          setAuthError(message);
           toast({
             variant: 'destructive',
             title: 'Errore Registrazione',
@@ -92,7 +106,14 @@ export function AuthGate() {
           let message = 'Email o password non corretti.';
           if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
             message = 'Email o password non corretti.';
+          } else if (error.code === 'auth/unauthorized-domain') {
+            message = 'Questo dominio non è autorizzato. Aggiungilo nella console Firebase sotto Authentication > Settings.';
+          } else if (error.code === 'auth/operation-not-allowed') {
+            message = 'L\'accesso con email non è abilitato nel tuo progetto Firebase.';
+          } else {
+            message = error.message;
           }
+          setAuthError(message);
           toast({
             variant: 'destructive',
             title: 'Errore Accesso',
@@ -137,6 +158,15 @@ export function AuthGate() {
     return (
       <Card className="w-full max-w-sm border-none shadow-none bg-transparent">
         <CardContent className="p-0 space-y-4">
+          {authError && (
+            <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive mb-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Attenzione</AlertTitle>
+              <AlertDescription className="text-xs">
+                {authError}
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="space-y-2">
             <Input 
               type="email" 
@@ -164,16 +194,19 @@ export function AuthGate() {
               ) : (
                 <LogIn className="mr-2 h-4 w-4" />
               )}
-              {isAuthLoading ? 'ELABORAZIONE...' : isRegistering ? 'REGISTRATI' : 'ACCEDI'}
+              {isAuthLoading ? 'ELABORAZIONE...' : isRegistering ? 'REGISTRATI ORA' : 'ACCEDI'}
             </Button>
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => setIsRegistering(!isRegistering)}
+              onClick={() => {
+                setIsRegistering(!isRegistering);
+                setAuthError(null);
+              }}
               className="text-primary font-semibold"
               disabled={isAuthLoading}
             >
-              {isRegistering ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati'}
+              {isRegistering ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati qui'}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setShowEmailForm(false)} className="mt-2" disabled={isAuthLoading}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Torna alle opzioni
@@ -194,7 +227,7 @@ export function AuthGate() {
         Usa Email e Password
       </Button>
       <p className="text-[10px] text-center text-muted-foreground mt-2 px-4">
-        L'accesso via email è consigliato se riscontri problemi con l'accesso Google sull'app Android.
+        L'accesso via email è consigliato per l'app Android. Se è la prima volta, clicca su "Usa Email" e poi su "Registrati qui".
       </p>
     </div>
   );
