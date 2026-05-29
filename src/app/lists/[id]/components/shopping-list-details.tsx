@@ -108,6 +108,7 @@ export function ShoppingListDetails({
   list: initialList,
   allProducts,
   allSupermarkets,
+  allCategories,
   onUpdateList,
   onArchive,
   onDuplicateList,
@@ -583,6 +584,7 @@ export function ShoppingListDetails({
         setIsOpen={setIsAddItemSheetOpen}
         allProducts={allProducts}
         allSupermarkets={allSupermarkets}
+        allCategories={allCategories}
         listItems={list.items}
         onAddCatalogProduct={(product) => onAddProductToList(product, 1)}
         onAddQuickProduct={onAddQuickProduct}
