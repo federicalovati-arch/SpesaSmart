@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { AuthGate } from '@/components/auth-gate';
+import { Badge } from '@/components/ui/badge';
 import {
   User,
   Database,
@@ -19,6 +20,8 @@ import {
   Upload,
   Check,
   Loader2,
+  ShieldCheck,
+  Smartphone,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -128,7 +131,10 @@ export default function ProfilePage() {
                         <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                       </Avatar>
                       <p className="font-bold text-xl">{user.displayName}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                      <p className="text-sm text-muted-foreground mb-3">{user.email}</p>
+                      <Badge className="bg-green-100 text-green-700 border-green-200 px-3 py-1 flex gap-1.5 items-center">
+                        <ShieldCheck className="h-3.5 w-3.5" /> Sincronizzato su Cloud
+                      </Badge>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center text-center">
@@ -136,7 +142,10 @@ export default function ProfilePage() {
                         <AvatarFallback><User className="h-8 w-8 text-gray-400" /></AvatarFallback>
                       </Avatar>
                     <p className="font-bold text-xl">Ospite</p>
-                    <p className="text-sm text-muted-foreground">Accedi per il sync su cloud</p>
+                    <p className="text-sm text-muted-foreground mb-3">Accedi per proteggere i tuoi dati</p>
+                    <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50 px-3 py-1 flex gap-1.5 items-center">
+                        <Smartphone className="h-3.5 w-3.5" /> Solo su questo dispositivo
+                    </Badge>
                   </div>
                 )}
             </CardContent>
@@ -158,7 +167,7 @@ export default function ProfilePage() {
                 </>
                 }
                 <p className="text-xs text-muted-foreground mt-2">
-                    Spazio occupato dalla copia locale nel browser per velocizzare l'app. I dati sono al sicuro nel Cloud se hai fatto l'accesso.
+                    Spazio occupato dalla copia locale per velocizzare l'app. {user ? 'I dati sono al sicuro nel Cloud.' : 'Senza account, i dati risiedono solo qui.'}
                 </p>
             </CardContent>
         </Card>
@@ -167,15 +176,15 @@ export default function ProfilePage() {
             <CardContent className="p-4 space-y-3">
                 <div className="flex items-center gap-3">
                     <Cloud className="h-5 w-5 text-muted-foreground" />
-                    <h2 className="font-bold text-lg">Backup</h2>
+                    <h2 className="font-bold text-lg">Backup Manuale</h2>
                 </div>
                 <Button className="w-full h-12" onClick={handleExport} disabled={isLoading}>
                     {isLoading ? <Loader2 className="mr-2 animate-spin" /> : <Download className="mr-2" />}
-                    {isLoading ? 'Caricamento...' : 'Esporta JSON'}
+                    {isLoading ? 'Caricamento...' : 'Esporta file JSON'}
                 </Button>
                 <Button className="w-full h-12" variant="outline" onClick={handleImportClick} disabled={isImporting || isLoading}>
                     {isImporting ? <Loader2 className="mr-2 animate-spin" /> : <Upload className="mr-2" />}
-                    {isImporting ? 'Importazione...' : 'Importa JSON'}
+                    {isImporting ? 'Importazione...' : 'Importa file JSON'}
                 </Button>
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".json" />
             </CardContent>
