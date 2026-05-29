@@ -104,8 +104,12 @@ export function AuthGate() {
         .catch((error: any) => {
           setIsAuthLoading(false);
           let message = 'Email o password non corretti.';
-          if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-            message = 'Email o password non corretti.';
+          if (error.code === 'auth/user-not-found') {
+            message = 'Account non trovato. Se non hai mai usato questa email, clicca su "Registrati qui" sotto.';
+          } else if (error.code === 'auth/wrong-password') {
+            message = 'Password errata. Riprova o recupera la password se necessario.';
+          } else if (error.code === 'auth/invalid-credential') {
+            message = 'Credenziali non valide. Se è il tuo primo accesso, devi prima creare un account cliccando su "Registrati qui".';
           } else if (error.code === 'auth/unauthorized-domain') {
             message = 'Questo dominio non è autorizzato. Aggiungilo nella console Firebase sotto Authentication > Settings.';
           } else if (error.code === 'auth/operation-not-allowed') {
@@ -158,6 +162,15 @@ export function AuthGate() {
     return (
       <Card className="w-full max-w-sm border-none shadow-none bg-transparent">
         <CardContent className="p-0 space-y-4">
+          <div className="text-center space-y-1">
+             <h2 className="text-xl font-bold text-primary uppercase">
+                {isRegistering ? 'Registrazione' : 'Accesso Email'}
+             </h2>
+             <p className="text-xs text-muted-foreground">
+                {isRegistering ? 'Crea un nuovo account' : 'Inserisci le tue credenziali'}
+             </p>
+          </div>
+
           {authError && (
             <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive mb-2">
               <AlertCircle className="h-4 w-4" />
@@ -167,13 +180,14 @@ export function AuthGate() {
               </AlertDescription>
             </Alert>
           )}
+
           <div className="space-y-2">
             <Input 
               type="email" 
               placeholder="Email" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-white"
+              className="bg-white h-12"
               disabled={isAuthLoading}
             />
             <Input 
@@ -181,34 +195,41 @@ export function AuthGate() {
               placeholder="Password" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-white"
+              className="bg-white h-12"
               disabled={isAuthLoading}
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Button onClick={handleEmailAuth} className="w-full h-12 font-bold" disabled={isAuthLoading || !email || !password}>
+            <Button onClick={handleEmailAuth} className="w-full h-12 font-bold text-lg" disabled={isAuthLoading || !email || !password}>
               {isAuthLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               ) : isRegistering ? (
-                <UserPlus className="mr-2 h-4 w-4"/>
+                <UserPlus className="mr-2 h-5 w-5"/>
               ) : (
-                <LogIn className="mr-2 h-4 w-4" />
+                <LogIn className="mr-2 h-5 w-5" />
               )}
-              {isAuthLoading ? 'ELABORAZIONE...' : isRegistering ? 'REGISTRATI ORA' : 'ACCEDI'}
+              {isAuthLoading ? 'ELABORAZIONE...' : isRegistering ? 'CREA ACCOUNT' : 'ENTRA'}
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => {
-                setIsRegistering(!isRegistering);
-                setAuthError(null);
-              }}
-              className="text-primary font-semibold"
-              disabled={isAuthLoading}
-            >
-              {isRegistering ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati qui'}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowEmailForm(false)} className="mt-2" disabled={isAuthLoading}>
+            
+            <div className="flex flex-col items-center gap-1 mt-2">
+                <p className="text-sm text-muted-foreground">
+                    {isRegistering ? 'Hai già un account?' : 'Non hai ancora un account?'}
+                </p>
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  onClick={() => {
+                    setIsRegistering(!isRegistering);
+                    setAuthError(null);
+                  }}
+                  className="text-primary font-bold h-auto p-0"
+                  disabled={isAuthLoading}
+                >
+                  {isRegistering ? 'Accedi qui' : 'Registrati qui'}
+                </Button>
+            </div>
+
+            <Button variant="ghost" size="sm" onClick={() => setShowEmailForm(false)} className="mt-4 text-muted-foreground" disabled={isAuthLoading}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Torna alle opzioni
             </Button>
           </div>
