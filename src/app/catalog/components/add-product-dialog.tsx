@@ -1,3 +1,13 @@
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+};
+
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -162,26 +172,67 @@ export function AddProductDialog({
   const watchedImages = form.watch('images');
   const watchedPrices = form.watch('prices');
 
-  function onSubmit(values: z.infer<typeof productSchema>) {
+  async function onSubmit(values: z.infer<typeof productSchema>) {
     const pricesWithValue = values.prices.filter((p) => p.price && p.price > 0);
 
-    const finalImages = values.images.map((img) => ({
-      id: img.id.startsWith('new-') ? `img-${Date.now()}` : img.id,
-      url: img.url,
-      supermarketId: img.supermarketId || undefined,
-    }));
+const finalImages = await Promise.all(
+  values.images.map(async (img) => {
+    let finalUrl = "";
 
-    const productData: Omit<Product, 'id'> = {
-      name: values.name,
-      brand: values.brand,
-      category: values.category,
-      prices: pricesWithValue,
-      images: finalImages,
+    // 👉 se è una nuova immagine
+    if (img.file) {
+      finalUrl = await fileToBase64(img.file);
+    } 
+    // 👉 se è già esistente (modifica prodotto)
+    else if (img.url) {
+      finalUrl = img.url;
+    }
+
+    return {
+      id: img.id.startsWith('new-') ? `img-${Date.now()}` : img.id,
+      url: finalUrl,
+      supermarketId: img.supermarketId || undefined,
     };
+  })
+);
+
+const cleanPrices = (values.prices || [])
+  .filter(p => p && p.supermarketId) // 👈 elimina roba rotta
+  .map(p => ({
+    supermarketId: String(p.supermarketId),
+    price: Number(p.price) || 0,
+    brand: p.brand ? String(p.brand) : ""
+  }));
+
+const cleanImages = [];
+
+(values.images || []).forEach((img) => {
+  if (!img || !img.url) return;
+
+  cleanImages.push({
+    id: String(img.id || `img-${Date.now()}`),
+    url: String(img.url),
+    supermarketId: img.supermarketId ? String(img.supermarketId) : ""
+  });
+});
+
+const productData: Omit<Product, 'id'> = {
+  name: values.name || "",
+  brand: values.brand || "",
+  category: values.category || "",
+
+  prices: (values.prices || []).map(p => ({
+    supermarketId: String(p.supermarketId || ""),
+    price: Number(p.price) || 0,
+    brand: p.brand ? String(p.brand) : ""
+  })),
+
+  images: cleanImages, // 👈 QUESTO
+};
 
     onAddProduct(productData);
-    form.reset(defaultValues);
-    setIsOpen(false);
+// form.reset(defaultValues);
+// setIsOpen(false);
   }
 
   return (

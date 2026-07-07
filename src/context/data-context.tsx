@@ -236,11 +236,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [user, firestore]);
 
-  const addProduct = useCallback((productData: Omit<Product, 'id'>) => {
-      const newProduct = { ...productData, id: `p${Date.now()}` };
-      if (user) { writeToFirestore('products', newProduct); } 
-      else setLocalProducts((prev) => [newProduct, ...prev]);
-  }, [user, writeToFirestore]);
+const addProduct = useCallback(async (productData: Omit<Product, 'id'>) => {
+  const newProduct = { ...productData, id: `p${Date.now()}` };
+
+  console.log("PROVO A SALVARE:", newProduct);
+
+  try {
+    if (user) {
+      console.log("SALVO SU FIREBASE");
+      await writeToFirestore('products', newProduct);
+      console.log("SALVATO SU FIREBASE");
+    } else {
+      console.log("SALVO IN LOCALE");
+      setLocalProducts((prev) => [newProduct, ...prev]);
+    }
+  } catch (e) {
+    console.error("ERRORE FIREBASE:", e);
+  }
+}, [user, writeToFirestore]);
   
   const updateProduct = useCallback((updatedProduct: Product) => {
       if (user) { writeToFirestore('products', updatedProduct); }

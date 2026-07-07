@@ -33,10 +33,10 @@ export default function RootLayout({
             <DataProvider>
               <SidebarProvider>
                 <AppSidebar />
-                <SidebarInset className="flex flex-col bg-background overflow-x-hidden">
-                  <div className="flex-grow pb-16 md:pb-0">{children}</div>
-                  <AppFooter />
-                </SidebarInset>
+<SidebarInset className="flex flex-col bg-background overflow-x-hidden pb-24 md:pb-0">
+  <div className="flex-grow">{children}</div>
+  <AppFooter />
+</SidebarInset>
               </SidebarProvider>
               <Toaster />
               <BottomNav />
