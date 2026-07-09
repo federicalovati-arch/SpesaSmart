@@ -33,12 +33,6 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dataUsage, setDataUsage] = useState(0);
   const [isImporting, setIsImporting] = useState(false);
-  const [lastBackup, setLastBackup] = useState<string | null>(null);
-
-useEffect(() => {
-  const backup = localStorage.getItem('lastManualBackup');
-  setLastBackup(backup);
-}, []);
 
   const getInitials = (name?: string | null) => {
     if (!name) return '...';
@@ -64,28 +58,31 @@ useEffect(() => {
   }, [exportData, dataLoading]);
 
   const handleExport = () => {
-    try {
-      const data = exportData();
-      const jsonString = JSON.stringify(data, null, 2);
-      const now = new Date();   // <-- una sola volta
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `spesa-smart-backup-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-       // Salva la data dell'ultimo backup
-    localStorage.setItem('lastManualBackup', now.toISOString());
+  try {
+    const data = exportData();
+    const jsonString = JSON.stringify(data, null, 2);
 
-alert(localStorage.getItem('lastManualBackup'));
-      toast({ title: 'Backup Esportato', description: 'Il file JSON è stato scaricato.' });
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Errore Esportazione', description: 'Impossibile creare il backup.' });
-    }
-  };
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `spesa-smart-backup-${new Date().toISOString().split('T')[0]}.json`;
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Backup Esportato',
+      description: 'Operazione completata con successo.',
+    });
+  } catch (error: any) {
+    // ...
+  }
+};
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -189,17 +186,6 @@ alert(localStorage.getItem('lastManualBackup'));
                     <Cloud className="h-5 w-5 text-muted-foreground" />
                     <h2 className="font-bold text-lg">Backup Manuale</h2>
                 </div>
-                        <p className="text-sm text-muted-foreground">
-            Ultimo backup manuale:{' '}
-            <span className="font-medium text-foreground">
-                {lastBackup
-                    ? new Date(lastBackup).toLocaleString('it-IT', {
-                          dateStyle: 'long',
-                          timeStyle: 'short',
-                      })
-                    : 'Mai eseguito'}
-            </span>
-        </p>
                 <Button className="w-full h-12" onClick={handleExport} disabled={isLoading}>
                     {isLoading ? <Loader2 className="mr-2 animate-spin" /> : <Download className="mr-2" />}
                     {isLoading ? 'Caricamento...' : 'Esporta file JSON'}
