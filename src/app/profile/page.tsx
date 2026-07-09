@@ -63,6 +63,8 @@ export default function ProfilePage() {
 const handleExport = async () => {
   try {
     const data = exportData();
+    console.log(data);
+    console.log(JSON.stringify(data, null, 2));
     const jsonString = JSON.stringify(data, null, 2);
     const fileName = `spesa-smart-backup-${new Date().toISOString().split('T')[0]}.json`;
 
