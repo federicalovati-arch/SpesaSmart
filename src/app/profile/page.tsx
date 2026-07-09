@@ -60,61 +60,38 @@ export default function ProfilePage() {
     }
   }, [exportData, dataLoading]);
 
-  const handleExport = async () => {
+const handleExport = async () => {
   try {
     const data = exportData();
     const jsonString = JSON.stringify(data, null, 2);
     const fileName = `spesa-smart-backup-${new Date().toISOString().split('T')[0]}.json`;
 
-    console.log("isNative:", Capacitor.isNativePlatform());
-toast({
-  title: "DEBUG",
-  description: Capacitor.isNativePlatform() ? "ANDROID" : "BROWSER",
-});
+    if (Capacitor.isNativePlatform()) {
+      await Filesystem.writeFile({
+        path: fileName,
+        data: jsonString,
+        directory: Directory.Cache,
+        encoding: "utf8",
+      });
 
-   if (Capacitor.isNativePlatform()) {
-   throw new Error("TEST ANDROID");
+      const uri = await Filesystem.getUri({
+        directory: Directory.Cache,
+        path: fileName,
+      });
 
-  await Filesystem.writeFile({
-    path: fileName,
-    data: jsonString,
-    directory: Directory.Cache,
-    encoding: "utf8",
-  });
-
-  toast({
-    title: "DEBUG",
-    description: "File scritto",
-  });
-
-  const uri = await Filesystem.getUri({
-    directory: Directory.Cache,
-    path: fileName,
-  });
-
-  toast({
-    title: "DEBUG",
-    description: uri.uri,
-  });
-
-  await Share.share({
-    title: "Backup Spesa Smart",
-    url: uri.uri,
-  });
-
-  toast({
-    title: "DEBUG",
-    description: "Share terminato",
-  });
-
-} else {
+      await Share.share({
+        title: "Backup Spesa Smart",
+        text: "Salva il backup dove preferisci.",
+        url: uri.uri,
+      });
+    } else {
       const blob = new Blob([jsonString], {
-        type: 'application/json',
+        type: "application/json",
       });
 
       const url = URL.createObjectURL(blob);
 
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
 
@@ -125,22 +102,23 @@ toast({
       URL.revokeObjectURL(url);
     }
 
-   toast({
-  title: 'QUESTO È UN TEST',
-  description: 'VERSIONE 999',
-});
-
+    toast({
+      title: "Backup Esportato",
+      description: "Operazione completata con successo.",
+    });
   } catch (e) {
     console.error(e);
 
     toast({
-      variant: 'destructive',
-      title: 'Errore Esportazione',
-      description: e instanceof Error ? e.message : 'Errore durante il backup.',
+      variant: "destructive",
+      title: "Errore Esportazione",
+      description:
+        e instanceof Error
+          ? e.message
+          : "Errore durante il backup.",
     });
   }
 };
-
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };
