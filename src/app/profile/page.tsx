@@ -184,7 +184,6 @@ export default function ProfilePage() {
             <CardContent className="p-4 space-y-3">
                 <div className="flex items-center gap-3">
                     <Cloud className="h-5 w-5 text-muted-foreground" />
-                    <h2 className="font-bold text-lg">Backup Manuale</h2>
                 </div>
                 <Button className="w-full h-12" onClick={handleExport} disabled={isLoading}>
                     {isLoading ? <Loader2 className="mr-2 animate-spin" /> : <Download className="mr-2" />}
