@@ -24,6 +24,9 @@ import {
   Smartphone,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 export default function ProfilePage() {
   const { user, loading: userLoading } = useUser();
@@ -57,30 +60,84 @@ export default function ProfilePage() {
     }
   }, [exportData, dataLoading]);
 
-  const handleExport = () => {
+  const handleExport = async () => {
   try {
     const data = exportData();
     const jsonString = JSON.stringify(data, null, 2);
+    const fileName = `spesa-smart-backup-${new Date().toISOString().split('T')[0]}.json`;
 
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    console.log("isNative:", Capacitor.isNativePlatform());
+toast({
+  title: "DEBUG",
+  description: Capacitor.isNativePlatform() ? "ANDROID" : "BROWSER",
+});
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `spesa-smart-backup-${new Date().toISOString().split('T')[0]}.json`;
+   if (Capacitor.isNativePlatform()) {
+   throw new Error("TEST ANDROID");
 
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  await Filesystem.writeFile({
+    path: fileName,
+    data: jsonString,
+    directory: Directory.Cache,
+    encoding: "utf8",
+  });
 
-    URL.revokeObjectURL(url);
+  toast({
+    title: "DEBUG",
+    description: "File scritto",
+  });
+
+  const uri = await Filesystem.getUri({
+    directory: Directory.Cache,
+    path: fileName,
+  });
+
+  toast({
+    title: "DEBUG",
+    description: uri.uri,
+  });
+
+  await Share.share({
+    title: "Backup Spesa Smart",
+    url: uri.uri,
+  });
+
+  toast({
+    title: "DEBUG",
+    description: "Share terminato",
+  });
+
+} else {
+      const blob = new Blob([jsonString], {
+        type: 'application/json',
+      });
+
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      URL.revokeObjectURL(url);
+    }
+
+   toast({
+  title: 'QUESTO È UN TEST',
+  description: 'VERSIONE 999',
+});
+
+  } catch (e) {
+    console.error(e);
 
     toast({
-      title: 'Backup Esportato',
-      description: 'Operazione completata con successo.',
+      variant: 'destructive',
+      title: 'Errore Esportazione',
+      description: e instanceof Error ? e.message : 'Errore durante il backup.',
     });
-  } catch (error: any) {
-    // ...
   }
 };
 
