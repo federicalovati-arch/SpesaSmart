@@ -26,6 +26,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import write_blob from 'capacitor-blob-writer';
 import { Share } from '@capacitor/share';
 
 export default function ProfilePage() {
@@ -70,17 +71,21 @@ const handleExport = async () => {
     const fileName = `backup-${Date.now()}.json`;
 
     if (Capacitor.isNativePlatform()) {
-      await Filesystem.writeFile({
-        path: fileName,
-        data: jsonString,
-        directory: Directory.Cache,
-        encoding: "utf8",
-      });
+       throw new Error("SONO DENTRO WRITE_BLOB");
+      const blob = new Blob([jsonString], {
+  type: "application/json",
+});
 
-      const uri = await Filesystem.getUri({
-        directory: Directory.Cache,
-        path: fileName,
-      });
+await write_blob({
+  path: fileName,
+  directory: Directory.Cache,
+  blob,
+});
+
+const uri = await Filesystem.getUri({
+  directory: Directory.Cache,
+  path: fileName,
+});
 
       await Share.share({
         title: "Backup Spesa Smart",
