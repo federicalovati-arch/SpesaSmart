@@ -570,13 +570,16 @@ const addProduct = useCallback(async (productData: Omit<Product, 'id'>) => {
     };
 
     if (user) {
-      await Promise.all([
-        setBatch('products', dataToImport.products),
-        setBatch('supermarkets', dataToImport.supermarkets),
-        setBatch('categories', dataToImport.categories),
-        setBatch('shoppingLists', dataToImport.shoppingLists),
-        setBatch('receipts', dataToImport.receipts),
-      ]);
+      await restoreProducts(dataToImport.products);
+
+await setBatch("supermarkets", dataToImport.supermarkets);
+
+await setBatch("categories", dataToImport.categories);
+
+await setBatch("shoppingLists", dataToImport.shoppingLists);
+
+await setBatch("receipts", dataToImport.receipts);
+
     } else {
       setLocalProducts(dataToImport.products);
       setLocalSupermarkets(dataToImport.supermarkets.sort((a,b) => a.order - b.order));
@@ -584,7 +587,7 @@ const addProduct = useCallback(async (productData: Omit<Product, 'id'>) => {
       setLocalShoppingLists(dataToImport.shoppingLists.sort((a,b) => a.order - b.order));
       setLocalReceipts(dataToImport.receipts.sort((a, b) => new Date(b.archivedAt).getTime() - new Date(a.archivedAt).getTime()));
     }
-  }, [user, setBatch]);
+  },  [user, setBatch, restoreProducts]);
 
   const exportData = useCallback((): AllData => ({
     products,
