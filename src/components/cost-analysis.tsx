@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, BarChart2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BarChart2,TrendingUp, TrendingDown, } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useData } from '@/context/data-context';
 import { parseISO, getYear, getMonth, format } from 'date-fns';
@@ -450,6 +450,39 @@ const variationReport = useMemo(() => {
                     </CardContent>
                 </Card>
             </div>
+            <div className="space-y-3">
+
+  <Card className="rounded-2xl shadow-sm">
+    <CardHeader className="pb-2">
+      <CardTitle className="text-base font-semibold text-destructive flex items-center gap-2">
+  <TrendingUp className="h-5 w-5" />
+  PRODOTTI AUMENTATI
+</CardTitle>
+    </CardHeader>
+
+    <CardContent>
+      <p className="text-sm text-muted-foreground">
+        Nessun prodotto ha registrato aumenti nel periodo selezionato.
+      </p>
+    </CardContent>
+  </Card>
+
+  <Card className="rounded-2xl shadow-sm">
+    <CardHeader className="pb-2">
+      <CardTitle className="text-base font-semibold text-primary flex items-center gap-2">
+  <TrendingDown className="h-5 w-5" />
+  PRODOTTI DIMINUITI
+</CardTitle>
+    </CardHeader>
+
+    <CardContent>
+      <p className="text-sm text-muted-foreground">
+        Nessun prodotto ha registrato ribassi nel periodo selezionato.
+      </p>
+    </CardContent>
+  </Card>
+
+</div>
           </TabsContent>
         </Tabs>
       </CardContent>
