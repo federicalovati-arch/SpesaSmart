@@ -532,12 +532,7 @@ const addProduct = useCallback(async (productData: Omit<Product, 'id'>) => {
     receipts,
   }), [products, supermarkets, categories, shoppingLists, receipts]);
 
-  console.log("DATA CONTEXT");
-console.log("products", products.length);
-console.log("supermarkets", supermarkets.length);
-console.log("categories", categories.length);
-console.log("shoppingLists", shoppingLists.length);
-console.log("receipts", receipts.length);
+
   const value: DataContextType = {
     products,
     supermarkets,
