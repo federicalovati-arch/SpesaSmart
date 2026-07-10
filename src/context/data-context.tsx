@@ -550,6 +550,18 @@ const addProduct = useCallback(async (productData: Omit<Product, 'id'>) => {
         shoppingLists: Array.isArray(data.shoppingLists) ? data.shoppingLists : [],
         receipts: Array.isArray(data.receipts) ? data.receipts : [],
     };
+console.log(
+  "Prodotti:",
+  dataToImport.products.length,
+  "Dimensione primo prodotto:",
+  dataToImport.products.length
+    ? JSON.stringify(dataToImport.products[0]).length
+    : 0,
+  "Dimensione prodotto più grande:",
+  dataToImport.products.length
+    ? Math.max(...dataToImport.products.map(p => JSON.stringify(p).length))
+    : 0
+);
 
     if (user) {
       await Promise.all([
