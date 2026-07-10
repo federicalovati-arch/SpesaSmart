@@ -66,7 +66,7 @@ const handleExport = async () => {
     console.log(data);
     console.log(JSON.stringify(data, null, 2));
     const jsonString = JSON.stringify(data, null, 2);
-    const fileName = `spesa-smart-backup-${new Date().toISOString().split('T')[0]}.json`;
+    const fileName = `backup-${Date.now()}.json`;
 
     if (Capacitor.isNativePlatform()) {
       await Filesystem.writeFile({
