@@ -473,14 +473,15 @@ const addProduct = useCallback(async (productData: Omit<Product, 'id'>) => {
       }
 
       await batch.commit();
-    } catch (error) {
-      console.error(`Error during batch operation for ${collectionName}:`, error);
-      toast({
-        variant: 'destructive',
-        title: `Errore during l'importazione`,
-        description: `Impossibile aggiornare la collezione ${collectionName}.`,
-      });
-    }
+    } catch (error: any) {
+  console.error(`Error during batch operation for ${collectionName}:`, error);
+
+  toast({
+    variant: 'destructive',
+    title: 'Errore importazione',
+    description: error?.message ?? String(error),
+  });
+}
   }, [user, firestore, toast]);
 
   const setCategories = useCallback((newCategories: Category[]) => {
