@@ -71,7 +71,6 @@ const handleExport = async () => {
     const fileName = `backup-${Date.now()}.json`;
 
     if (Capacitor.isNativePlatform()) {
-       throw new Error("SONO DENTRO WRITE_BLOB");
       const blob = new Blob([jsonString], {
   type: "application/json",
 });
