@@ -451,38 +451,81 @@ const addProduct = useCallback(async (productData: Omit<Product, 'id'>) => {
     }
   }, [user, receipts, firestoreReceipts, shoppingLists, firestoreShoppingLists, writeToFirestore, deleteFromFirestore]);
 
+  const BATCH_SIZE = 50;
   const setBatch = useCallback(async (collectionName: string, items: any[]) => {
-    if (!user || !firestore) return;
+  if (!user || !firestore) return;
 
-    const batch = writeBatch(firestore);
-    
-    const collectionRef = collection(firestore, 'users', user.uid, collectionName);
-    try {
-      const snapshot = await getDocs(collectionRef);
-      snapshot.docs.forEach(doc => {
-          batch.delete(doc.ref);
-      });
+  const collectionRef = collection(
+    firestore,
+    "users",
+    user.uid,
+    collectionName
+  );
 
-      if (items && Array.isArray(items)) {
-          items.forEach(item => {
-              if (item.id) {
-                  const docRef = doc(firestore, 'users', user.uid, collectionName, item.id);
-                  batch.set(docRef, item);
-              }
-          });
-      }
+  try {
+    // -----------------------------
+    // FASE 1 - Cancella tutto
+    // -----------------------------
+    const snapshot = await getDocs(collectionRef);
+
+    for (let i = 0; i < snapshot.docs.length; i += BATCH_SIZE) {
+      const batch = writeBatch(firestore);
+
+      snapshot.docs
+        .slice(i, i + BATCH_SIZE)
+        .forEach((docSnap) => batch.delete(docSnap.ref));
 
       await batch.commit();
-    } catch (error: any) {
-  console.error(`Error during batch operation for ${collectionName}:`, error);
+    }
 
-  toast({
-    variant: 'destructive',
-    title: 'Errore importazione',
-    description: error?.message ?? String(error),
-  });
-}
-  }, [user, firestore, toast]);
+    // -----------------------------
+    // FASE 2 - Reinserisci tutto
+    // -----------------------------
+    if (items && Array.isArray(items)) {
+
+      for (let i = 0; i < items.length; i += BATCH_SIZE) {
+
+        const batch = writeBatch(firestore);
+
+        items
+          .slice(i, i + BATCH_SIZE)
+          .forEach((item) => {
+
+            if (!item.id) return;
+
+            const docRef = doc(
+              firestore,
+              "users",
+              user.uid,
+              collectionName,
+              item.id
+            );
+
+            batch.set(docRef, item);
+
+          });
+
+        await batch.commit();
+      }
+    }
+
+  } catch (error: any) {
+
+    console.error(
+      `Error during batch operation for ${collectionName}:`,
+      error
+    );
+
+    toast({
+      variant: "destructive",
+      title: "Errore importazione",
+      description: error?.message ?? String(error),
+    });
+
+    throw error;
+  }
+
+}, [user, firestore, toast]);
 
   const setCategories = useCallback((newCategories: Category[]) => {
       if (user) { setBatch('categories', newCategories); }
