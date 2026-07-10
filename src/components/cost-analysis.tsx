@@ -1,4 +1,5 @@
 'use client';
+import { analyzeMonthVariations } from "@/analytics/variation-analysis";
 
 import { useState, useMemo, useEffect } from 'react';
 import {
@@ -25,7 +26,7 @@ import { parseISO, getYear, getMonth, format } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 export function CostAnalysis() {
-  const { receipts } = useData();
+ const { receipts, products } = useData();
 
   // State for "Andamento" tab
   const viewYear = new Date().getFullYear();
@@ -155,6 +156,22 @@ export function CostAnalysis() {
 
   }, [receipts, monthA, monthYearA, monthB, monthB, monthIndices, monthShortNames]);
   
+const variationReport = useMemo(() => {
+
+  return analyzeMonthVariations(
+    receipts,
+    products,
+    monthIndices[variationMonth],
+    parseInt(variationYear)
+  );
+
+}, [
+  receipts,
+  products,
+  variationMonth,
+  variationYear
+]);
+
   const { totalIncreases, totalSavings } = useMemo(() => {
     const monthIndex = monthIndices[variationMonth];
     const year = parseInt(variationYear);
