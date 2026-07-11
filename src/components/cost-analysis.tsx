@@ -451,12 +451,16 @@ const variationReport = useMemo(() => {
                     </CardContent>
                 </Card>
             </div>
-            <MonthlyVariations
+                   <MonthlyVariations
   variationReport={variationReport}
 />
           </TabsContent>
+          
         </Tabs>
+ 
       </CardContent>
+      
     </Card>
+    
   );
 }

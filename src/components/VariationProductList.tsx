@@ -12,6 +12,8 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { ProductVariation } from '@/analytics/types';
+import { useState } from 'react';
+import VariationDetailsSheet from './VariationDetailsSheet';
 
 type VariationItem = {
   productName: string;
@@ -36,9 +38,12 @@ export default function VariationProductList({
   products,
 }: VariationProductListProps) {
 
-  return (
+const [open, setOpen] = useState(false);
 
-  <Card className="rounded-2xl shadow-sm">
+  return (
+<>
+
+    <Card className="rounded-2xl shadow-sm">
 
     <CardHeader className="pb-2">
 
@@ -123,7 +128,11 @@ export default function VariationProductList({
 
       {products.length > 3 && (
 
-        <Button variant="ghost" className="w-full">
+        <Button
+  variant="ghost"
+  className="w-full"
+  onClick={() => setOpen(true)}
+>
   Vedi tutti
   <ArrowRight className="ml-2 h-4 w-4" />
 </Button>
@@ -137,6 +146,15 @@ export default function VariationProductList({
 </CardContent>
 
   </Card>
+
+<VariationDetailsSheet
+      open={open}
+      onOpenChange={setOpen}
+      title={title}
+      products={products}
+    />
+
+  </>
 
 );
 }
