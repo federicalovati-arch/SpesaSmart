@@ -218,11 +218,10 @@ const variationReport = useMemo(() => {
       </CardHeader>
       <CardContent className="space-y-6">
         <Tabs defaultValue="andamento" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-gray-100 rounded-full h-12 p-1.5">
-            <TabsTrigger value="andamento" className="rounded-full text-[0.625rem] font-bold sm:text-base sm:font-normal data-[state=active]:bg-white data-[state=active]:shadow-md">ANDAMENTO</TabsTrigger>
-            <TabsTrigger value="variazioni" className="rounded-full text-[0.625rem] font-bold sm:text-base sm:font-normal data-[state=active]:bg-white data-[state=active]:shadow-md">VARIAZIONI</TabsTrigger>
-            <TabsTrigger value="anni" className="rounded-full text-[0.625rem] font-bold sm:text-base sm:font-normal data-[state=active]:bg-white data-[state=active]:shadow-md">ANNI</TabsTrigger>
-            <TabsTrigger value="mesi" className="rounded-full text-[0.625rem] font-bold sm:text-base sm:font-normal data-[state=active]:bg-white data-[state=active]:shadow-md">MESI</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 bg-gray-100 rounded-full h-12 p-1.5">
+            <TabsTrigger value="andamento" className="rounded-full text-xs font-bold sm:text-base sm:font-normal data-[state=active]:bg-white data-[state=active]:shadow-md">ANDAMENTO</TabsTrigger>
+            <TabsTrigger value="variazioni" className="rounded-full text-xs font-bold sm:text-base sm:font-normal data-[state=active]:bg-white data-[state=active]:shadow-md">VARIAZIONI</TabsTrigger>
+            <TabsTrigger value="confronto" className="rounded-full text-xs font-bold sm:text-base sm:font-normal data-[state=active]:bg-white data-[state=active]:shadow-md">CONFRONTO</TabsTrigger>
           </TabsList>
           <TabsContent value="andamento" className="mt-6 space-y-6">
             <div className="flex items-center justify-between p-2 rounded-full bg-gray-100">
@@ -261,7 +260,8 @@ const variationReport = useMemo(() => {
               </ResponsiveContainer>
             </div>
           </TabsContent>
-          <TabsContent value="anni" className="mt-6 space-y-6">
+          <TabsContent value="confronto" className="mt-6 space-y-6">
+            <label className="font-semibold text-sm">CONFRONTO ANNUALE</label>
              <div className="p-4 bg-gray-100 rounded-2xl space-y-3">
                 <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold text-gray-500">PERIODO A:</label>
@@ -309,9 +309,11 @@ const variationReport = useMemo(() => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </TabsContent>
-          <TabsContent value="mesi" className="mt-6 space-y-6">
-            <div className="p-4 bg-gray-100 rounded-2xl space-y-3">
+
+         <div class="block -mx-6 border-t-8 border-gray-200 mt-12 mb-16" />
+
+         <label className="block font-semibold text-sm">CONFRONTO MENSILE</label>
+      <div className="p-4 bg-gray-100 rounded-2xl space-y-6">
                 <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold text-gray-500">PERIODO A:</label>
                     <div className="flex items-center gap-2">
@@ -379,6 +381,8 @@ const variationReport = useMemo(() => {
                 </ResponsiveContainer>
             </div>
           </TabsContent>
+
+
           <TabsContent value="variazioni" className="mt-6 space-y-6">
             <div className="p-4 bg-gray-100 rounded-2xl flex items-center justify-between">
               <label className="text-sm font-semibold text-gray-500">MESE:</label>
