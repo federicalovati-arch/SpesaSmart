@@ -1,6 +1,6 @@
 'use client';
 import { analyzeMonthVariations } from "@/analytics/variation-analysis";
-import VariationProductList from '@/components/VariationProductList';
+import MonthlyVariations from '@/components/MonthlyVariations';
 
 import { useState, useMemo, useEffect } from 'react';
 import {
@@ -451,21 +451,7 @@ const variationReport = useMemo(() => {
                     </CardContent>
                 </Card>
             </div>
-            <div className="space-y-3">
-
- <VariationProductList
-  title="PRODOTTI AUMENTATI"
-  type="increase"
-  products={variationReport.increasedProducts}
-/>
-
-<VariationProductList
-  title="PRODOTTI DIMINUITI"
-  type="decrease"
-  products={variationReport.decreasedProducts}
-/>
-
-</div>
+            
           </TabsContent>
         </Tabs>
       </CardContent>
