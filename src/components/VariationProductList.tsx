@@ -1,6 +1,7 @@
 'use client';
 
 import { TrendingDown, TrendingUp } from 'lucide-react';
+import { ArrowRight } from "lucide-react";
 
 import {
   Card,
@@ -10,6 +11,7 @@ import {
 } from '@/components/ui/card';
 
 import { Button } from '@/components/ui/button';
+import { ProductVariation } from '@/analytics/types';
 
 type VariationItem = {
   productName: string;
@@ -25,7 +27,7 @@ type VariationProductListProps = {
   title: string;
   type: 'increase' | 'decrease';
 
-  products: VariationItem[];
+  products: ProductVariation[];
 };
 
 export default function VariationProductList({
@@ -54,7 +56,7 @@ export default function VariationProductList({
           <TrendingDown className="h-5 w-5" />
         )}
 
-        {title}
+        {title} ({products.length})
 
       </CardTitle>
 
@@ -62,45 +64,75 @@ export default function VariationProductList({
 
     <CardContent className="space-y-4">
 
-  <div>
+  {products.length === 0 ? (
 
-    <p className="font-medium">
-      Carta Igienica
+    <p className="text-sm text-muted-foreground">
+      {type === 'increase'
+        ? 'Nessun prodotto ha registrato aumenti nel periodo selezionato.'
+        : 'Nessun prodotto ha registrato ribassi nel periodo selezionato.'}
     </p>
 
-    <div className="flex items-center justify-between mt-1">
+  ) : (
 
-      <div className="text-sm text-muted-foreground">
+    <>
+      {products.slice(0, 3).map((product) => (
 
-        Conad •
-        <span className="ml-1 text-gray-400">
-          €1,80
-        </span>
+        <div
+          key={product.productName}
+          className="border-b last:border-0 pb-3 last:pb-0"
+        >
 
-        <span className="mx-2">
-          →
-        </span>
+          <p className="font-medium">
+            {product.productName}
+          </p>
 
-        <span className="text-foreground">
-          €1,90
-        </span>
+          <div className="flex items-center justify-between mt-1">
 
-      </div>
+            <div className="text-sm text-muted-foreground">
 
-      <span className="font-semibold text-destructive">
-        +€0,10
-      </span>
+              {product.supermarket} •{" "}
 
-    </div>
+              <span className="text-gray-400">
+                €{product.oldPrice.toFixed(2)}
+              </span>
 
-  </div>
+              <span className="mx-2">→</span>
 
-  <Button
-    variant="ghost"
-    className="w-full"
-  >
-    Vedi tutti
-  </Button>
+              <span className="text-foreground">
+                €{product.newPrice.toFixed(2)}
+              </span>
+
+            </div>
+
+            <span
+              className={`font-semibold ${
+                type === 'increase'
+                  ? 'text-destructive'
+                  : 'text-primary'
+              }`}
+            >
+              {type === 'increase' ? '+' : '-'}
+              €{Math.abs(product.variationEuro).toFixed(2)}
+            </span>
+
+          </div>
+
+        </div>
+
+      ))}
+
+      {products.length > 3 && (
+
+        <Button variant="ghost" className="w-full">
+  Vedi tutti
+  <ArrowRight className="ml-2 h-4 w-4" />
+</Button>
+
+      )}
+
+    </>
+
+  )}
 
 </CardContent>
 

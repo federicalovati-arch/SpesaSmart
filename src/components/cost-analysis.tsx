@@ -453,35 +453,17 @@ const variationReport = useMemo(() => {
             </div>
             <div className="space-y-3">
 
-  <Card className="rounded-2xl shadow-sm">
-    <CardHeader className="pb-2">
-      <CardTitle className="text-base font-semibold text-destructive flex items-center gap-2">
-  <TrendingUp className="h-5 w-5" />
-  PRODOTTI AUMENTATI
-</CardTitle>
-    </CardHeader>
+ <VariationProductList
+  title="PRODOTTI AUMENTATI"
+  type="increase"
+  products={variationReport.increasedProducts}
+/>
 
-    <CardContent>
-      <p className="text-sm text-muted-foreground">
-        Nessun prodotto ha registrato aumenti nel periodo selezionato.
-      </p>
-    </CardContent>
-  </Card>
-
-  <Card className="rounded-2xl shadow-sm">
-    <CardHeader className="pb-2">
-      <CardTitle className="text-base font-semibold text-primary flex items-center gap-2">
-  <TrendingDown className="h-5 w-5" />
-  PRODOTTI DIMINUITI
-</CardTitle>
-    </CardHeader>
-
-    <CardContent>
-      <p className="text-sm text-muted-foreground">
-        Nessun prodotto ha registrato ribassi nel periodo selezionato.
-      </p>
-    </CardContent>
-  </Card>
+<VariationProductList
+  title="PRODOTTI DIMINUITI"
+  type="decrease"
+  products={variationReport.decreasedProducts}
+/>
 
 </div>
           </TabsContent>
