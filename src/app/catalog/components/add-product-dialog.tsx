@@ -533,7 +533,7 @@ const productData: Omit<Product, 'id'> = {
           open={!!enlargedImage}
           onOpenChange={() => setEnlargedImage(null)}
         >
-          <DialogContent className="p-0 bg-transparent border-none shadow-none w-auto max-w-[90vw] lg:max-w-2xl">
+          <DialogContent className="p-0 bg-transparent border-none shadow-none w-auto max-w-[90vw] lg:max-w-4xl">
             <DialogHeader>
                 <DialogTitle className="sr-only">Immagine Prodotto Ingrandita</DialogTitle>
                 <DialogDescription className="sr-only">Visualizzazione ingrandita dell'immagine del prodotto.</DialogDescription>
