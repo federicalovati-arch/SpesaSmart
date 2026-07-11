@@ -9,6 +9,7 @@ import {
 
 import { ProductVariation } from '@/analytics/types';
 import { useState } from "react";
+import ProductHistorySheet from './ProductHistorySheet';
 
 type VariationDetailsSheetProps = {
   open: boolean;
@@ -28,9 +29,12 @@ export default function VariationDetailsSheet({
 
     const [selectedProductId, setSelectedProductId] =
   useState<string | null>(null);
+const [historyOpen, setHistoryOpen] = useState(false);
 
   return (
 
+    <>
+    
     <Sheet
       open={open}
       onOpenChange={onOpenChange}
@@ -53,13 +57,13 @@ export default function VariationDetailsSheet({
 
     <button
   key={product.productId }
-  onClick={() =>
-  setSelectedProductId(
-    selectedProductId === product.productId
-      ? null
-      : product.productId
-  )
-}
+  onClick={() => {
+
+  setSelectedProductId(product.productId);
+
+  setHistoryOpen(true);
+
+}}
   className="w-full border-b last:border-0 pb-3 last:pb-0 text-left transition-colors hover:bg-muted/40 rounded-lg px-2 py-2"
 >
 
@@ -98,22 +102,6 @@ export default function VariationDetailsSheet({
 
 </div>
 
-{selectedProductId === product.productId && (
-
-  <div className="mt-4 rounded-xl bg-muted/30 p-4">
-
-    <p className="text-sm font-semibold">
-      Storico prezzi
-    </p>
-
-    <p className="mt-2 text-sm text-muted-foreground">
-      (qui mostreremo gli acquisti precedenti)
-    </p>
-
-  </div>
-
-)}
-
 </button>
 
   ))}
@@ -122,6 +110,14 @@ export default function VariationDetailsSheet({
       </SheetContent>
 
     </Sheet>
+
+<ProductHistorySheet
+  open={historyOpen}
+  onOpenChange={setHistoryOpen}
+  productId={selectedProductId}
+/>
+
+</>
 
   );
 
