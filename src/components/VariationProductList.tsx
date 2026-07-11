@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { ProductVariation } from '@/analytics/types';
 import { useState } from 'react';
 import VariationDetailsSheet from './VariationDetailsSheet';
+import ProductHistorySheet from './ProductHistorySheet';
 
 type VariationItem = {
   productName: string;
@@ -39,6 +40,10 @@ export default function VariationProductList({
 }: VariationProductListProps) {
 
 const [open, setOpen] = useState(false);
+const [historyOpen, setHistoryOpen] = useState(false);
+
+const [selectedProductId, setSelectedProductId] =
+  useState<string | null>(null);
 
   return (
 <>
@@ -82,10 +87,17 @@ const [open, setOpen] = useState(false);
     <>
       {products.slice(0, 3).map((product) => (
 
-        <div
-          key={product.productName}
-          className="border-b last:border-0 pb-3 last:pb-0"
-        >
+        <button
+  key={product.productId}
+  onClick={() => {
+
+    setSelectedProductId(product.productId);
+
+    setHistoryOpen(true);
+
+  }}
+  className="w-full border-b last:border-0 pb-3 last:pb-0 text-left transition-colors hover:bg-muted/40 rounded-lg px-2 py-2"
+>
 
           <p className="font-medium">
             {product.productName}
@@ -122,7 +134,7 @@ const [open, setOpen] = useState(false);
 
           </div>
 
-        </div>
+        </button>
 
       ))}
 
@@ -153,8 +165,13 @@ const [open, setOpen] = useState(false);
       title={title}
       products={products}
     />
-
+<ProductHistorySheet
+  open={historyOpen}
+  onOpenChange={setHistoryOpen}
+  productId={selectedProductId}
+/>
   </>
+  
 
 );
 }
