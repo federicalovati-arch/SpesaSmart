@@ -313,7 +313,7 @@ const variationReport = useMemo(() => {
           <TabsContent value="mesi" className="mt-6 space-y-6">
             <div className="p-4 bg-gray-100 rounded-2xl space-y-3">
                 <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold text-gray-500">PERIODO A:</label>
+                    <label className="text-xs font-semibold text-gray-500">PERIODO A:</label>
                     <div className="flex items-center gap-2">
                         <Select value={monthYearA} onValueChange={setMonthYearA}>
                             <SelectTrigger className="w-[120px] rounded-lg bg-white font-bold border-gray-200">
@@ -334,7 +334,7 @@ const variationReport = useMemo(() => {
                     </div>
                 </div>
                 <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold text-gray-500">PERIODO B:</label>
+                    <label className="text-xs font-semibold text-gray-500">PERIODO B:</label>
                     <div className="flex items-center gap-2">
                         <Select value={monthYearB} onValueChange={setMonthYearB}>
                             <SelectTrigger className="w-[120px] rounded-lg bg-white font-bold border-gray-200">
