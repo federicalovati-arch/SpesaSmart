@@ -40,9 +40,12 @@ const [historyOpen, setHistoryOpen] = useState(false);
       onOpenChange={onOpenChange}
     >
 
-      <SheetContent side="bottom" className="rounded-t-2xl px-6 pb-8">
+      <SheetContent
+  side="bottom"
+  className="rounded-t-2xl px-6 pb-8 max-h-[80vh] overflow-y-auto"
+>
 
-        <SheetHeader>
+        <SheetHeader className="pb-4">
 
           <SheetTitle>
 
@@ -51,12 +54,12 @@ const [historyOpen, setHistoryOpen] = useState(false);
           </SheetTitle>
 
         </SheetHeader>
-<div className="mt-6 space-y-4">
+<div className="space-y-4">
 
   {products.map((product) => (
 
     <button
-  key={product.productId }
+  key={`${product.productId}-${product.date}`}
   onClick={() => {
 
   setSelectedProductId(product.productId);

@@ -20,35 +20,27 @@ export default function MonthlyVariations({
 
   return (
 
-    <Card className="rounded-3xl shadow-lg">
+    <>
+  <h2 className="text-xl font-bold">
+    VARIAZIONI DEL MESE
+  </h2>
 
-      <CardHeader>
+  <div className="space-y-3">
 
-        <CardTitle>
+    <VariationProductList
+      title="PRODOTTI AUMENTATI"
+      type="increase"
+      products={variationReport.increasedProducts}
+    />
 
-          VARIAZIONI DEL MESE
+    <VariationProductList
+      title="PRODOTTI DIMINUITI"
+      type="decrease"
+      products={variationReport.decreasedProducts}
+    />
 
-        </CardTitle>
-
-      </CardHeader>
-
-      <CardContent className="space-y-3">
-
-  <VariationProductList
-    title="PRODOTTI AUMENTATI"
-    type="increase"
-    products={variationReport.increasedProducts}
-  />
-
-  <VariationProductList
-    title="PRODOTTI DIMINUITI"
-    type="decrease"
-    products={variationReport.decreasedProducts}
-  />
-
-</CardContent>
-
-    </Card>
+  </div>
+</>
 
   );
 

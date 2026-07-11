@@ -88,7 +88,7 @@ const [selectedProductId, setSelectedProductId] =
       {products.slice(0, 3).map((product) => (
 
         <button
-  key={product.productId}
+  key={`${product.productId}-${product.date}`}
   onClick={() => {
 
     setSelectedProductId(product.productId);

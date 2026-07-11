@@ -105,35 +105,36 @@ export default function ProductHistorySheet({
 
   {suggestion?.shouldSuggest && (
 
-    <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-4">
+  <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5">
 
-      <p className="font-semibold text-amber-900">
-        💡 Prezzzo stabile rilevato
-      </p>
+    <p className="font-semibold text-amber-900">
+      Suggerimento intelligente
+    </p>
 
-      <p className="mt-2 text-sm text-amber-800">
-        Il prezzo di questo prodotto è rimasto stabilmente
-        {suggestion.reason.includes('increased')
-          ? ' più alto '
-          : ' più basso '}
-        del prezzo base negli ultimi acquisti.
-      </p>
+    <p className="mt-3 text-sm text-amber-900 leading-relaxed">
 
-      <div className="mt-4 rounded-xl bg-white p-3">
+      Negli ultimi acquisti questo prodotto ha mantenuto
+      un prezzo stabilmente{" "}
 
-        <p className="text-xs text-muted-foreground">
-          Prezzo consigliato
-        </p>
+      <strong>
+        {suggestion.reason.includes("increased")
+          ? "più alto"
+          : "più basso"}
+      </strong>
 
-        <p className="text-2xl font-bold">
-          €{suggestion.suggestedPrice.toFixed(2)}
-        </p>
+      {" "}del prezzo di riferimento.
 
-      </div>
+    </p>
 
-    </div>
+    <p className="mt-3 text-sm text-amber-900">
 
-  )}
+      Vuoi aggiornare manualmente il prezzo base?
+
+    </p>
+
+  </div>
+
+)}
 
 </SheetContent>
     </Sheet>
