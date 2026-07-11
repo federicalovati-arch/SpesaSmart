@@ -1,5 +1,6 @@
 'use client';
 import { analyzeMonthVariations } from "@/analytics/variation-analysis";
+import VariationProductList from '@/components/VariationProductList';
 
 import { useState, useMemo, useEffect } from 'react';
 import {
@@ -219,9 +220,9 @@ const variationReport = useMemo(() => {
         <Tabs defaultValue="andamento" className="w-full">
           <TabsList className="grid w-full grid-cols-4 bg-gray-100 rounded-full h-12 p-1.5">
             <TabsTrigger value="andamento" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">ANDAMENTO</TabsTrigger>
+            <TabsTrigger value="variazioni" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">VARIAZIONI</TabsTrigger>
             <TabsTrigger value="anni" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">ANNI</TabsTrigger>
             <TabsTrigger value="mesi" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">MESI</TabsTrigger>
-            <TabsTrigger value="variazioni" className="rounded-full text-sm data-[state=active]:bg-white data-[state=active]:shadow-md">VARIAZIONI</TabsTrigger>
           </TabsList>
           <TabsContent value="andamento" className="mt-6 space-y-6">
             <div className="flex items-center justify-between p-2 rounded-full bg-gray-100">
