@@ -606,9 +606,6 @@ export function ShoppingListDetails({
               height={800}
               className="object-contain w-full h-auto max-h-[80vh] rounded-lg"
             />
-            <DialogClose className="absolute -top-2 -right-2 z-50 rounded-full bg-white/80 p-1.5 text-black opacity-100 ring-offset-0 focus:ring-0 backdrop-blur-sm hover:bg-white">
-              <X className="h-5 w-5" />
-            </DialogClose>
           </DialogContent>
         </Dialog>
       )}

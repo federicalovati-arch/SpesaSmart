@@ -14,7 +14,6 @@ import {
   SheetTitle,
   SheetFooter,
   SheetDescription,
-  SheetClose,
 } from '@/components/ui/sheet';
 import {
   Form,
@@ -28,7 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { parseListWithAI } from '../actions';
-import { Loader2, Sparkles, X } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 
 const listSchema = z.object({
   name: z.string().min(2, 'Il nome della lista è obbligatorio.'),
@@ -95,9 +94,6 @@ export function AddListDialog({
           <SheetDescription className="px-4 text-center">
             Crea una nuova lista della spesa.
           </SheetDescription>
-          <SheetClose className="absolute right-4 top-3 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-            <X className="h-5 w-5" />
-          </SheetClose>
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

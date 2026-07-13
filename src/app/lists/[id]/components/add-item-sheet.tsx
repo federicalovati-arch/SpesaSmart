@@ -8,7 +8,6 @@ import * as z from 'zod';
 import {
   Sheet,
   SheetContent,
-  SheetClose,
   SheetHeader,
   SheetTitle,
   SheetDescription,
@@ -31,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, X, Plus, Box, LayoutGrid, LucideIcon } from 'lucide-react';
+import { Search, Plus, Box, LayoutGrid, LucideIcon } from 'lucide-react';
 import type { Product, Supermarket, ShoppingListItem, Category } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { categoryIconMap as iconMap } from '@/lib/icons';
@@ -136,10 +135,6 @@ export function AddItemSheet({
                   AGGIUNTA RAPIDA
                   </TabsTrigger>
               </TabsList>
-              <SheetClose className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full p-1 bg-gray-200/80 h-7 w-7 flex items-center justify-center ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-                  <X className="h-5 w-5 text-gray-600" />
-                  <span className="sr-only">Close</span>
-              </SheetClose>
             </div>
           
             <TabsContent value="catalog" className="flex-1 flex flex-col min-h-0 mt-4">

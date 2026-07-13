@@ -15,7 +15,6 @@ import {
   SheetTitle,
   SheetFooter,
   SheetDescription,
-  SheetClose,
 } from '@/components/ui/sheet';
 import {
   Form,
@@ -27,7 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { Check, X } from 'lucide-react';
+import { Check} from 'lucide-react';
 
 const supermarketSchema = z.object({
   name: z.string().min(2, 'Il nome del supermercato è obbligatorio.'),
@@ -86,10 +85,6 @@ export function AddSupermarketDialog({
               ? 'Modifica i dettagli del tuo supermercato.'
               : 'Aggiungi un nuovo supermercato al tuo elenco.'}
           </SheetDescription>
-          <SheetClose className="absolute right-4 top-3 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-            <X className="h-5 w-5" />
-            <span className="sr-only">Close</span>
-          </SheetClose>
         </SheetHeader>
         <Form {...form}>
           <form

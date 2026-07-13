@@ -11,7 +11,6 @@ import {
   CreditCard,
   Ticket,
   Check,
-  X,
   Tag,
 } from 'lucide-react';
 import type {
@@ -29,7 +28,6 @@ import {
   SheetTitle,
   SheetFooter,
   SheetDescription,
-  SheetClose,
 } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -247,9 +245,6 @@ export function ArchiveListDialog({
           <SheetDescription>
             Conferma i dettagli della spesa per archiviarla.
           </SheetDescription>
-          <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-            <X className="h-5 w-5" />
-          </SheetClose>
         </SheetHeader>
 
         <div className="flex-1 min-h-0 overflow-y-auto">

@@ -246,10 +246,6 @@ const productData: Omit<Product, 'id'> = {
             <SheetTitle className="font-bold text-lg">
               {productToEdit ? 'Modifica Prodotto' : 'Nuovo Prodotto'}
             </SheetTitle>
-            <SheetClose className="absolute right-4 top-3 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-              <X className="h-5 w-5" />
-              <span className="sr-only">Close</span>
-            </SheetClose>
           </SheetHeader>
           <Form {...form}>
             <form
@@ -533,7 +529,7 @@ const productData: Omit<Product, 'id'> = {
           open={!!enlargedImage}
           onOpenChange={() => setEnlargedImage(null)}
         >
-          <DialogContent className="p-0 bg-transparent border-none shadow-none w-auto max-w-[98vw] max-h-[98vh] lg:max-w-4xl">
+          <DialogContent className="p-0 bg-transparent border-none shadow-none w-auto max-w-full max-h-screen lg:max-w-4xl">
             <DialogHeader>
                 <DialogTitle className="sr-only">Immagine Prodotto Ingrandita</DialogTitle>
                 <DialogDescription className="sr-only">Visualizzazione ingrandita dell'immagine del prodotto.</DialogDescription>
@@ -545,9 +541,6 @@ const productData: Omit<Product, 'id'> = {
               height={800}
               className="object-contain w-full h-auto max-h-[80vh] rounded-lg"
             />
-            <DialogClose className="absolute -top-2 -right-2 z-50 rounded-full bg-white/80 p-1.5 text-black opacity-100 ring-offset-0 focus:ring-0 backdrop-blur-sm hover:bg-white">
-              <X className="h-5 w-5" />
-            </DialogClose>
           </DialogContent>
         </Dialog>
       )}
