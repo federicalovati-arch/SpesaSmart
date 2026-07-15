@@ -1,6 +1,9 @@
 'use client';
 import { analyzeMonthVariations } from "@/analytics/variation-analysis";
 import MonthlyVariations from '@/components/MonthlyVariations';
+import ProductStatisticsSheet from "@/components/ProductStatisticsSheet";
+import { RecentReceipts } from "@/components/recent-receipts";
+import { Input } from "@/components/ui/input";
 
 import { useState, useMemo, useEffect } from 'react';
 import {
@@ -25,6 +28,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useData } from '@/context/data-context';
 import { parseISO, getYear, getMonth, format } from 'date-fns';
 import { it } from 'date-fns/locale';
+import type { Product } from "@/types";
+
 
 export function CostAnalysis() {
  const { receipts, products } = useData();
@@ -52,6 +57,11 @@ export function CostAnalysis() {
   
   const andamentoChartData = monthlyTotals.slice(periodStart, periodStart + 6);
   
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
+
+const [productSearch, setProductSearch] = useState("");
+
   const today = new Date();
   const currentActualMonth = today.getMonth();
   const currentActualYear = today.getFullYear();
@@ -82,6 +92,7 @@ export function CostAnalysis() {
 
   const [variationMonth, setVariationMonth] = useState<string>(availableMonths[new Date().getMonth()]);
   const [variationYear, setVariationYear] = useState<string>(allYearsFromReceipts[0]);
+  const [showAllProducts, setShowAllProducts] = useState(false);
 
   useEffect(() => {
     setYearA(allYearsFromReceipts[0]);
@@ -90,7 +101,8 @@ export function CostAnalysis() {
     setMonthYearB(allYearsFromReceipts[1] || (parseInt(allYearsFromReceipts[0]) - 1).toString());
     setVariationYear(allYearsFromReceipts[0]);
   }, [allYearsFromReceipts]);
-  
+  const [activeTab, setActiveTab] = useState("andamento");
+
   const monthShortNames: { [key: string]: string } = {
     "Gennaio": "Gen", "Febbraio": "Feb", "Marzo": "Mar", "Aprile": "Apr", "Maggio": "Mag", "Giugno": "Giu",
     "Luglio": "Lug", "Agosto": "Ago", "Settembre": "Set", "Ottobre": "Ott", "Novembre": "Nov", "Dicembre": "Dic"
@@ -205,8 +217,17 @@ const variationReport = useMemo(() => {
     { name: 'Aumenti', value: totalIncreases, color: 'hsl(var(--destructive))' },
     { name: 'Risparmi', value: totalSavings, color: 'hsl(var(--primary))' },
   ];
-
+const filteredProducts = products
+  .filter((product) =>
+    product.name.toLowerCase().includes(productSearch.toLowerCase())
+  )
+  .sort((a, b) => a.name.localeCompare(b.name, "it"));
+  const visibleProducts =
+  productSearch || showAllProducts
+    ? filteredProducts
+    : filteredProducts.slice(0, 3);
   return (
+    <>
     <Card className="shadow-lg rounded-3xl border-none">
       <CardHeader>
         <CardTitle className="flex items-center gap-3 text-2xl font-bold">
@@ -217,7 +238,7 @@ const variationReport = useMemo(() => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Tabs defaultValue="andamento" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-gray-100 rounded-full h-12 p-1.5">
             <TabsTrigger value="andamento" className="rounded-full text-xs font-bold sm:text-base sm:font-normal data-[state=active]:bg-white data-[state=active]:shadow-md">ANDAMENTO</TabsTrigger>
             <TabsTrigger value="variazioni" className="rounded-full text-xs font-bold sm:text-base sm:font-normal data-[state=active]:bg-white data-[state=active]:shadow-md">VARIAZIONI</TabsTrigger>
@@ -456,16 +477,85 @@ const variationReport = useMemo(() => {
                 </Card>
             </div>
 
-                   <MonthlyVariations
-  variationReport={variationReport}
-/>
           </TabsContent>
           
         </Tabs>
- 
+
       </CardContent>
-      
+
     </Card>
-    
-  );
+
+
+{activeTab === "variazioni" && (
+  <Card className="shadow-lg rounded-3xl border-none mt-6">
+    <CardHeader>
+      <CardTitle>Variazioni del mese</CardTitle>
+    </CardHeader>
+
+    <CardContent>
+      <MonthlyVariations
+        variationReport={variationReport}
+      />
+    </CardContent>
+  </Card>
+)}
+
+
+
+    {activeTab === "variazioni" && (
+      <Card className="shadow-lg rounded-3xl border-none mt-6">
+        <CardHeader>
+          <CardTitle>Timeline prezzi</CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-3">
+          <Input
+  placeholder="Cerca un prodotto..."
+  value={productSearch}
+  onChange={(e) => setProductSearch(e.target.value)}
+/>
+{visibleProducts.map((product) => (
+    <div
+  key={product.id}
+  onClick={() => {
+    setSelectedProduct(product);
+    setIsStatisticsOpen(true);
+  }}
+  className="flex items-center justify-between p-3 rounded-xl border hover:bg-gray-50 cursor-pointer transition-colors"
+>
+      <div>
+        <p className="font-semibold">{product.name}</p>
+        <p className="text-sm text-muted-foreground">
+          {product.category}
+        </p>
+      </div>
+
+      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+    </div>
+  ))}
+{filteredProducts.length > 3 && (
+  <button
+    onClick={() => setShowAllProducts(!showAllProducts)}
+    className="w-full pt-2 text-sm font-medium text-primary hover:underline"
+  >
+    {showAllProducts
+      ? "Mostra meno"
+      : `Mostra tutti i ${filteredProducts.length} prodotti`}
+  </button>
+)}
+</CardContent>
+      </Card>
+    )}
+    {activeTab !== "variazioni" && (
+  <RecentReceipts receipts={receipts} />
+)}
+
+<ProductStatisticsSheet
+  open={isStatisticsOpen}
+  onOpenChange={setIsStatisticsOpen}
+  product={selectedProduct}
+/>
+  </>
+  
+);
 }

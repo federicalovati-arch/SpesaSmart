@@ -22,13 +22,6 @@ export default function MonthlyVariations({
 
     <>
 
-  <h2 className="text-xl font-bold">
-
-    VARIAZIONI DEL MESE
-
-  </h2>
-
-
 
   <div className="space-y-3">
 

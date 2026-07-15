@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { CostAnalysis } from '@/components/cost-analysis';
-import { RecentReceipts } from '@/components/recent-receipts';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/firebase';
 import { useData } from '@/context/data-context';
@@ -78,7 +78,7 @@ export default function DashboardPage() {
         </div>
 
         <CostAnalysis />
-        <RecentReceipts receipts={receipts} />
+
       </div>
     </div>
   );
