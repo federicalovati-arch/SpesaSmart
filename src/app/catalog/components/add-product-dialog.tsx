@@ -53,7 +53,15 @@ const productSchema = z.object({
   prices: z.array(
     z.object({
       supermarketId: z.string(),
-      price: z.coerce.number().optional().default(0),
+      price: z.preprocess(
+  (value) => {
+    if (value === "" || value === null || value === undefined) {
+      return undefined;
+    }
+    return Number(value);
+  },
+  z.number().optional()
+),
       brand: z.string().optional(),
     })
   ),
@@ -96,7 +104,7 @@ export function AddProductDialog({
       images: [],
       prices: supermarkets.map((s) => ({
         supermarketId: s.id,
-        price: 0,
+        price: undefined,
         brand: '',
       })),
     };
@@ -117,7 +125,7 @@ export function AddProductDialog({
           );
           return {
             supermarketId: s.id,
-            price: priceInfo?.price || 0,
+            price: priceInfo?.price,
             brand: priceInfo?.brand || '',
           };
         }),
@@ -171,8 +179,12 @@ export function AddProductDialog({
 
   const watchedImages = form.watch('images');
   const watchedPrices = form.watch('prices');
+  useEffect(() => {
+  console.log("WATCH", watchedPrices);
+}, [watchedPrices]);
 
   async function onSubmit(values: z.infer<typeof productSchema>) {
+    console.log("VALUES ON SUBMIT", values.prices);
     const pricesWithValue = values.prices.filter((p) => p.price && p.price > 0);
 
 const finalImages = await Promise.all(
@@ -197,11 +209,14 @@ const finalImages = await Promise.all(
 );
 
 const cleanPrices = (values.prices || [])
-  .filter(p => p && p.supermarketId) // 👈 elimina roba rotta
-  .map(p => ({
+  .filter(
+    (p): p is typeof p & { price: number } =>
+      p?.supermarketId != null && p.price != null
+  )
+  .map((p) => ({
     supermarketId: String(p.supermarketId),
-    price: Number(p.price) || 0,
-    brand: p.brand ? String(p.brand) : ""
+    price: p.price,
+    brand: p.brand ?? "",
   }));
 
 const cleanImages = [];
@@ -221,11 +236,7 @@ const productData: Omit<Product, 'id'> = {
   brand: values.brand || "",
   category: values.category || "",
 
-  prices: (values.prices || []).map(p => ({
-    supermarketId: String(p.supermarketId || ""),
-    price: Number(p.price) || 0,
-    brand: p.brand ? String(p.brand) : ""
-  })),
+  prices: cleanPrices,
 
   images: cleanImages, // 👈 QUESTO
 };
@@ -392,12 +403,19 @@ const productData: Omit<Product, 'id'> = {
                               <FormItem className="flex items-center gap-1">
                                 <FormControl>
                                   <Input
-                                    type="number"
-                                    step="0.01"
-                                    {...priceField}
-                                    className="w-20 text-right font-bold bg-white"
-                                    placeholder="€ 0.00"
-                                  />
+                                      type="number"
+                                      step="0.01"
+                                      value={priceField.value ?? ""}
+                                      onChange={(e) => {
+                                        const value = e.target.value;
+                                        priceField.onChange(value === "" ? undefined : Number(value));
+                                      }}
+                                      onBlur={priceField.onBlur}
+                                      name={priceField.name}
+                                      ref={priceField.ref}
+                                      className="w-20 text-right font-bold bg-white"
+                                      placeholder="€ 0.00"
+                                    />
                                 </FormControl>
                               </FormItem>
                             )}
