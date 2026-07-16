@@ -299,7 +299,7 @@ const filteredProducts = products
     </CardTitle>
   </CardHeader>
 
-  <CardContent className="space-y-6">
+  <CardContent className="space-y-6 -mx-4 px-4">
 
       <div className="p-4 bg-gray-100 rounded-2xl space-y-6">
                 <div className="flex items-center justify-between">
