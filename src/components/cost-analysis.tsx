@@ -132,6 +132,7 @@ const [productSearch, setProductSearch] = useState("");
     const monthIndexA = monthIndices[monthA];
     const monthIndexB = monthIndices[monthB];
 
+
     const totalA = receipts
         .filter(r => {
             const d = parseISO(r.archivedAt);
@@ -169,6 +170,10 @@ const [productSearch, setProductSearch] = useState("");
 
   }, [receipts, monthA, monthYearA, monthB, monthB, monthIndices, monthShortNames]);
   
+      const monthlyDifference =
+  (monthlyComparisonChartData[1]?.total ?? 0) -
+  (monthlyComparisonChartData[0]?.total ?? 0);
+
 const variationReport = useMemo(() => {
 
   return analyzeMonthVariations(
@@ -226,6 +231,11 @@ const filteredProducts = products
   productSearch || showAllProducts
     ? filteredProducts
     : filteredProducts.slice(0, 3);
+
+    const yearlyDifference =
+  (yearlyChartData[1]?.total ?? 0) -
+  (yearlyChartData[0]?.total ?? 0);
+
   return (
     <>
     <Card className="shadow-lg rounded-3xl border-none">
@@ -282,58 +292,15 @@ const filteredProducts = products
             </div>
           </TabsContent>
           <TabsContent value="confronto" className="mt-6 space-y-6">
-            <label className="font-semibold text-sm">CONFRONTO ANNUALE</label>
-             <div className="p-4 bg-gray-100 rounded-2xl space-y-3">
-                <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-gray-500">PERIODO A:</label>
-                    <Select value={yearA} onValueChange={setYearA}>
-                        <SelectTrigger className="w-[120px] rounded-lg bg-white font-bold border-gray-200">
-                        <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                        {allYearsFromReceipts.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-gray-500">PERIODO B:</label>
-                    <Select value={yearB} onValueChange={setYearB}>
-                        <SelectTrigger className="w-[120px] rounded-lg bg-white font-bold border-gray-200">
-                        <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                        {allYearsFromReceipts.filter(y => y !== yearA).map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-            <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={yearlyChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }} barCategoryGap="20%">
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{ fill: '#6b7280', fontSize: 14, fontWeight: 'bold' }} />
-                  <YAxis axisLine={false} tickLine={false} tickFormatter={formatYAxis} tick={{ fill: '#6b7280', fontSize: 12 }} domain={[0, 'dataMax + 50']} />
-                  <Tooltip
-                    cursor={{ fill: 'hsl(var(--primary)/0.1)' }}
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="bg-background p-2 rounded-lg shadow-lg border">
-                            <p className="font-bold text-primary">{`€${payload[0].value?.toLocaleString('it-IT', {minimumFractionDigits: 2})}`}</p>
-                            <p className="text-xs text-muted-foreground">{`Totale ${payload[0].payload.name}`}</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar dataKey="total" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} maxBarSize={60} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <Card className="shadow-none border-none">
+  <CardHeader>
+    <CardTitle className="text-base font-bold">
+      CONFRONTO MENSILE
+    </CardTitle>
+  </CardHeader>
 
-         <div class="block -mx-6 border-t-8 border-gray-200 mt-12 mb-16" />
+  <CardContent className="space-y-6">
 
-         <label className="block font-semibold text-sm">CONFRONTO MENSILE</label>
       <div className="p-4 bg-gray-100 rounded-2xl space-y-6">
                 <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold text-gray-500">PERIODO A:</label>
@@ -378,30 +345,55 @@ const filteredProducts = products
                     </div>
                 </div>
             </div>
-            <div className="h-[250px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyComparisonChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }} barCategoryGap="20%">
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{ fill: '#6b7280', fontSize: 14, fontWeight: 'bold' }} />
-                    <YAxis axisLine={false} tickLine={false} tickFormatter={formatYAxis} tick={{ fill: '#6b7280', fontSize: 12 }} domain={[0, 'dataMax + 50']} />
-                    <Tooltip
-                        cursor={{ fill: 'hsl(var(--primary)/0.1)' }}
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                              return (
-                              <div className="bg-background p-2 rounded-lg shadow-lg border">
-                                  <p className="font-bold text-primary">{`€${payload[0].value?.toLocaleString('it-IT', {minimumFractionDigits: 2})}`}</p>
-                                  <p className="text-xs text-muted-foreground">{`Totale ${payload[0].payload.name}`}</p>
-                              </div>
-                              );
-                          }
-                          return null;
-                        }}
-                    />
-                    <Bar dataKey="total" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} maxBarSize={60} />
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
+            <div className="space-y-4">
+
+  <div className="flex justify-between items-center border-b pb-3">
+    <span className="font-medium">
+      {monthlyComparisonChartData[0]?.name}
+    </span>
+
+    <span className="text-l font-bold">
+      €{monthlyComparisonChartData[0]?.total.toFixed(2)}
+    </span>
+  </div>
+
+  <div className="flex justify-between items-center border-b pb-3">
+    <span className="font-medium">
+      {monthlyComparisonChartData[1]?.name}
+    </span>
+
+    <span className="text-l font-bold">
+      €{monthlyComparisonChartData[1]?.total.toFixed(2)}
+    </span>
+  </div>
+
+  <div className="flex justify-between items-center rounded-xl bg-muted px-4 py-3">
+    <span className="font-semibold">
+      Differenza
+    </span>
+
+    <span
+  className={`text-xl font-bold ${
+    monthlyDifference > 0
+      ? "text-red-500"
+      : monthlyDifference < 0
+      ? "text-green-600"
+      : ""
+  }`}
+>
+  {monthlyDifference > 0 ? "+" : ""}
+  €{monthlyDifference.toFixed(2)}
+</span>
+
+  </div>
+  </div>
+            </CardContent>
+</Card>
           </TabsContent>
+
+
+
+
 
 
           <TabsContent value="variazioni" className="mt-6 space-y-6">
@@ -427,7 +419,7 @@ const filteredProducts = products
               </div>
             </div>
 
-            <div className="h-[250px] w-full">
+            <div className="h-[100px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={variationsData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }} barCategoryGap="35%">
                   <XAxis dataKey="name" axisLine={false} tickLine={false} dy={10} tick={{ fill: '#6b7280', fontSize: 14, fontWeight: 'bold' }} />
@@ -546,6 +538,87 @@ const filteredProducts = products
 </CardContent>
       </Card>
     )}
+
+ {activeTab === "confronto" && (
+<Card className="border-none">
+  <CardHeader>
+    <CardTitle className="text-base font-bold">
+      CONFRONTO ANNUALE
+    </CardTitle>
+  </CardHeader>
+
+  <CardContent className="space-y-6">
+             <div className="p-4 bg-gray-100 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-gray-500">PERIODO A:</label>
+                    <Select value={yearA} onValueChange={setYearA}>
+                        <SelectTrigger className="w-[120px] rounded-lg bg-white font-bold border-gray-200">
+                        <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {allYearsFromReceipts.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-gray-500">PERIODO B:</label>
+                    <Select value={yearB} onValueChange={setYearB}>
+                        <SelectTrigger className="w-[120px] rounded-lg bg-white font-bold border-gray-200">
+                        <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {allYearsFromReceipts.filter(y => y !== yearA).map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+<div className="space-y-4">
+
+  <div className="flex justify-between items-center border-b pb-3">
+    <span className="font-medium">
+      {yearlyChartData[0]?.name}
+    </span>
+
+    <span className="text-l font-bold">
+      €{yearlyChartData[0]?.total.toFixed(2)}
+    </span>
+  </div>
+
+  <div className="flex justify-between items-center border-b pb-3">
+    <span className="font-medium">
+      {yearlyChartData[1]?.name}
+    </span>
+
+    <span className="text-l font-bold">
+      €{yearlyChartData[1]?.total.toFixed(2)}
+    </span>
+  </div>
+
+  <div className="flex justify-between items-center rounded-xl bg-muted px-4 py-3">
+    <span className="font-semibold">
+      Differenza
+    </span>
+
+    <span
+  className={`text-xl font-bold ${
+    yearlyDifference > 0
+      ? "text-red-500"
+      : yearlyDifference < 0
+      ? "text-green-600"
+      : ""
+  }`}
+>
+  {yearlyDifference > 0 ? "+" : ""}
+  €{yearlyDifference.toFixed(2)}
+</span>
+
+  </div>
+
+</div>
+  </CardContent>
+</Card>
+)}
+          
     {activeTab !== "variazioni" && (
   <RecentReceipts receipts={receipts} />
 )}
