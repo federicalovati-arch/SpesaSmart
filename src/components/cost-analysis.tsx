@@ -293,7 +293,7 @@ const filteredProducts = products
           </TabsContent>
           <TabsContent value="confronto" className="mt-6 space-y-6">
             <Card className="shadow-none border-none">
-  <CardHeader>
+  <CardHeader className="space-y-6 -mx-4 px-4">
     <CardTitle className="text-base font-bold">
       CONFRONTO MENSILE
     </CardTitle>
