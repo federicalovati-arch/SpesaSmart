@@ -29,13 +29,13 @@ import { useData } from '@/context/data-context';
 import { parseISO, getYear, getMonth, format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import type { Product } from "@/types";
-
+import { PaymentMethodsCard } from "@/components/payment-methods-card";
 
 export function CostAnalysis() {
  const { receipts, products } = useData();
 
   // State for "Andamento" tab
-  const viewYear = new Date().getFullYear();
+  const [viewYear, setViewYear] = useState(new Date().getFullYear());
   const currentMonthIndex = new Date().getMonth();
   const [periodStart, setPeriodStart] = useState(currentMonthIndex < 6 ? 0 : 6);
 
@@ -617,6 +617,16 @@ const filteredProducts = products
 </div>
   </CardContent>
 </Card>
+)}
+
+{activeTab === "andamento" && (
+  <>
+    {/* altre card */}
+
+    <PaymentMethodsCard
+      selectedYear={viewYear}
+    />
+  </>
 )}
           
     {activeTab !== "variazioni" && (
