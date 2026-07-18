@@ -48,7 +48,7 @@ export function PaymentMethodsCard(props: PaymentMethodsCardProps) {
   <CardHeader className="pb-3">
   <CardTitle className="flex items-center gap-2">
     <WalletCards className="h-5 w-5 text-primary" />
-    Come paghi la tua spesa
+    Come paghi la spesa
   </CardTitle>
 
   <div className="flex items-center justify-center gap-4 mt-2">
@@ -175,6 +175,15 @@ export function PaymentMethodsCard(props: PaymentMethodsCardProps) {
       );
     })
   )}
+  <div className="text-center">
+  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    Totale {selectedYear}
+  </p>
+
+  <p className="text-2xl font-bold tracking-tight">
+    €{statistics.totalSpent.toFixed(2).replace(".", ",")}
+  </p>
+</div>
 </CardContent>
     </Card>
   );

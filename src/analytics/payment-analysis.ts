@@ -85,7 +85,9 @@ if (!supermarketName || supermarketName === "undefined") {
   });
 }
 
-      totalSpent += payment.amount;
+      if (payment.method !== "Sconto") {
+  totalSpent += payment.amount;
+}
 
       const existing = paymentMap.get(payment.method);
 

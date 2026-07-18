@@ -72,9 +72,9 @@ export default function DashboardPage() {
             </Link>
         )}
 
-        <div className="p-6 text-center rounded-3xl bg-primary text-primary-foreground shadow-lg">
-            <p className="text-sm font-bold opacity-80">MESE CORRENTE</p>
-            <p className="text-5xl font-bold tracking-tighter">€{currentMonthTotal.toFixed(2)}</p>
+        <div className="p-2 text-center rounded-3xl bg-primary text-primary-foreground shadow-lg">
+            <p className="text-xs font-semibold opacity-80">MESE CORRENTE</p>
+            <p className="text-4xl font-bold tracking-tighter">€{currentMonthTotal.toFixed(2)}</p>
         </div>
 
         <CostAnalysis />
