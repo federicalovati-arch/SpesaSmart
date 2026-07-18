@@ -5,19 +5,27 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-import { WalletCards, ChevronDown, ChevronUp } from "lucide-react";
+import { WalletCards, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, } from "lucide-react";
 
 import { getPaymentMethodStatistics } from "@/analytics/payment-analysis";
 import { useData } from "@/context/data-context";
+import { Button } from "@/components/ui/button";
 
 
 type PaymentMethodsCardProps = {
   selectedYear: number;
+  onPreviousYear: () => void;
+  onNextYear: () => void;
 };
 
-export function PaymentMethodsCard({
-  selectedYear,
-}: PaymentMethodsCardProps) {
+export function PaymentMethodsCard(props: PaymentMethodsCardProps) {
+  console.log("PROPS:", props);
+
+  const {
+    selectedYear,
+    onPreviousYear,
+    onNextYear,
+  } = props;
   const { receipts } = useData();
 
   const statistics = getPaymentMethodStatistics(
@@ -27,14 +35,48 @@ export function PaymentMethodsCard({
 
   const [expandedMethod, setExpandedMethod] = useState<string | null>(null);
 
+  const currentYear = new Date().getFullYear();
+
+  console.log({
+  selectedYear,
+  onPreviousYear,
+  onNextYear,
+});
+
   return (
     <Card className="shadow-lg rounded-3xl border-none">
-  <CardHeader>
-    <CardTitle className="flex items-center gap-2">
-      <WalletCards className="h-5 w-5 text-primary" />
-      Come paghi la tua spesa
-    </CardTitle>
-  </CardHeader>
+  <CardHeader className="pb-3">
+  <CardTitle className="flex items-center gap-2">
+    <WalletCards className="h-5 w-5 text-primary" />
+    Come paghi la tua spesa
+  </CardTitle>
+
+  <div className="flex items-center justify-center gap-4 mt-2">
+    <Button
+  variant="ghost"
+  size="icon"
+  className="h-8 w-8 rounded-full"
+  onClick={() => {
+    onPreviousYear();
+  }}
+>
+  <ChevronLeft className="h-4 w-4" />
+</Button>
+
+    <span className="text-medium font-semibold text-primary">
+      {selectedYear}
+    </span>
+
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8 rounded-full"
+      onClick={onNextYear}
+    >
+      <ChevronRight className="h-4 w-4" />
+    </Button>
+  </div>
+</CardHeader>
 
  <CardContent className="space-y-4">
   {statistics.methods.length === 0 ? (
@@ -44,7 +86,12 @@ export function PaymentMethodsCard({
   ) : (
     statistics.methods.map((method, index) => {
       const isExpanded = expandedMethod === method.method;
-      const isExpandable = method.supermarkets.length > 1;
+      const isExpandable =
+  method.supermarkets.length > 1 ||
+  (
+    method.method !== "Conad Card" &&
+    method.supermarkets.length === 1
+  );
 
       return (
         <div

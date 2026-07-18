@@ -36,6 +36,7 @@ export function CostAnalysis() {
 
   // State for "Andamento" tab
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
+  const [paymentYear, setPaymentYear] = useState(new Date().getFullYear());
   const currentMonthIndex = new Date().getMonth();
   const [periodStart, setPeriodStart] = useState(currentMonthIndex < 6 ? 0 : 6);
 
@@ -66,8 +67,27 @@ const [productSearch, setProductSearch] = useState("");
   const currentActualMonth = today.getMonth();
   const currentActualYear = today.getFullYear();
   
-  const handlePrevPeriod = () => setPeriodStart(0);
-  const handleNextPeriod = () => setPeriodStart(6);
+const handlePrevPeriod = () => {
+  if (periodStart === 6) {
+    // Secondo semestre -> Primo semestre dello stesso anno
+    setPeriodStart(0);
+  } else {
+    // Primo semestre -> Secondo semestre dell'anno precedente
+    setViewYear((y) => y - 1);
+    setPeriodStart(6);
+  }
+};
+
+const handleNextPeriod = () => {
+  if (periodStart === 0) {
+    // Primo semestre -> Secondo semestre dello stesso anno
+    setPeriodStart(6);
+  } else {
+    // Secondo semestre -> Primo semestre dell'anno successivo
+    setViewYear((y) => y + 1);
+    setPeriodStart(0);
+  }
+};
   
   const allYearsFromReceipts = useMemo(() => {
       const years = new Set(receipts.map(r => getYear(parseISO(r.archivedAt)).toString()));
@@ -236,17 +256,29 @@ const filteredProducts = products
   (yearlyChartData[1]?.total ?? 0) -
   (yearlyChartData[0]?.total ?? 0);
 
+  const periodLabel =
+  periodStart === 0 ? "Gennaio - Giugno" : "Luglio - Dicembre";
+
   return (
     <>
     <Card className="shadow-lg rounded-3xl border-none">
       <CardHeader>
-        <CardTitle className="flex items-center gap-3 text-2xl font-bold">
-          <div className="p-2.5 bg-primary/10 rounded-xl">
-            <BarChart2 className="h-6 w-6 text-primary" />
-          </div>
-          Analisi Costi
-        </CardTitle>
-      </CardHeader>
+  <CardTitle className="flex items-center gap-3">
+    <div className="p-2.5 bg-primary/10 rounded-xl">
+      <BarChart2 className="h-6 w-6 text-primary" />
+    </div>
+
+    <div className="flex flex-col">
+      <h2 className="text-2xl font-bold leading-none">
+        Analisi Costi
+      </h2>
+
+      <span className="text-medium font-bold text-primary mt-1">
+        {viewYear}
+      </span>
+    </div>
+  </CardTitle>
+</CardHeader>
       <CardContent className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-gray-100 rounded-full h-12 p-1.5">
@@ -255,15 +287,29 @@ const filteredProducts = products
             <TabsTrigger value="confronto" className="rounded-full text-xs font-bold sm:text-base sm:font-normal data-[state=active]:bg-white data-[state=active]:shadow-md">CONFRONTO</TabsTrigger>
           </TabsList>
           <TabsContent value="andamento" className="mt-6 space-y-6">
-            <div className="flex items-center justify-between p-2 rounded-full bg-gray-100">
-              <Button variant="ghost" size="icon" className="rounded-full bg-white shadow" onClick={handlePrevPeriod} disabled={periodStart === 0}>
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-              <span className="font-semibold text-sm">SPOSTA PERIODO</span>
-              <Button variant="ghost" size="icon" className="rounded-full bg-white shadow" onClick={handleNextPeriod} disabled={periodStart === 6}>
-                <ChevronRight className="h-5 w-5" />
-              </Button>
-            </div>
+            <div className="flex items-center justify-between h-10 px-2 rounded-full bg-gray-100">
+  <Button
+    variant="ghost"
+    size="icon"
+    className="h-8 w-8 rounded-full bg-white shadow-sm"
+    onClick={handlePrevPeriod}
+  >
+    <ChevronLeft className="h-4 w-4" />
+  </Button>
+
+  <span className="text-medium font-semibold tracking-wide text-muted-foreground">
+    {periodLabel}
+  </span>
+
+  <Button
+    variant="ghost"
+    size="icon"
+    className="h-8 w-8 rounded-full bg-white shadow-sm"
+    onClick={handleNextPeriod}
+  >
+    <ChevronRight className="h-4 w-4" />
+  </Button>
+</div>
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={andamentoChartData} margin={{ top: 5, right: 0, left: -20, bottom: 5 }}>
@@ -624,12 +670,14 @@ const filteredProducts = products
     {/* altre card */}
 
     <PaymentMethodsCard
-      selectedYear={viewYear}
-    />
+  selectedYear={paymentYear}
+  onPreviousYear={() => setPaymentYear((y) => y - 1)}
+  onNextYear={() => setPaymentYear((y) => y + 1)}
+/>
   </>
 )}
           
-    {activeTab !== "variazioni" && (
+   {activeTab === "confronto" && (
   <RecentReceipts receipts={receipts} />
 )}
 
