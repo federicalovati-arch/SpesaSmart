@@ -52,11 +52,38 @@ export function getPaymentMethodStatistics(
 
     for (const payment of receipt.payments) {
 
-const supermarketName =
-  payment.supermarketName?.trim() &&
-  payment.supermarketName !== "undefined"
-    ? payment.supermarketName.trim()
-    : "Supermercato sconosciuto";
+
+// Compatibilità con gli scontrini storici:
+// le prime versioni salvavano il supermercato negli items ma non nei payments.
+// Se il pagamento non ha supermarketName e lo scontrino contiene un solo
+// supermercato, lo recuperiamo automaticamente dagli items.
+let supermarketName = payment.supermarketName?.trim();
+
+if (!supermarketName || supermarketName === "undefined") {
+  const receiptSupermarkets = [
+    ...new Set(
+      receipt.items
+        .map((item) => item.supermarketName?.trim())
+        .filter(Boolean)
+    ),
+  ];
+
+  if (receiptSupermarkets.length === 1) {
+    supermarketName = receiptSupermarkets[0];
+  } else {
+    supermarketName = "Supermercato sconosciuto";
+  }
+}
+
+    if (payment.method === "Bancomat") {
+  console.log({
+    data: receipt.archivedAt,
+    lista: receipt.listName,
+    supermercatoOriginale: payment.supermarketName,
+    supermercatoUsato: supermarketName,
+    importo: payment.amount,
+  });
+}
 
       totalSpent += payment.amount;
 
